@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import BlockPalette      from '@/components/palette/BlockPalette.vue'
 import CanvasEditor      from '@/components/canvas/CanvasEditor.vue'
 import BlockInspector    from '@/components/inspector/BlockInspector.vue'
@@ -9,18 +9,35 @@ import ComponentBuilder  from '@/components/manager/ComponentBuilder.vue'
 import EnvEditor         from '@/components/manager/EnvEditor.vue'
 import TestRunner        from '@/components/runner/TestRunner.vue'
 import ExportModal       from '@/components/export/ExportModal.vue'
-import { useRunnerStore }   from '@/stores/runnerStore.js'
+import { useRunnerStore }     from '@/stores/runnerStore.js'
 import { useCanvasStore  }   from '@/stores/canvasStore.js'
 import { useBlockRegistry }  from '@/stores/blockRegistry.js'
 import { useDataRegistry  }  from '@/stores/dataRegistry.js'
+import { useComponentStore } from '@/stores/componentStore.js'
 
-const runner   = useRunnerStore()
-const canvas   = useCanvasStore()
-const registry = useBlockRegistry()
-const dataReg  = useDataRegistry()
+const runner    = useRunnerStore()
+const canvas    = useCanvasStore()
+const registry  = useBlockRegistry()
+const dataReg   = useDataRegistry()
+const compStore = useComponentStore()
 
 const showDataManager      = ref(false)
 const showComponentBuilder = ref(false)
+const builderInitialCompId = ref(null)
+
+// Buka ComponentBuilder otomatis saat double-click block component di canvas
+watch(() => compStore.builderTargetCompId, (compId) => {
+  if (compId) {
+    builderInitialCompId.value = compId
+    showComponentBuilder.value = true
+  }
+})
+
+function closeComponentBuilder() {
+  showComponentBuilder.value = false
+  builderInitialCompId.value = null
+  compStore.clearBuilderTarget()
+}
 const showEnvEditor        = ref(false)
 const showExportModal      = ref(false)
 
@@ -90,7 +107,7 @@ const runnerStatusColor = computed(() => {
       </div>
       <div class="topbar-right">
         <button class="topbar-btn" :class="{ active: showDataManager }"      @click="showDataManager = true"      title="Data Manager">📊 Data</button>
-        <button class="topbar-btn" :class="{ active: showComponentBuilder }" @click="showComponentBuilder = true" title="Component Builder">📦 Components</button>
+        <button class="topbar-btn" :class="{ active: showComponentBuilder }" @click="showComponentBuilder = true; builderInitialCompId = null" title="Component Builder">📦 Components</button>
         <button class="topbar-btn" :class="{ active: showEnvEditor }"        @click="showEnvEditor = true"        title="Environment Variables">⚙️ .env</button>
         <button
           class="topbar-btn"
@@ -161,7 +178,11 @@ const runnerStatusColor = computed(() => {
 
     <!-- Modals -->
     <DataManager       v-if="showDataManager"      @close="showDataManager = false" />
-    <ComponentBuilder  v-if="showComponentBuilder" @close="showComponentBuilder = false" />
+    <ComponentBuilder
+      v-if="showComponentBuilder"
+      :initial-comp-id="builderInitialCompId"
+      @close="closeComponentBuilder"
+    />
     <EnvEditor         v-if="showEnvEditor"        @close="showEnvEditor = false" />
     <ExportModal       v-if="showExportModal"      @close="showExportModal = false" />
 

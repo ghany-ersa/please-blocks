@@ -193,6 +193,22 @@ export const useCanvasStore = defineStore('canvas', {
       return null
     },
 
+    // Ganti semua referensi blockId lama ke baru (dipakai saat method/component di-rename)
+    renameStepBlockId(oldBlockId, newBlockId) {
+      let changed = false
+      for (const f of this.features) {
+        for (const tc of f.testCases) {
+          for (const step of tc.steps) {
+            if (step.blockId === oldBlockId) {
+              step.blockId = newBlockId
+              changed = true
+            }
+          }
+        }
+      }
+      if (changed) this.persist()
+    },
+
     updateStepInputs(stepId, inputs) {
       for (const f of this.features) {
         for (const tc of f.testCases) {
@@ -228,6 +244,45 @@ export const useCanvasStore = defineStore('canvas', {
           return
         }
       }
+    },
+
+    // Ambil salinan step pada indices tertentu (untuk diekstrak jadi component)
+    getStepsAt(testCaseId, indices) {
+      for (const f of this.features) {
+        const tc = f.testCases.find(t => t.id === testCaseId)
+        if (!tc) continue
+        const sorted = [...indices].sort((a, b) => a - b)
+        return sorted.map(i => ({ ...tc.steps[i] }))
+      }
+      return []
+    },
+
+    // Ganti step pada indices dengan satu step component (blockId hasil generate).
+    // blockId harus sudah terdaftar di blockRegistry sebelum dipanggil.
+    replaceStepsWithComponent(testCaseId, indices, blockId) {
+      for (const f of this.features) {
+        const tc = f.testCases.find(t => t.id === testCaseId)
+        if (!tc) continue
+
+        const sorted = [...indices].sort((a, b) => a - b)
+        const groupStep = {
+          id:      uid('step'),
+          blockId,
+          inputs:  {},
+          hasError: false
+        }
+
+        // Hapus step terpilih dari belakang agar index tidak bergeser
+        for (let i = sorted.length - 1; i >= 0; i--) {
+          tc.steps.splice(sorted[i], 1)
+        }
+        tc.steps.splice(sorted[0], 0, groupStep)
+
+        this.activeStepId = groupStep.id
+        this.persist()
+        return groupStep
+      }
+      return null
     },
 
     // ── Drag & Drop State ──────────────────────────────────────────

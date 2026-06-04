@@ -9,7 +9,7 @@
  *
  * Ini memberi QA visibilitas penuh sambil tetap menginformasikan ketidaksesuaian.
  */
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { useDataRegistry }       from '@/stores/dataRegistry.js'
 import { useCanvasStore }        from '@/stores/canvasStore.js'
 import { checkEntryCompatibility } from '@/core/blocks/schemaValidator.js'
@@ -32,6 +32,10 @@ const canvas  = useCanvasStore()
 const open      = ref(false)
 const searchQ   = ref('')
 const inputRef  = ref(null)
+const triggerRef = ref(null)
+
+// Posisi dropdown di-teleport ke body
+const dropStyle = ref({})
 
 // Nilai yang tampil di trigger
 const displayValue = computed(() => {
@@ -121,7 +125,33 @@ function toggle() {
   open.value = !open.value
   if (open.value) {
     searchQ.value = ''
-    setTimeout(() => inputRef.value?.focus(), 50)
+    nextTick(() => {
+      positionDropdown()
+      inputRef.value?.focus()
+    })
+  }
+}
+
+function positionDropdown() {
+  if (!triggerRef.value) return
+  const rect = triggerRef.value.getBoundingClientRect()
+  const spaceBelow = window.innerHeight - rect.bottom
+  const dropHeight = 240
+
+  if (spaceBelow >= dropHeight || spaceBelow >= 120) {
+    // Buka ke bawah
+    dropStyle.value = {
+      top:   `${rect.bottom + window.scrollY}px`,
+      left:  `${rect.left  + window.scrollX}px`,
+      width: `${rect.width}px`
+    }
+  } else {
+    // Buka ke atas
+    dropStyle.value = {
+      top:   `${rect.top + window.scrollY - dropHeight}px`,
+      left:  `${rect.left + window.scrollX}px`,
+      width: `${rect.width}px`
+    }
   }
 }
 
@@ -131,7 +161,8 @@ function close() {
 }
 
 function onOutsideClick(e) {
-  if (!e.target.closest('.drs-wrap')) close()
+  // Tutup jika klik bukan di trigger (.drs-wrap) maupun dropdown (.drs-dropdown)
+  if (!e.target.closest('.drs-wrap') && !e.target.closest('.drs-dropdown')) close()
 }
 
 watch(open, (val) => {
@@ -164,15 +195,22 @@ const schemaHint = computed(() => {
 
     <div class="drs-wrap" :class="{ open }">
       <!-- Trigger -->
-      <div class="drs-trigger" :class="{ 'has-error': error, 'has-value': displayValue }" @click="toggle">
+      <div
+        ref="triggerRef"
+        class="drs-trigger"
+        :class="{ 'has-error': error, 'has-value': displayValue }"
+        @click="toggle"
+      >
         <span v-if="displayValue" class="drs-current" :style="{ color }">{{ displayValue }}</span>
         <span v-else class="drs-placeholder">{{ placeholder }}</span>
         <button v-if="displayValue" class="drs-clear" @click.stop="clearValue">×</button>
         <span class="drs-arrow" :class="{ rotated: open }">›</span>
       </div>
+    </div>
 
-      <!-- Dropdown -->
-      <div v-if="open" class="drs-dropdown">
+    <!-- Dropdown di-teleport ke body agar tidak terpotong overflow:hidden -->
+    <Teleport to="body">
+      <div v-if="open" class="drs-dropdown" :style="dropStyle">
         <div class="drs-search-wrap">
           <input
             ref="inputRef"
@@ -208,12 +246,10 @@ const schemaHint = computed(() => {
               <span class="opt-icon">{{ entry.icon }}</span>
               <div class="opt-body">
                 <span class="opt-path">{{ entry.path }}</span>
-                <!-- Field preview untuk object entries -->
                 <span v-if="entry.fields" class="opt-fields">
                   {{ entry.fields.join(', ') }}
                 </span>
               </div>
-              <!-- Compat marker -->
               <span v-if="schema && entry.compat === 'ok'"      class="opt-compat ok">✓</span>
               <span v-else-if="schema && entry.compat !== 'ok'" class="opt-compat warn"
                 :title="`Field tidak lengkap. Butuh: ${schema.requiredFields?.join(', ')}`">⚠</span>
@@ -252,7 +288,7 @@ const schemaHint = computed(() => {
           </div>
         </div>
       </div>
-    </div>
+    </Teleport>
 
     <span v-if="error" class="field-error">{{ error }}</span>
   </div>
@@ -281,7 +317,7 @@ const schemaHint = computed(() => {
 .sh-icon { flex-shrink: 0; }
 
 /* Trigger */
-.drs-wrap    { position: relative; }
+.drs-wrap    { position: relative; }  /* tetap untuk border-radius trigger saat open */
 .drs-trigger {
   display: flex; align-items: center; gap: 6px;
   width: 100%; background: #0f1117; border: 1px solid #334155;
@@ -300,12 +336,12 @@ const schemaHint = computed(() => {
 .drs-arrow { color: #475569; font-size: 14px; flex-shrink: 0; transition: transform 0.2s; display: inline-block; }
 .drs-arrow.rotated { transform: rotate(90deg); }
 
-/* Dropdown */
+/* Dropdown — di-teleport ke body, posisi via inline style */
 .drs-dropdown {
-  position: absolute; left: 0; right: 0; top: 100%; z-index: 50;
+  position: fixed; z-index: 9999;
   background: #0f1117; border: 1px solid #6366f1;
-  border-top: none; border-radius: 0 0 5px 5px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  border-radius: 0 0 5px 5px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
   max-height: 240px; display: flex; flex-direction: column;
 }
 .drs-search-wrap { padding: 6px; border-bottom: 1px solid #1e293b; flex-shrink: 0; }

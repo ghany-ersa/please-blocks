@@ -12,7 +12,7 @@
  *   - DataRef    : { type: 'dataref', path: 'ACCOUNT.valid.username' }
  *   - VarRef     : { type: 'varref',  varName: 'headerText' }
  */
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { useDataRegistry } from '@/stores/dataRegistry.js'
 import { useCanvasStore }  from '@/stores/canvasStore.js'
 
@@ -60,9 +60,11 @@ function onTextInput(e) {
 }
 
 // ── Data ref mode — dropdown ──────────────────────────────────────
-const open      = ref(false)
-const searchQ   = ref('')
-const searchRef = ref(null)
+const open       = ref(false)
+const searchQ    = ref('')
+const searchRef  = ref(null)
+const triggerRef = ref(null)
+const dropStyle  = ref({})
 
 // Display string untuk trigger button
 const displayValue = computed(() => {
@@ -111,11 +113,34 @@ function clearValue() {
   emit('update:modelValue', '')
 }
 
+function positionDropdown() {
+  if (!triggerRef.value) return
+  const rect = triggerRef.value.getBoundingClientRect()
+  const spaceBelow = window.innerHeight - rect.bottom
+  const dropHeight = 220
+  if (spaceBelow >= dropHeight || spaceBelow >= 120) {
+    dropStyle.value = {
+      top:   `${rect.bottom + window.scrollY}px`,
+      left:  `${rect.left  + window.scrollX}px`,
+      width: `${rect.width}px`
+    }
+  } else {
+    dropStyle.value = {
+      top:   `${rect.top + window.scrollY - dropHeight}px`,
+      left:  `${rect.left + window.scrollX}px`,
+      width: `${rect.width}px`
+    }
+  }
+}
+
 function toggleDropdown() {
   open.value = !open.value
   if (open.value) {
     searchQ.value = ''
-    setTimeout(() => searchRef.value?.focus(), 40)
+    nextTick(() => {
+      positionDropdown()
+      searchRef.value?.focus()
+    })
   }
 }
 
@@ -125,7 +150,7 @@ function closeDropdown() {
 }
 
 function onOutside(e) {
-  if (!e.target.closest('.hvi-wrap')) closeDropdown()
+  if (!e.target.closest('.hvi-wrap') && !e.target.closest('.hvi-dropdown')) closeDropdown()
 }
 
 watch(open, (v) => {
@@ -170,6 +195,7 @@ watch(open, (v) => {
     <div v-else class="hvi-wrap" :class="{ open }">
       <!-- Trigger -->
       <div
+        ref="triggerRef"
         class="hvi-trigger"
         :class="{ 'has-error': error, 'has-value': displayValue }"
         @click="toggleDropdown"
@@ -184,9 +210,11 @@ watch(open, (v) => {
         <span v-else class="hvi-placeholder">Pilih dari Data Factory atau variabel canvas...</span>
         <span class="hvi-arrow" :class="{ rotated: open }">›</span>
       </div>
+    </div>
 
-      <!-- Dropdown -->
-      <div v-if="open" class="hvi-dropdown">
+    <!-- Dropdown di-teleport ke body agar tidak terpotong overflow:hidden -->
+    <Teleport to="body">
+      <div v-if="open" class="hvi-dropdown" :style="dropStyle">
         <div class="hvi-search-wrap">
           <input
             ref="searchRef"
@@ -241,7 +269,7 @@ watch(open, (v) => {
           </div>
         </div>
       </div>
-    </div>
+    </Teleport>
 
     <span v-if="error" class="field-error">{{ error }}</span>
   </div>
@@ -312,12 +340,12 @@ watch(open, (v) => {
 }
 .hvi-arrow.rotated { transform: rotate(90deg); }
 
-/* Dropdown */
+/* Dropdown — di-teleport ke body */
 .hvi-dropdown {
-  position: absolute; left: 0; right: 0; top: 100%; z-index: 50;
+  position: fixed; z-index: 9999;
   background: #0f1117; border: 1px solid #6366f1;
-  border-top: none; border-radius: 0 0 5px 5px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  border-radius: 0 0 5px 5px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
   max-height: 220px; display: flex; flex-direction: column;
 }
 .hvi-search-wrap { padding: 6px; border-bottom: 1px solid #1e293b; flex-shrink: 0; }

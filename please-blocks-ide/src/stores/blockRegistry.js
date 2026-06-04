@@ -6,18 +6,17 @@ export const useBlockRegistry = defineStore('blockRegistry', {
     // Built-in blocks — hardcoded, dari definitions/
     builtIn: Object.fromEntries(ALL_BUILT_IN_BLOCKS.map(b => [b.id, b])),
 
-    // Dynamic blocks — akan diisi oleh ComponentFactory dan DataFactory (Sprint 3)
+    // Blocks dari ComponentBuilder / extract canvas (dikelola componentStore)
     components: {},
+
     data: {}
   }),
 
   getters: {
-    // Semua blok dalam satu flat object { id: blockDef }
     all(state) {
       return { ...state.builtIn, ...state.components, ...state.data }
     },
 
-    // Blok dikelompokkan per kategori, urut sesuai CATEGORY_ORDER
     byCategory(state) {
       const all = { ...state.builtIn, ...state.components, ...state.data }
       const groups = {}
@@ -27,7 +26,6 @@ export const useBlockRegistry = defineStore('blockRegistry', {
         groups[block.type].push(block)
       }
 
-      // Kembalikan dalam urutan yang sudah ditentukan
       const ordered = []
       for (const cat of CATEGORY_ORDER) {
         if (groups[cat]?.length) {
@@ -39,7 +37,6 @@ export const useBlockRegistry = defineStore('blockRegistry', {
         }
       }
 
-      // Kategori dinamis (component, data) ditambah di akhir
       for (const [cat, blocks] of Object.entries(groups)) {
         if (!CATEGORY_ORDER.includes(cat) && blocks.length) {
           ordered.push({
@@ -53,21 +50,17 @@ export const useBlockRegistry = defineStore('blockRegistry', {
       return ordered
     },
 
-    // Ambil satu block definition by ID
     getById: (state) => (id) => {
       return state.builtIn[id] || state.components[id] || state.data[id] || null
     }
   },
 
   actions: {
-    // Daftarkan component blocks dari ComponentFactory (dipakai Sprint 3)
+    // Daftarkan semua block component dari componentStore (replace penuh)
     registerComponentBlocks(blocks) {
-      for (const block of blocks) {
-        this.components[block.id] = block
-      }
+      this.components = Object.fromEntries(blocks.map(b => [b.id, b]))
     },
 
-    // Daftarkan data blocks dari DataFactory (dipakai Sprint 3)
     registerDataBlocks(blocks) {
       for (const block of blocks) {
         this.data[block.id] = block
@@ -77,7 +70,7 @@ export const useBlockRegistry = defineStore('blockRegistry', {
     // Reset dynamic blocks (saat project ditutup)
     clearDynamicBlocks() {
       this.components = {}
-      this.data = {}
+      this.data       = {}
     }
   }
 })

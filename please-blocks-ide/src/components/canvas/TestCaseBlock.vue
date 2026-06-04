@@ -3,7 +3,9 @@ import { ref, computed } from 'vue'
 import { useCanvasStore } from '@/stores/canvasStore.js'
 import { useBlockRegistry } from '@/stores/blockRegistry.js'
 import { useDataRegistry } from '@/stores/dataRegistry.js'
+import { useComponentStore } from '@/stores/componentStore.js'
 import { validateTestCase } from '@/core/blocks/stepValidator.js'
+import { useStepSelection } from '@/composables/useStepSelection.js'
 import StepItem from './StepItem.vue'
 
 const props = defineProps({
@@ -14,7 +16,79 @@ const props = defineProps({
 const canvas    = useCanvasStore()
 const registry  = useBlockRegistry()
 const dataReg   = useDataRegistry()
+const compStore = useComponentStore()
 const editing   = ref(false)
+
+const sel = useStepSelection()
+
+// Dialog "Jadikan Component"
+const showDialog    = ref(false)
+const componentName = ref('')
+const extractError  = ref('')
+
+function openExtractDialog() {
+  componentName.value = ''
+  extractError.value  = ''
+  showDialog.value    = true
+}
+
+// Bersihkan nama jadi PascalCase identifier yang valid utk nama class
+function sanitizeName(raw) {
+  const cleaned = raw
+    .replace(/[^a-zA-Z0-9 ]/g, ' ')
+    .split(' ')
+    .filter(Boolean)
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+    .join('')
+  return cleaned
+}
+
+function confirmExtract() {
+  extractError.value = ''
+  const name = sanitizeName(componentName.value)
+
+  if (!name) {
+    extractError.value = 'Nama component tidak valid (gunakan huruf/angka).'
+    return
+  }
+  if (/^[0-9]/.test(name)) {
+    extractError.value = 'Nama tidak boleh diawali angka.'
+    return
+  }
+  if (!sel.hasSelection.value) {
+    extractError.value = 'Tidak ada step yang dipilih.'
+    return
+  }
+  // Cegah nama duplikat
+  if (compStore.components.some(c => c.name.toLowerCase() === name.toLowerCase())) {
+    extractError.value = `Component "${name}" sudah ada. Pilih nama lain.`
+    return
+  }
+
+  const indices = sel.selectedIndices.value
+  const steps   = canvas.getStepsAt(props.testCase.id, indices)
+
+  // 1. Buat module component + method "run" berisi step terpilih
+  const { blockId } = compStore.createComponentFromSteps(name, steps, 'run')
+
+  // 2. Pastikan block sudah terdaftar sebelum mengganti step di canvas
+  if (!registry.getById(blockId)) {
+    extractError.value = 'Gagal mendaftarkan component. Coba lagi.'
+    return
+  }
+
+  // 3. Ganti step terpilih dengan satu step yang memanggil component
+  canvas.replaceStepsWithComponent(props.testCase.id, indices, blockId)
+
+  showDialog.value = false
+  sel.clearSelection()
+}
+
+function cancelExtract() {
+  showDialog.value   = false
+  extractError.value = ''
+  sel.clearSelection()
+}
 
 const tcValidation = computed(() =>
   validateTestCase(props.testCase, registry, dataReg.entries)
@@ -48,14 +122,12 @@ function onSelect() {
 // Drag-and-drop dari palette ke test case
 function onDragOver(e) {
   e.preventDefault()
-  e.stopPropagation()           // cegah CanvasEditor ikut merespons dragover
+  e.stopPropagation()
   e.dataTransfer.dropEffect = 'copy'
   isDropOver.value = true
 }
 
 function onDragLeave(e) {
-  // Hanya reset jika kursor benar-benar keluar dari container,
-  // bukan saat masuk ke child element (step item di dalam)
   if (!e.currentTarget.contains(e.relatedTarget)) {
     isDropOver.value = false
   }
@@ -63,10 +135,9 @@ function onDragLeave(e) {
 
 function onDrop(e) {
   e.preventDefault()
-  e.stopPropagation()           // ← kunci: cegah event naik ke CanvasEditor
+  e.stopPropagation()
   isDropOver.value = false
 
-  // Drop dari palette (block baru)
   const blockId = e.dataTransfer.getData('text/plain')
   if (blockId) {
     canvas.addStep(props.testCase.id, blockId)
@@ -74,10 +145,9 @@ function onDrop(e) {
     return
   }
 
-  // Drop dari reorder ke area kosong di bawah semua step
   const reorderData = e.dataTransfer.getData('step-reorder')
   if (reorderData) {
-    const { stepId, testCaseId, fromIndex } = JSON.parse(reorderData)
+    const { testCaseId, fromIndex } = JSON.parse(reorderData)
     if (testCaseId === props.testCase.id) {
       const lastIndex = props.testCase.steps.length - 1
       if (fromIndex !== lastIndex) {
@@ -142,6 +212,8 @@ function onDrop(e) {
         :step="step"
         :test-case-id="testCase.id"
         :index="idx"
+        :selected="sel.isSelected(idx)"
+        @step-click="sel.onStepClick(idx, $event)"
       />
 
       <!-- Drop zone hint -->
@@ -152,6 +224,37 @@ function onDrop(e) {
         <span v-else-if="isDropOver" class="drop-hint-active">
           ＋ Lepas untuk tambah blok
         </span>
+      </div>
+
+      <!-- Floating toolbar saat ada selection -->
+      <div v-if="sel.hasSelection.value" class="extract-toolbar">
+        <span class="extract-info">{{ sel.selectedIndices.value.length }} step dipilih</span>
+        <button class="extract-btn" @click="openExtractDialog">📦 Jadikan Component</button>
+        <button class="extract-cancel" @click="sel.clearSelection()">✕</button>
+      </div>
+    </div>
+
+    <!-- Dialog nama component -->
+    <div v-if="showDialog" class="extract-dialog-overlay" @click.self="cancelExtract">
+      <div class="extract-dialog">
+        <div class="dialog-title">📦 Jadikan Component</div>
+        <p class="dialog-hint">
+          {{ sel.selectedIndices.value.length }} step akan dipindah ke sebuah module
+          component baru dan dipanggil sebagai satu blok.
+        </p>
+        <input
+          v-model="componentName"
+          class="dialog-input"
+          placeholder="Nama component (mis. LoginFlow)"
+          @keyup.enter="confirmExtract"
+          @keyup.escape="cancelExtract"
+          autofocus
+        />
+        <p v-if="extractError" class="dialog-error">{{ extractError }}</p>
+        <div class="dialog-actions">
+          <button class="dialog-confirm" @click="confirmExtract">Simpan</button>
+          <button class="dialog-cancel"  @click="cancelExtract">Batal</button>
+        </div>
       </div>
     </div>
   </div>
@@ -258,4 +361,118 @@ function onDrop(e) {
   color: #a855f7 !important;
   font-weight: 600;
 }
+
+/* Floating extract toolbar */
+.extract-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 5px 8px;
+  background: rgba(168,85,247,0.1);
+  border: 1px solid rgba(168,85,247,0.3);
+  border-radius: 6px;
+}
+.extract-info {
+  font-size: 9.5px;
+  color: #c084fc;
+  flex: 1;
+}
+.extract-btn {
+  background: #7c3aed;
+  border: none;
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.extract-btn:hover { background: #6d28d9; }
+.extract-cancel {
+  background: none;
+  border: none;
+  color: #6b7280;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0 3px;
+  line-height: 1;
+}
+.extract-cancel:hover { color: #ef4444; }
+
+/* Dialog overlay */
+.extract-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.extract-dialog {
+  background: #1e1b2e;
+  border: 1px solid rgba(168,85,247,0.4);
+  border-radius: 10px;
+  padding: 20px;
+  min-width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.dialog-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #c084fc;
+}
+.dialog-hint {
+  font-size: 10px;
+  color: #94a3b8;
+  line-height: 1.5;
+  margin: 0;
+}
+.dialog-error {
+  font-size: 10px;
+  color: #f87171;
+  margin: 0;
+}
+.dialog-input {
+  background: rgba(168,85,247,0.08);
+  border: 1px solid rgba(168,85,247,0.35);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: #e2e8f0;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+.dialog-input:focus { border-color: #a855f7; }
+.dialog-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.dialog-confirm {
+  background: #7c3aed;
+  border: none;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 14px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.dialog-confirm:hover { background: #6d28d9; }
+.dialog-cancel {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #94a3b8;
+  font-size: 11px;
+  padding: 5px 14px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.dialog-cancel:hover { background: rgba(255,255,255,0.08); }
 </style>

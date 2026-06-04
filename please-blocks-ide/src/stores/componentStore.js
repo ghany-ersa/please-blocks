@@ -10,6 +10,7 @@
 
 import { defineStore } from 'pinia'
 import { buildComponentBlocks } from '@/core/factory/ComponentFactory.js'
+import { useBlockRegistry } from '@/stores/blockRegistry.js'
 
 const STORAGE_KEY = 'please-blocks:componentStore'
 
@@ -45,13 +46,16 @@ const uidM = () => `meth-${Date.now()}-${Math.random().toString(36).slice(2, 6)}
 
 export const useComponentStore = defineStore('componentStore', {
   state: () => {
+    let components = structuredClone(DEFAULT_COMPONENTS)
     try {
       const saved = localStorage.getItem(STORAGE_KEY)
-      if (saved) {
-        return { components: JSON.parse(saved) }
-      }
+      if (saved) components = JSON.parse(saved)
     } catch { /* ignore */ }
-    return { components: structuredClone(DEFAULT_COMPONENTS) }
+    return {
+      components,
+      // ID component yang harus dibuka di ComponentBuilder (null = tutup)
+      builderTargetCompId: null
+    }
   },
 
   getters: {
@@ -62,13 +66,34 @@ export const useComponentStore = defineStore('componentStore', {
     // ── Process: component defs → block registry ──────────────────
 
     processAndRegister() {
-      // Import blockRegistry secara lazy untuk hindari circular dependency
-      import('@/stores/blockRegistry.js').then(({ useBlockRegistry }) => {
-        const registry = useBlockRegistry()
-        const allBlocks = this.components.flatMap(buildComponentBlocks)
-        registry.registerComponentBlocks(allBlocks)
-      })
+      // Register secara synchronous agar block langsung tersedia
+      const registry = useBlockRegistry()
+      const allBlocks = this.components.flatMap(buildComponentBlocks)
+      registry.registerComponentBlocks(allBlocks)
       this.persist()
+    },
+
+    /**
+     * Buat component module baru dari sekumpulan step (hasil seleksi di canvas).
+     * Mengembalikan { component, method, blockId } — blockId siap dipakai sbagai step.
+     *
+     * @param {string} name   Nama class component (mis. "LoginFlow")
+     * @param {Array}  steps  Array step { blockId, inputs }
+     * @param {string} methodName  Nama method (default "run")
+     */
+    createComponentFromSteps(name, steps, methodName = 'run') {
+      const comp   = this.addComponent(name)
+      const method = this.addMethod(comp.id, methodName)
+      // Salin step apa adanya (blockId + inputs) ke dalam method
+      method.steps = steps.map(s => ({
+        blockId: s.blockId,
+        inputs:  { ...(s.inputs || {}) }
+      }))
+      this.processAndRegister()
+
+      // blockId di-generate oleh ComponentFactory: comp.<name lowercase>.<method>
+      const blockId = `comp.${comp.name.toLowerCase()}.${method.name}`
+      return { component: comp, method, blockId }
     },
 
     // ── Component CRUD ─────────────────────────────────────────────
@@ -169,6 +194,18 @@ export const useComponentStore = defineStore('componentStore', {
         m.params = m.params.filter(p => p !== paramName)
         this.processAndRegister()
       }
+    },
+
+    // ── ComponentBuilder navigation ───────────────────────────────
+
+    // Panggil ini untuk membuka ComponentBuilder langsung ke component tertentu.
+    // AppShell watch state ini dan merespons.
+    openBuilderFor(compId) {
+      this.builderTargetCompId = compId
+    },
+
+    clearBuilderTarget() {
+      this.builderTargetCompId = null
     },
 
     // ── Persistence ───────────────────────────────────────────────

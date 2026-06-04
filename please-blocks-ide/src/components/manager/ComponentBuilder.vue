@@ -9,17 +9,25 @@
  *   QA buat component → tambah method → drag block ke step list
  *   → Save → ComponentFactory generate block defs → blok muncul di palette
  */
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useComponentStore } from '@/stores/componentStore.js'
 import { useBlockRegistry }  from '@/stores/blockRegistry.js'
+import { useCanvasStore }    from '@/stores/canvasStore.js'
+import { useDataRegistry }   from '@/stores/dataRegistry.js'
 import { generateComponentFile } from '@/core/factory/ComponentFactory.js'
+import StepCard from '@/components/shared/StepCard.vue'
 
+const props = defineProps({
+  initialCompId: { type: String, default: null }
+})
 const emit   = defineEmits(['close'])
 const compStore = useComponentStore()
 const registry  = useBlockRegistry()
+const canvas    = useCanvasStore()
+const dataReg   = useDataRegistry()
 
-// Navigasi
-const activeCompId   = ref(compStore.components[0]?.id || null)
+// Navigasi — jika dibuka via double-click, langsung ke component tsb
+const activeCompId   = ref(props.initialCompId || compStore.components[0]?.id || null)
 const activeMethodId = ref(null)
 const editingName    = ref(false)
 const draftName      = ref('')
@@ -121,6 +129,31 @@ function removeMethod(methodId) {
   if (activeMethodId.value === methodId) activeMethodId.value = null
 }
 
+// Inline edit nama method
+const editingMethodId  = ref(null)
+const draftMethodName  = ref('')
+
+function startEditMethod(method, e) {
+  e.stopPropagation()
+  editingMethodId.value = method.id
+  draftMethodName.value = method.name
+}
+
+function saveMethodName(methodId) {
+  const newName = draftMethodName.value.trim()
+  const oldName = activeMethod.value?.name
+  if (newName && newName !== oldName && activeComp.value) {
+    const compKey  = activeComp.value.name.toLowerCase()
+    const oldBlockId = `comp.${compKey}.${oldName}`
+    const newBlockId = `comp.${compKey}.${newName}`
+    // Update method di store (processAndRegister otomatis di-call)
+    compStore.updateMethod(activeCompId.value, methodId, { name: newName })
+    // Update semua step di canvas yang pakai blockId lama
+    canvas.renameStepBlockId(oldBlockId, newBlockId)
+  }
+  editingMethodId.value = null
+}
+
 // ── Parameter actions ──────────────────────────────────────────────
 function addParam() {
   if (!activeMethod.value) return
@@ -157,6 +190,15 @@ function onStepDrop(e) {
 
 function removeStep(stepIdx) {
   compStore.removeMethodStep(activeCompId.value, activeMethodId.value, stepIdx)
+}
+
+function updateStepInput(stepIdx, fieldName, value) {
+  compStore.updateMethodStepInputs(
+    activeCompId.value,
+    activeMethodId.value,
+    stepIdx,
+    { [fieldName]: value }
+  )
 }
 
 // Tab: 'builder' | 'preview'
@@ -282,8 +324,21 @@ const activeTab = ref('builder')
             @click="activeMethodId = method.id"
           >
             <div class="method-sig">
-              <span class="method-name">{{ method.name }}</span>
-              <span class="method-params">({{ method.params.join(', ') || '' }})</span>
+              <template v-if="editingMethodId === method.id">
+                <input
+                  v-model="draftMethodName"
+                  class="method-name-input"
+                  @blur="saveMethodName(method.id)"
+                  @keyup.enter="saveMethodName(method.id)"
+                  @keyup.escape="editingMethodId = null"
+                  @click.stop
+                  autofocus
+                />
+              </template>
+              <template v-else>
+                <span class="method-name" @dblclick="startEditMethod(method, $event)" title="Double-click untuk ubah nama">{{ method.name }}</span>
+                <span class="method-params">({{ method.params.join(', ') || '' }})</span>
+              </template>
             </div>
             <span class="method-count">{{ method.steps.length }} step</span>
             <button class="item-del" @click.stop="removeMethod(method.id)">×</button>
@@ -324,20 +379,16 @@ const activeTab = ref('builder')
             @dragleave="onStepDragLeave"
             @drop="onStepDrop"
           >
-            <div
+            <StepCard
               v-for="(step, idx) in activeMethod.steps"
               :key="idx"
-              class="method-step"
-            >
-              <span class="step-num">{{ idx + 1 }}</span>
-              <span v-if="registry.getById(step.blockId)" class="step-icon">
-                {{ registry.getById(step.blockId).icon }}
-              </span>
-              <span class="step-label" :style="{ color: registry.getById(step.blockId)?.color }">
-                {{ registry.getById(step.blockId)?.label || step.blockId }}
-              </span>
-              <button class="item-del small" @click="removeStep(idx)">×</button>
-            </div>
+              :step="step"
+              :index="idx"
+              :editable="true"
+              :draggable="false"
+              @remove="removeStep(idx)"
+              @update-input="(field, val) => updateStepInput(idx, field, val)"
+            />
 
             <div
               v-if="!activeMethod.steps.length || isDropOver"
@@ -545,17 +596,13 @@ const activeTab = ref('builder')
   flex: 1; overflow-y: auto; padding: 8px 12px;
   min-height: 80px;
 }
-.method-step {
-  display: flex; align-items: center; gap: 6px;
-  padding: 5px 8px; border-radius: 5px;
-  background: rgba(255,255,255,0.02); border: 1px solid #1e293b;
-  margin-bottom: 4px;
+/* Inline edit nama method */
+.method-name-input {
+  flex: 1; background: rgba(255,255,255,0.05);
+  border: 1px solid #334155; border-radius: 3px;
+  padding: 1px 5px; font-size: 10.5px; font-weight: 600;
+  color: #6ee7b7; font-family: monospace; outline: none;
 }
-.method-step:hover { border-color: #334155; }
-.method-step:hover .item-del { opacity: 1; }
-.step-num   { font-size: 9px; color: #334155; font-family: monospace; width: 14px; text-align: right; flex-shrink: 0; }
-.step-icon  { font-size: 11px; flex-shrink: 0; }
-.step-label { font-size: 10px; font-weight: 600; flex: 1; }
 
 .drop-hint, .drop-hint-small {
   text-align: center; padding: 10px 8px;
