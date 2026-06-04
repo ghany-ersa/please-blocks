@@ -1,71 +1,81 @@
 /**
  * dataResolver.js
- * Mengubah nilai input dari canvas node menjadi ekspresi JavaScript yang valid.
- *
- * Empat jenis input yang mungkin datang dari canvas:
- *   dataref  → { type: 'dataref', path: 'ACCOUNT.valid' }  → 'ACCOUNT.valid'
- *   varref   → { type: 'varref',  varName: 'headerText' }  → 'headerText'
- *   inline   → 'some string' / 42                           → "'some string'" / 42
- *   selector → '#submit' / '//div'                          → "'#submit'"
+ * Mengubah nilai input canvas menjadi ekspresi JavaScript valid.
+ * Juga menyediakan helper untuk scan DataRef usage per file
+ * agar specGenerator bisa generate require() yang tepat.
  */
 
 /**
- * Resolve satu nilai input menjadi string ekspresi JS.
- * @param {any} value - nilai dari step.inputs[fieldName]
- * @param {'text'|'selector'|'value'|'number'|'dataref'|'varref'} inputType
- * @returns {string} ekspresi JS yang siap ditulis ke kode
+ * Resolve satu nilai input → string ekspresi JS.
  */
 export function resolveInput(value, inputType = 'text') {
-  // Null / undefined → string kosong
   if (value === null || value === undefined || value === '') {
     return inputType === 'number' ? '0' : "''"
   }
-
-  // DataRef object { type: 'dataref', path: 'URL.login' }
   if (value && typeof value === 'object' && value.type === 'dataref') {
-    return value.path // langsung sebagai JS identifier: URL.login
+    return value.path       // e.g. 'ACCOUNT.valid' atau 'PRODUCT.laptop'
   }
-
-  // VarRef object { type: 'varref', varName: 'headerText' }
   if (value && typeof value === 'object' && value.type === 'varref') {
-    return value.varName
+    return value.varName    // e.g. 'headerText'
   }
-
-  // Number literal — tanpa quotes
   if (inputType === 'number') {
     const n = Number(value)
     return isNaN(n) ? '0' : String(n)
   }
-
-  // Semua tipe lain (text, selector, value) → string literal dengan escape minimal
-  const escaped = String(value)
-    .replace(/\\/g, '\\\\')
-    .replace(/'/g, "\\'")
+  const escaped = String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'")
   return `'${escaped}'`
 }
 
 /**
- * Dari satu feature, kumpulkan semua grup DataRef yang dipakai
- * agar specGenerator bisa generate baris require() yang benar.
- * Contoh hasil: ['URL', 'ACCOUNT']
+ * Scan satu feature dan kumpulkan semua DataRef yang dipakai,
+ * dikelompokkan per file sumber.
+ *
+ * Hasil:
+ *   {
+ *     'main':     { filePath: 'data/main.js',     groups: ['URL', 'ACCOUNT'] },
+ *     'products': { filePath: 'data/products.js', groups: ['PRODUCT'] },
+ *   }
+ *
+ * @param {Object}  feature       - feature dari canvasStore
+ * @param {Array}   dataEntries   - dataRegistry.entries (sudah punya fileId + filePath)
+ * @returns {Object} imports per file
  */
-export function collectDataGroups(feature) {
-  const groups = new Set()
+export function collectImportsPerFile(feature, dataEntries) {
+  const importsMap = {}  // { fileId: { filePath, groups: Set<groupName> } }
+
+  // Buat index: path → entry (untuk lookup O(1))
+  const entryByPath = {}
+  for (const e of dataEntries) {
+    entryByPath[e.path] = e
+  }
+
   for (const tc of feature.testCases) {
     for (const step of tc.steps) {
       for (const val of Object.values(step.inputs || {})) {
         if (val && typeof val === 'object' && val.type === 'dataref') {
-          groups.add(val.path.split('.')[0])
+          const entry = entryByPath[val.path]
+          if (!entry) continue
+
+          const { fileId, filePath, group } = entry
+          if (!importsMap[fileId]) {
+            importsMap[fileId] = { filePath, groups: new Set() }
+          }
+          importsMap[fileId].groups.add(group)
         }
       }
     }
   }
-  return [...groups]
+
+  // Konversi Set ke Array
+  for (const v of Object.values(importsMap)) {
+    v.groups = [...v.groups]
+  }
+  return importsMap
 }
 
 /**
- * Dari satu feature, kumpulkan semua nama component yang dipakai (AUTH, CHECKOUT, dll.)
- * berdasarkan block type === 'component'.
+ * Dari importsMap, kumpulkan nama component yang dipakai
+ * (block type === 'component').
  */
 export function collectComponents(feature, blockRegistry) {
   const comps = new Set()
@@ -73,7 +83,6 @@ export function collectComponents(feature, blockRegistry) {
     for (const step of tc.steps) {
       const block = blockRegistry.getById(step.blockId)
       if (block?.type === 'component') {
-        // 'comp.auth.login' → ambil bagian kedua → 'auth' → uppercase 'AUTH'
         const parts = block.id.split('.')
         if (parts[1]) comps.add(parts[1].toUpperCase())
       }

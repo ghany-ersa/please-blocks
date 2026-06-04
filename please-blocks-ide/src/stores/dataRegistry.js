@@ -1,163 +1,229 @@
 /**
- * dataRegistry.js — Pinia store
+ * dataRegistry.js — Pinia store (Sprint 3+)
  *
- * Menyimpan semua data test (URL, Account, dll.) yang didefinisikan QA
- * melalui Data Manager. Data di-flatten menjadi DataRef entries yang
- * dipakai oleh DataRefSelect dropdown di Block Inspector.
+ * Mendukung MULTI-FILE data:
+ *   files: {
+ *     main:     { filename: 'main',     label: 'Main Data',    groups: { URL, ACCOUNT } },
+ *     products: { filename: 'products', label: 'Product Data', groups: { PRODUCT } },
+ *   }
  *
- * Persistence: localStorage (Sprint 3), file system via Electron (Sprint 5+)
+ * Setiap DataRef entry menyertakan fileId dan filePath agar
+ * specGenerator bisa generate require() ke file yang tepat.
  */
 
 import { defineStore } from 'pinia'
-import { processDataGroups } from '@/core/factory/DataFactory.js'
+import { processDataFiles } from '@/core/factory/DataFactory.js'
 
-const STORAGE_KEY = 'please-blocks:dataRegistry'
+const STORAGE_KEY = 'please-blocks:dataRegistry-v2'
 
-// Data default (sesuai template create-please-test)
-const DEFAULT_GROUPS = {
-  URL: {
-    login: {
-      url:   'https://practicetestautomation.com/practice-test-login/',
-      title: 'Test Login | Practice Test Automation'
-    },
-    dashboard: {
-      url:   'https://practicetestautomation.com/logged-in-successfully/',
-      title: 'Logged In Successfully | Practice Test Automation'
-    }
-  },
-  ACCOUNT: {
-    valid: {
-      username: 'process.env.ACCOUNT_USERNAME',
-      password: 'process.env.ACCOUNT_PASSWORD'
-    },
-    wrongPassword: {
-      username: 'process.env.ACCOUNT_USERNAME',
-      password: 'wrongpassword'
-    },
-    wrongUsername: {
-      username: 'invaliduser',
-      password: 'process.env.ACCOUNT_PASSWORD'
-    },
-    empty: {
-      username: '',
-      password: ''
+// ── Default data (sesuai create-please-test template) ─────────────
+
+const DEFAULT_FILES = {
+  main: {
+    id:       'main',
+    filename: 'main',
+    label:    'Main Data',
+    description: 'URL halaman dan data akun utama',
+    groups: {
+      URL: {
+        login: {
+          url:   'https://practicetestautomation.com/practice-test-login/',
+          title: 'Test Login | Practice Test Automation'
+        },
+        dashboard: {
+          url:   'https://practicetestautomation.com/logged-in-successfully/',
+          title: 'Logged In Successfully | Practice Test Automation'
+        }
+      },
+      ACCOUNT: {
+        valid: {
+          username: 'process.env.ACCOUNT_USERNAME',
+          password: 'process.env.ACCOUNT_PASSWORD'
+        },
+        wrongPassword: {
+          username: 'process.env.ACCOUNT_USERNAME',
+          password: 'wrongpassword'
+        },
+        wrongUsername: {
+          username: 'invaliduser',
+          password: 'process.env.ACCOUNT_PASSWORD'
+        },
+        empty: {
+          username: '',
+          password: ''
+        }
+      }
     }
   }
 }
 
 const DEFAULT_ENV = {
-  BASE_URL:          'https://practicetestautomation.com',
-  ACCOUNT_USERNAME:  'student',
-  ACCOUNT_PASSWORD:  'Password123'
+  BASE_URL:         'https://practicetestautomation.com',
+  ACCOUNT_USERNAME: 'student',
+  ACCOUNT_PASSWORD: 'Password123'
 }
+
+const uid = () => `file-${Date.now()}-${Math.random().toString(36).slice(2,5)}`
 
 export const useDataRegistry = defineStore('dataRegistry', {
   state: () => {
-    // Coba load dari localStorage
     try {
       const saved = localStorage.getItem(STORAGE_KEY)
       if (saved) {
-        const parsed = JSON.parse(saved)
-        return {
-          groups:  parsed.groups  || DEFAULT_GROUPS,
-          env:     parsed.env     || DEFAULT_ENV,
-          entries: []
-        }
+        const p = JSON.parse(saved)
+        return { files: p.files || structuredClone(DEFAULT_FILES), env: p.env || structuredClone(DEFAULT_ENV), entries: [] }
       }
     } catch { /* ignore */ }
-
     return {
-      groups:  structuredClone(DEFAULT_GROUPS),
+      files:   structuredClone(DEFAULT_FILES),
       env:     structuredClone(DEFAULT_ENV),
-      entries: []   // diisi oleh processAndRegister()
+      entries: []
     }
   },
 
   getters: {
-    // Semua entries yang kompatibel dengan satu input type tertentu
+    // Semua file ID yang ada
+    fileIds: (state) => Object.keys(state.files),
+
+    // File def by ID
+    fileById: (state) => (id) => state.files[id] || null,
+
+    // Entries filtered by input type compatibility
     getByCompatibility: (state) => (inputType) =>
       state.entries.filter(e => e.compatibleWith.includes(inputType)),
 
-    // Hanya entries level atas (group names)
-    groupNames: (state) => Object.keys(state.groups),
+    // Entries dari satu file
+    entriesForFile: (state) => (fileId) =>
+      state.entries.filter(e => e.fileId === fileId),
 
-    // Entries untuk satu group tertentu
-    entriesForGroup: (state) => (groupName) =>
-      state.entries.filter(e => e.group === groupName && e.path !== groupName)
+    // Entries dari satu group dalam file
+    entriesForGroup: (state) => (fileId, groupName) =>
+      state.entries.filter(e => e.fileId === fileId && e.group === groupName),
+
+    // Semua group names dari semua file (untuk import detection)
+    allGroupNames: (state) => {
+      const groups = new Set()
+      for (const f of Object.values(state.files)) {
+        for (const g of Object.keys(f.groups)) groups.add(g)
+      }
+      return [...groups]
+    }
   },
 
   actions: {
-    // ── Core: process data → entries ──────────────────────────────
+    // ── Core: process semua files → flat entries ──────────────────
 
     processAndRegister() {
-      this.entries = processDataGroups(this.groups, this.env)
+      this.entries = processDataFiles(this.files, this.env)
       this.persist()
+    },
+
+    // ── File management ───────────────────────────────────────────
+
+    addFile(filename, label = '') {
+      const id = filename.replace(/[^a-z0-9_]/gi, '').toLowerCase() || uid()
+      if (this.files[id]) return null
+      this.files[id] = {
+        id,
+        filename: id,
+        label:    label || id,
+        description: '',
+        groups:   {}
+      }
+      this.processAndRegister()
+      return id
+    },
+
+    updateFile(fileId, patch) {
+      if (!this.files[fileId]) return
+      Object.assign(this.files[fileId], patch)
+      this.processAndRegister()
+    },
+
+    removeFile(fileId) {
+      if (fileId === 'main') return  // main tidak bisa dihapus
+      delete this.files[fileId]
+      this.processAndRegister()
     },
 
     // ── Group management ──────────────────────────────────────────
 
-    addGroup(name) {
-      if (!name || this.groups[name]) return
-      this.groups[name] = {}
+    addGroup(fileId, groupName) {
+      const f = this.files[fileId]
+      if (!f || !groupName || f.groups[groupName]) return
+      f.groups[groupName.toUpperCase()] = {}
       this.processAndRegister()
     },
 
-    renameGroup(oldName, newName) {
-      if (!newName || oldName === newName || this.groups[newName]) return
-      this.groups[newName] = this.groups[oldName]
-      delete this.groups[oldName]
+    renameGroup(fileId, oldName, newName) {
+      const f = this.files[fileId]
+      if (!f || oldName === newName || f.groups[newName]) return
+      f.groups[newName] = f.groups[oldName]
+      delete f.groups[oldName]
       this.processAndRegister()
     },
 
-    removeGroup(name) {
-      delete this.groups[name]
+    removeGroup(fileId, groupName) {
+      const f = this.files[fileId]
+      if (!f) return
+      delete f.groups[groupName]
       this.processAndRegister()
     },
 
     // ── Entry management ──────────────────────────────────────────
 
-    addEntry(groupName, entryName, fields = {}) {
-      if (!this.groups[groupName]) return
-      this.groups[groupName][entryName] = fields
+    addEntry(fileId, groupName, entryName, fields = {}) {
+      const g = this.files[fileId]?.groups[groupName]
+      if (g === undefined) return
+      this.files[fileId].groups[groupName][entryName] = fields
       this.processAndRegister()
     },
 
-    updateEntry(groupName, entryName, fields) {
-      if (!this.groups[groupName]) return
-      this.groups[groupName][entryName] = { ...fields }
-      this.processAndRegister()
-    },
-
-    renameEntry(groupName, oldName, newName) {
-      if (!newName || oldName === newName) return
-      const g = this.groups[groupName]
+    updateEntry(fileId, groupName, entryName, fields) {
+      const g = this.files[fileId]?.groups[groupName]
       if (!g) return
+      g[entryName] = { ...fields }
+      this.processAndRegister()
+    },
+
+    renameEntry(fileId, groupName, oldName, newName) {
+      const g = this.files[fileId]?.groups[groupName]
+      if (!g || oldName === newName) return
       g[newName] = g[oldName]
       delete g[oldName]
       this.processAndRegister()
     },
 
-    removeEntry(groupName, entryName) {
-      delete this.groups[groupName]?.[entryName]
+    removeEntry(fileId, groupName, entryName) {
+      const g = this.files[fileId]?.groups[groupName]
+      if (!g) return
+      delete g[entryName]
       this.processAndRegister()
     },
 
-    // ── Field management dalam satu entry ─────────────────────────
+    // ── Field management ──────────────────────────────────────────
+    // Selalu rebuild entry object (spread) agar Vue Proxy mendeteksi perubahan.
 
-    addField(groupName, entryName, fieldName, value = '') {
-      if (!this.groups[groupName]?.[entryName]) return
-      this.groups[groupName][entryName][fieldName] = value
+    addField(fileId, groupName, entryName, fieldName, value = '') {
+      const group = this.files[fileId]?.groups[groupName]
+      if (!group || !(entryName in group)) return
+      // Spread entry → object baru → Vue pasti reaktif
+      group[entryName] = { ...group[entryName], [fieldName]: value }
       this.processAndRegister()
     },
 
-    updateField(groupName, entryName, fieldName, value) {
-      if (!this.groups[groupName]?.[entryName]) return
-      this.groups[groupName][entryName][fieldName] = value
+    updateField(fileId, groupName, entryName, fieldName, value) {
+      const group = this.files[fileId]?.groups[groupName]
+      if (!group || !(entryName in group)) return
+      group[entryName] = { ...group[entryName], [fieldName]: value }
       this.processAndRegister()
     },
 
-    removeField(groupName, entryName, fieldName) {
-      delete this.groups[groupName]?.[entryName]?.[fieldName]
+    removeField(fileId, groupName, entryName, fieldName) {
+      const group = this.files[fileId]?.groups[groupName]
+      if (!group || !(entryName in group)) return
+      const { [fieldName]: _removed, ...rest } = group[entryName]
+      group[entryName] = rest
       this.processAndRegister()
     },
 
@@ -183,16 +249,13 @@ export const useDataRegistry = defineStore('dataRegistry', {
 
     persist() {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({
-          groups: this.groups,
-          env:    this.env
-        }))
-      } catch { /* quota exceeded etc. */ }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ files: this.files, env: this.env }))
+      } catch { /* ignore */ }
     },
 
     reset() {
-      this.groups  = structuredClone(DEFAULT_GROUPS)
-      this.env     = structuredClone(DEFAULT_ENV)
+      this.files = structuredClone(DEFAULT_FILES)
+      this.env   = structuredClone(DEFAULT_ENV)
       this.processAndRegister()
     }
   }

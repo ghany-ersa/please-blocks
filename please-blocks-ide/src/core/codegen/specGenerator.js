@@ -1,76 +1,81 @@
 /**
  * specGenerator.js
- * Mengubah satu Feature dari canvas state menjadi string kode JS
- * yang valid dan siap dijalankan oleh mocha + please-test.
+ * Canvas state (Feature) → kode JS spec yang valid.
  *
- * Output contoh:
- *   // feature/login.spec.js
- *   const { please, AUTH } = require('../app')
- *   const { URL, ACCOUNT }  = require('../data/main')
+ * Mendukung multi-file data: require() di-generate per file yang dipakai,
+ * bukan hardcode ke '../data/main' saja.
  *
- *   describe('Login', () => {
- *     it('login berhasil', async () => {
- *       await please.goTo(URL.login)
+ * Contoh output dengan 2 data file:
+ *
+ *   const { please, AUTH }     = require('../app')
+ *   const { URL, ACCOUNT }     = require('../data/main')
+ *   const { PRODUCT, PAYMENT } = require('../data/checkout')
+ *
+ *   describe('Checkout Flow', () => {
+ *     it('beli produk berhasil', async () => {
+ *       await please.goTo(URL.shop)
+ *       await please.see('produk', '.title', PRODUCT.laptop.name)
  *       await AUTH.login(ACCOUNT.valid)
  *       ...
  *     })
  *   })
  */
 
-import { collectDataGroups, collectComponents } from './dataResolver.js'
+import { collectImportsPerFile, collectComponents } from './dataResolver.js'
 
 /**
- * Generate kode spec untuk satu Feature.
- * @param {Object} feature     - feature object dari canvasStore
+ * Generate kode spec lengkap untuk satu Feature.
+ *
+ * @param {Object} feature       - feature dari canvasStore
  * @param {Object} blockRegistry - instance Pinia blockRegistry store
- * @returns {string}           - kode JS lengkap sebagai string
+ * @param {Array}  dataEntries   - dataRegistry.entries (dengan fileId + filePath)
+ * @returns {string}
  */
-export function generateSpec(feature, blockRegistry) {
+export function generateSpec(feature, blockRegistry, dataEntries = []) {
   if (!feature) return '// Pilih sebuah Feature di canvas'
 
-  const dataGroups = collectDataGroups(feature)
-  const components = collectComponents(feature, blockRegistry)
+  const components  = collectComponents(feature, blockRegistry)
+  const importsMap  = collectImportsPerFile(feature, dataEntries)
 
-  // ── Baris import ──────────────────────────────────────────────
-  const compList = ['please', ...components].join(', ')
   const lines = [
     `// feature/${slugify(feature.label)}.spec.js`,
     `// Auto-generated oleh Please Blocks IDE`,
     `// Jangan edit manual — ubah melalui canvas`,
-    '',
-    `const { ${compList} } = require('../app')`,
+    ''
   ]
 
-  if (dataGroups.length) {
-    lines.push(`const { ${dataGroups.join(', ')} } = require('../data/main')`)
+  // Import app (please + components)
+  const compList = ['please', ...components].join(', ')
+  lines.push(`const { ${compList} } = require('../app')`)
+
+  // Import data — satu baris per file yang dipakai
+  for (const { filePath, groups } of Object.values(importsMap)) {
+    const requirePath = `../${filePath.replace(/\.js$/, '')}`
+    lines.push(`const { ${groups.join(', ')} } = require('${requirePath}')`)
   }
 
   lines.push('', `describe('${feature.label}', () => {`)
 
-  // ── Test cases ────────────────────────────────────────────────
+  // Test cases
   const testCaseBlocks = feature.testCases.map(tc =>
     generateTestCase(tc, blockRegistry)
   )
 
-  if (testCaseBlocks.length === 0) {
+  if (!testCaseBlocks.length) {
     lines.push('  // Belum ada test case')
   } else {
     lines.push(...testCaseBlocks)
   }
 
   lines.push('})')
-
   return lines.join('\n')
 }
 
 /**
- * Generate satu blok it() dari sebuah TestCase.
+ * Generate blok it() dari satu TestCase.
  */
 function generateTestCase(tc, blockRegistry) {
-  const stepLines = tc.steps.map(step =>
-    generateStep(step, blockRegistry)
-  )
-
+  const stepLines = tc.steps.map(step => generateStep(step, blockRegistry))
   const body = stepLines.length
     ? stepLines.map(l => `    ${l}`).join('\n')
     : '    // Belum ada step'
@@ -79,36 +84,32 @@ function generateTestCase(tc, blockRegistry) {
     '',
     `  it('${tc.label}', async () => {`,
     body,
-    `  })`,
+    `  })`
   ].join('\n')
 }
 
 /**
- * Generate satu baris kode dari sebuah Step.
+ * Generate satu baris kode dari satu Step.
  */
 function generateStep(step, blockRegistry) {
   const block = blockRegistry.getById(step.blockId)
-
-  if (!block) {
-    return `// [!] Block tidak ditemukan: ${step.blockId}`
-  }
-
+  if (!block) return `// [!] Block tidak ditemukan: ${step.blockId}`
   try {
     return block.codegen(step.inputs || {})
   } catch (err) {
-    return `// [!] Error generate '${step.blockId}': ${err.message}`
+    return `// [!] Error pada '${step.blockId}': ${err.message}`
   }
 }
 
 /**
- * Generate semua features sekaligus (untuk index.js preview).
+ * Generate index.js dari semua features aktif.
  */
 export function generateIndex(features) {
   if (!features.length) return '// Belum ada feature'
   return [
     '// index.js — aktifkan atau nonaktifkan spec yang ingin dijalankan',
     '',
-    ...features.map(f => `require('./feature/${slugify(f.label)}.spec')`),
+    ...features.map(f => `require('./feature/${slugify(f.label)}.spec')`)
   ].join('\n')
 }
 
@@ -120,6 +121,5 @@ function slugify(str) {
     .replace(/\s+/g, '-')
     .replace(/[^a-z0-9-]/g, '')
     .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '')
-    || 'feature'
+    .replace(/^-|-$/g, '') || 'feature'
 }

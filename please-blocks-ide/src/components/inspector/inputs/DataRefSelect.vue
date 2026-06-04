@@ -1,15 +1,18 @@
 <script setup>
 /**
  * DataRefSelect — dropdown reaktif dari dataRegistry.
- * Menggantikan DataRefInput text box untuk tipe 'dataref', 'value', 'varref'.
  *
- * - Tipe 'dataref': tampilkan semua entries dari dataRegistry (objects + primitives)
- * - Tipe 'value':   tampilkan data primitives + opsi inline (ketik langsung)
- * - Tipe 'varref':  tampilkan canvas variables (hasil Get Text/Value)
+ * Mendukung prop `schema` untuk validasi dan filtering kompatibilitas:
+ *   - Entry yang kompatibel → tampil normal
+ *   - Entry yang inkompatibel → tetap tampil tapi diberi marker ⚠ dan warna redup
+ *   - Masih bisa dipilih tapi BlockInspector akan menampilkan error schema
+ *
+ * Ini memberi QA visibilitas penuh sambil tetap menginformasikan ketidaksesuaian.
  */
 import { ref, computed, watch } from 'vue'
-import { useDataRegistry } from '@/stores/dataRegistry.js'
-import { useCanvasStore }  from '@/stores/canvasStore.js'
+import { useDataRegistry }       from '@/stores/dataRegistry.js'
+import { useCanvasStore }        from '@/stores/canvasStore.js'
+import { checkEntryCompatibility } from '@/core/blocks/schemaValidator.js'
 
 const props = defineProps({
   modelValue:  { default: '' },
@@ -17,7 +20,8 @@ const props = defineProps({
   placeholder: { type: String,  default: 'Pilih atau ketik...' },
   required:    { type: Boolean, default: false },
   error:       { type: String,  default: '' },
-  inputType:   { type: String,  default: 'dataref' }   // 'dataref' | 'value' | 'varref'
+  inputType:   { type: String,  default: 'dataref' },  // 'dataref' | 'value' | 'varref'
+  schema:      { type: Object,  default: null }         // block input schema (optional)
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -29,7 +33,7 @@ const open      = ref(false)
 const searchQ   = ref('')
 const inputRef  = ref(null)
 
-// Nilai yang tampil di trigger button
+// Nilai yang tampil di trigger
 const displayValue = computed(() => {
   const v = props.modelValue
   if (!v) return ''
@@ -38,23 +42,38 @@ const displayValue = computed(() => {
   return String(v)
 })
 
-// Warna berdasarkan input type
 const colorMap = { dataref: '#0ea5e9', value: '#94a3b8', varref: '#c084fc' }
 const color    = computed(() => colorMap[props.inputType] || '#94a3b8')
 
-// ── Opsi dropdown ─────────────────────────────────────────────────
+// ── Opsi dropdown ────────────────────────────────────────────────
 
-// DataRef entries dari registry (untuk tipe dataref dan value)
+// DataRef entries dengan info kompatibilitas skema
 const dataOptions = computed(() => {
-  const entries = dataReg.entries.filter(e =>
-    e.compatibleWith.includes(props.inputType)
-  )
-  if (!searchQ.value) return entries
   const q = searchQ.value.toLowerCase()
-  return entries.filter(e => e.path.toLowerCase().includes(q))
+
+  return dataReg.entries
+    .filter(e => e.compatibleWith.includes(props.inputType))
+    .filter(e => !q || e.path.toLowerCase().includes(q))
+    .map(e => {
+      const compat = props.schema
+        ? checkEntryCompatibility(e, props.schema)
+        : 'ok'
+      return { ...e, compat }
+    })
+    // Urutkan: compatible dulu, inkompatibel di bawah
+    .sort((a, b) => {
+      if (a.compat === 'ok' && b.compat !== 'ok') return -1
+      if (a.compat !== 'ok' && b.compat === 'ok') return 1
+      return 0
+    })
 })
 
-// Canvas variables dari Get Text / Get Value steps
+// Apakah ada setidaknya satu entry yang compatible dengan skema
+const hasCompatibleOptions = computed(() =>
+  !props.schema || dataOptions.value.some(e => e.compat === 'ok')
+)
+
+// Canvas variables
 const varOptions = computed(() => {
   const vars = []
   for (const f of canvas.features) {
@@ -66,19 +85,16 @@ const varOptions = computed(() => {
       }
     }
   }
-  return vars.filter(v =>
-    !searchQ.value || v.varName.toLowerCase().includes(searchQ.value.toLowerCase())
-  )
+  const q = searchQ.value.toLowerCase()
+  return vars.filter(v => !q || v.varName.toLowerCase().includes(q))
 })
 
-// Apakah ada opsi inline (ketik nilai langsung)
+// Inline (hanya untuk tipe value + ada search query)
 const inlineValue = computed(() =>
-  searchQ.value && props.inputType !== 'dataref'
-    ? searchQ.value
-    : null
+  searchQ.value && props.inputType !== 'dataref' ? searchQ.value : null
 )
 
-// ── Pilih opsi ────────────────────────────────────────────────────
+// ── Select handlers ──────────────────────────────────────────────
 
 function selectData(entry) {
   emit('update:modelValue', { type: 'dataref', path: entry.path })
@@ -99,13 +115,12 @@ function clearValue() {
   emit('update:modelValue', '')
 }
 
-// ── Open / close ──────────────────────────────────────────────────
+// ── Open/close ───────────────────────────────────────────────────
 
 function toggle() {
   open.value = !open.value
   if (open.value) {
     searchQ.value = ''
-    // Focus search input setelah render
     setTimeout(() => inputRef.value?.focus(), 50)
   }
 }
@@ -115,7 +130,6 @@ function close() {
   searchQ.value = ''
 }
 
-// Tutup saat klik di luar
 function onOutsideClick(e) {
   if (!e.target.closest('.drs-wrap')) close()
 }
@@ -123,6 +137,12 @@ function onOutsideClick(e) {
 watch(open, (val) => {
   if (val) document.addEventListener('click', onOutsideClick)
   else     document.removeEventListener('click', onOutsideClick)
+})
+
+// ── Schema hint text ─────────────────────────────────────────────
+const schemaHint = computed(() => {
+  if (!props.schema) return ''
+  return `Butuh: ${props.schema.requiredFields?.join(', ')} · Contoh: ${props.schema.example || ''}`
 })
 </script>
 
@@ -135,6 +155,12 @@ watch(open, (val) => {
         {{ inputType === 'dataref' ? 'data ref' : inputType === 'varref' ? 'var' : 'value' }}
       </span>
     </label>
+
+    <!-- Schema hint (jika ada skema) -->
+    <div v-if="schema" class="schema-hint">
+      <span class="sh-icon">📋</span>
+      <span>{{ schemaHint }}</span>
+    </div>
 
     <div class="drs-wrap" :class="{ open }">
       <!-- Trigger -->
@@ -152,9 +178,17 @@ watch(open, (val) => {
             ref="inputRef"
             v-model="searchQ"
             class="drs-search"
-            placeholder="Cari atau ketik..."
+            placeholder="Cari..."
             @keyup.escape="close"
           />
+          <!-- Info skema di dalam dropdown -->
+          <div v-if="schema && !hasCompatibleOptions" class="drs-schema-warn">
+            ⚠ Tidak ada data yang sesuai. Buka Data Manager dan tambahkan object dengan field
+            <strong>{{ schema.requiredFields?.join(', ') }}</strong>.
+          </div>
+          <div v-else-if="schema" class="drs-schema-info">
+            ✓ = kompatibel &nbsp;⚠ = field tidak lengkap
+          </div>
         </div>
 
         <div class="drs-list">
@@ -165,21 +199,35 @@ watch(open, (val) => {
               v-for="entry in dataOptions"
               :key="entry.path"
               class="drs-option"
+              :class="{
+                'compat-ok':    entry.compat === 'ok',
+                'compat-warn':  entry.compat !== 'ok' && schema
+              }"
               @click="selectData(entry)"
             >
               <span class="opt-icon">{{ entry.icon }}</span>
-              <span class="opt-path">{{ entry.path }}</span>
+              <div class="opt-body">
+                <span class="opt-path">{{ entry.path }}</span>
+                <!-- Field preview untuk object entries -->
+                <span v-if="entry.fields" class="opt-fields">
+                  {{ entry.fields.join(', ') }}
+                </span>
+              </div>
+              <!-- Compat marker -->
+              <span v-if="schema && entry.compat === 'ok'"      class="opt-compat ok">✓</span>
+              <span v-else-if="schema && entry.compat !== 'ok'" class="opt-compat warn"
+                :title="`Field tidak lengkap. Butuh: ${schema.requiredFields?.join(', ')}`">⚠</span>
               <span class="opt-type">{{ entry.type }}</span>
             </div>
           </template>
 
-          <!-- Canvas variables (varref) -->
+          <!-- Canvas variables -->
           <template v-if="(inputType === 'varref' || inputType === 'value') && varOptions.length">
             <div class="drs-group-label">📌 Canvas Variables</div>
             <div
               v-for="v in varOptions"
               :key="v.varName"
-              class="drs-option var-opt"
+              class="drs-option"
               @click="selectVar(v)"
             >
               <span class="opt-icon">📌</span>
@@ -187,10 +235,10 @@ watch(open, (val) => {
             </div>
           </template>
 
-          <!-- Inline value (ketik langsung) -->
+          <!-- Inline value -->
           <template v-if="inlineValue && inputType !== 'dataref'">
             <div class="drs-group-label">✏️ Nilai Inline</div>
-            <div class="drs-option inline-opt" @click="selectInline(inlineValue)">
+            <div class="drs-option" @click="selectInline(inlineValue)">
               <span class="opt-icon">✏️</span>
               <span class="opt-path" style="color:#fbbf24">'{{ inlineValue }}'</span>
             </div>
@@ -198,7 +246,9 @@ watch(open, (val) => {
 
           <!-- Empty -->
           <div v-if="!dataOptions.length && !varOptions.length && !inlineValue" class="drs-empty">
-            {{ searchQ ? `Tidak ada hasil untuk "${searchQ}"` : 'Belum ada data. Buka Data Manager.' }}
+            {{ searchQ
+              ? `Tidak ada hasil untuk "${searchQ}"`
+              : 'Belum ada data. Buka Data Manager.' }}
           </div>
         </div>
       </div>
@@ -209,7 +259,7 @@ watch(open, (val) => {
 </template>
 
 <style scoped>
-.field       { margin-bottom: 10px; position: relative; }
+.field       { margin-bottom: 10px; }
 .field-label {
   display: flex; align-items: center; gap: 5px;
   font-size: 9.5px; font-weight: 600; color: #64748b;
@@ -220,6 +270,15 @@ watch(open, (val) => {
   font-size: 8px; padding: 1px 5px; border-radius: 3px;
   border: 1px solid; font-weight: 700; margin-left: auto;
 }
+
+/* Schema hint */
+.schema-hint {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 9px; color: #475569; margin-bottom: 5px;
+  padding: 4px 7px; background: rgba(99,102,241,0.06);
+  border-radius: 4px; border: 1px solid rgba(99,102,241,0.15);
+}
+.sh-icon { flex-shrink: 0; }
 
 /* Trigger */
 .drs-wrap    { position: relative; }
@@ -235,14 +294,10 @@ watch(open, (val) => {
 .drs-placeholder { font-size: 10.5px; color: #334155; flex: 1; }
 .drs-clear {
   background: none; border: none; cursor: pointer;
-  color: #475569; font-size: 14px; line-height: 1; padding: 0;
-  flex-shrink: 0; transition: color 0.1s;
+  color: #475569; font-size: 14px; line-height: 1; padding: 0; flex-shrink: 0; transition: color 0.1s;
 }
 .drs-clear:hover { color: #ef4444; }
-.drs-arrow {
-  color: #475569; font-size: 14px; flex-shrink: 0;
-  transition: transform 0.2s; display: inline-block;
-}
+.drs-arrow { color: #475569; font-size: 14px; flex-shrink: 0; transition: transform 0.2s; display: inline-block; }
 .drs-arrow.rotated { transform: rotate(90deg); }
 
 /* Dropdown */
@@ -251,15 +306,23 @@ watch(open, (val) => {
   background: #0f1117; border: 1px solid #6366f1;
   border-top: none; border-radius: 0 0 5px 5px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-  max-height: 220px; display: flex; flex-direction: column;
+  max-height: 240px; display: flex; flex-direction: column;
 }
 .drs-search-wrap { padding: 6px; border-bottom: 1px solid #1e293b; flex-shrink: 0; }
 .drs-search {
   width: 100%; background: #1e293b; border: 1px solid #334155;
-  border-radius: 4px; padding: 4px 8px; font-size: 10.5px;
-  color: #e2e8f0; outline: none;
+  border-radius: 4px; padding: 4px 8px; font-size: 10.5px; color: #e2e8f0; outline: none;
 }
 .drs-search:focus { border-color: #6366f1; }
+
+/* Schema info/warn di dalam dropdown */
+.drs-schema-info {
+  font-size: 8.5px; color: #334155; padding: 3px 2px 0;
+}
+.drs-schema-warn {
+  font-size: 9px; color: #f59e0b; padding: 4px 2px 0; line-height: 1.4;
+}
+.drs-schema-warn strong { color: #fbbf24; }
 
 .drs-list { overflow-y: auto; flex: 1; }
 .drs-group-label {
@@ -267,16 +330,33 @@ watch(open, (val) => {
   padding: 6px 10px 3px; text-transform: uppercase; letter-spacing: 0.06em;
 }
 .drs-option {
-  display: flex; align-items: center; gap: 6px;
-  padding: 5px 10px; cursor: pointer;
-  transition: background 0.1s;
+  display: flex; align-items: center; gap: 7px;
+  padding: 5px 10px; cursor: pointer; transition: background 0.1s;
 }
 .drs-option:hover { background: rgba(255,255,255,0.04); }
+
+/* Kompatibilitas */
+.drs-option.compat-ok { }
+.drs-option.compat-warn { opacity: 0.6; }
+.drs-option.compat-warn:hover { opacity: 0.85; }
+
 .opt-icon { font-size: 10px; flex-shrink: 0; }
-.opt-path { font-size: 10.5px; font-family: monospace; color: #38bdf8; flex: 1; }
+.opt-body { flex: 1; min-width: 0; }
+.opt-path {
+  display: block; font-size: 10.5px; font-family: monospace;
+  color: #38bdf8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.opt-fields {
+  display: block; font-size: 8.5px; color: #334155; font-family: monospace;
+}
+.opt-compat {
+  font-size: 10px; flex-shrink: 0; font-weight: 700;
+}
+.opt-compat.ok   { color: #10b981; }
+.opt-compat.warn { color: #f59e0b; cursor: help; }
 .opt-type {
   font-size: 8.5px; color: #334155;
-  background: rgba(255,255,255,0.04); border-radius: 3px; padding: 1px 4px;
+  background: rgba(255,255,255,0.04); border-radius: 3px; padding: 1px 5px; flex-shrink: 0;
 }
 .drs-empty { font-size: 10px; color: #334155; padding: 12px 10px; text-align: center; }
 .field-error { font-size: 9px; color: #ef4444; margin-top: 3px; display: block; }

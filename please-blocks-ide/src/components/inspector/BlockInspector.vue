@@ -7,13 +7,17 @@
 import { computed, watch, ref } from 'vue'
 import { useCanvasStore }    from '@/stores/canvasStore.js'
 import { useBlockRegistry }  from '@/stores/blockRegistry.js'
-import TextInput      from './inputs/TextInput.vue'
-import SelectorInput  from './inputs/SelectorInput.vue'
-import NumberInput    from './inputs/NumberInput.vue'
-import DataRefSelect  from './inputs/DataRefSelect.vue'
+import { useDataRegistry }   from '@/stores/dataRegistry.js'
+import { validateSchema }    from '@/core/blocks/schemaValidator.js'
+import TextInput        from './inputs/TextInput.vue'
+import SelectorInput    from './inputs/SelectorInput.vue'
+import NumberInput      from './inputs/NumberInput.vue'
+import DataRefSelect    from './inputs/DataRefSelect.vue'
+import HybridValueInput from './inputs/HybridValueInput.vue'
 
 const canvas   = useCanvasStore()
 const registry = useBlockRegistry()
+const dataReg  = useDataRegistry()
 
 // Step yang sedang aktif
 const activeStep = computed(() => {
@@ -32,37 +36,60 @@ const block = computed(() =>
   activeStep.value ? registry.getById(activeStep.value.blockId) : null
 )
 
-// Salinan lokal inputs untuk editing — di-sync ke store saat berubah
+// Salinan lokal inputs untuk editing
 const localInputs = ref({})
 
-// Saat step aktif berubah → reset localInputs dari step.inputs
 watch(activeStep, (step) => {
   localInputs.value = step ? { ...step.inputs } : {}
 }, { immediate: true })
 
-// Saat localInputs berubah → update store (debounce ringan pakai watch deep)
 watch(localInputs, (val) => {
   if (activeStep.value) {
     canvas.updateStepInputs(activeStep.value.id, val)
   }
 }, { deep: true })
 
-// Validasi per field
+// ── Validasi ──────────────────────────────────────────────────────
+
+// Hasil validasi skema per field (null = tidak ada masalah)
+const schemaErrors = computed(() => {
+  if (!block.value) return {}
+  const result = {}
+  for (const inputDef of block.value.inputs) {
+    if (!inputDef.schema) continue
+    const v = localInputs.value[inputDef.name]
+    const schemaResult = validateSchema(v, inputDef, dataReg.entries)
+    if (schemaResult && !schemaResult.valid) {
+      result[inputDef.name] = schemaResult
+    }
+  }
+  return result
+})
+
+// Error gabungan: required + schema
 const errors = computed(() => {
   if (!block.value) return {}
   const errs = {}
+
   for (const inputDef of block.value.inputs) {
-    if (inputDef.required) {
-      const v = localInputs.value[inputDef.name]
-      if (!v && v !== 0) {
-        errs[inputDef.name] = `${inputDef.label} wajib diisi`
-      }
+    const v = localInputs.value[inputDef.name]
+
+    // Required check
+    if (inputDef.required && (!v && v !== 0)) {
+      errs[inputDef.name] = `${inputDef.label} wajib diisi`
+      continue
+    }
+
+    // Schema check (hanya jika ada nilai dan ada skema)
+    if (schemaErrors.value[inputDef.name]) {
+      errs[inputDef.name] = schemaErrors.value[inputDef.name].message
     }
   }
   return errs
 })
 
-const hasErrors = computed(() => Object.keys(errors.value).length > 0)
+const hasErrors   = computed(() => Object.keys(errors.value).length > 0)
+const schemaCount = computed(() => Object.keys(schemaErrors.value).length)
 
 function updateField(name, value) {
   localInputs.value = { ...localInputs.value, [name]: value }
@@ -91,7 +118,10 @@ function updateField(name, value) {
           <div class="insp-name">{{ block.label }}</div>
           <div class="insp-type">{{ block.type }}</div>
         </div>
-        <div v-if="hasErrors" class="insp-err-badge">{{ Object.keys(errors).length }} error</div>
+        <div v-if="schemaCount" class="insp-schema-badge" title="Ada ketidaksesuaian tipe data">
+          ⚠ {{ schemaCount }} skema
+        </div>
+        <div v-else-if="hasErrors" class="insp-err-badge">{{ Object.keys(errors).length }} error</div>
       </div>
 
       <!-- Description -->
@@ -128,19 +158,19 @@ function updateField(name, value) {
             :placeholder="inputDef.placeholder"
             :required="inputDef.required"
             :error="errors[inputDef.name]"
+            :schema="inputDef.schema || null"
             :input-type="inputDef.type"
             :model-value="localInputs[inputDef.name] ?? ''"
             @update:model-value="updateField(inputDef.name, $event)"
           />
 
-          <!-- value: bisa inline string atau DataRef path -->
-          <DataRefSelect
+          <!-- value: hybrid — plain text ATAU DataRef, bisa di-toggle -->
+          <HybridValueInput
             v-else-if="inputDef.type === 'value'"
             :label="inputDef.label"
             :placeholder="inputDef.placeholder"
             :required="inputDef.required"
             :error="errors[inputDef.name]"
-            input-type="value"
             :model-value="localInputs[inputDef.name] ?? ''"
             @update:model-value="updateField(inputDef.name, $event)"
           />
@@ -226,6 +256,16 @@ function updateField(name, value) {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   margin-top: 1px;
+}
+.insp-schema-badge {
+  font-size: 9px;
+  background: rgba(245,158,11,0.15);
+  color: #f59e0b;
+  border-radius: 10px;
+  padding: 2px 7px;
+  font-weight: 700;
+  flex-shrink: 0;
+  cursor: default;
 }
 .insp-err-badge {
   font-size: 9px;

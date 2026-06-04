@@ -1,6 +1,8 @@
 // Definisi blok kategori Actions
 // Mapping ke: please.click(), fill(), fillAndEnter(), clear(), datepicker(), uploadFile(), scrollTo()
 
+import { resolveValue } from './helpers.js'
+
 export default [
   {
     id: 'action.click',
@@ -42,12 +44,11 @@ export default [
     ],
     output: null,
     codegen(inputs) {
-      const val = inputs.value?.path || `'${inputs.value || ''}'`
-      return `await please.fill('${inputs.label || ''}', '${inputs.selector || ''}', ${val})`
+      return `await please.fill('${inputs.label || ''}', '${inputs.selector || ''}', ${resolveValue(inputs.value)})`
     },
     validate(inputs) {
       if (!inputs.selector) return 'Selector wajib diisi'
-      if (!inputs.value && inputs.value !== 0) return 'Nilai wajib diisi'
+      if (inputs.value === undefined || inputs.value === null || inputs.value === '') return 'Nilai wajib diisi'
       return null
     }
   },
@@ -67,12 +68,11 @@ export default [
     ],
     output: null,
     codegen(inputs) {
-      const val = inputs.value?.path || `'${inputs.value || ''}'`
-      return `await please.fillAndEnter('${inputs.label || ''}', '${inputs.selector || ''}', ${val})`
+      return `await please.fillAndEnter('${inputs.label || ''}', '${inputs.selector || ''}', ${resolveValue(inputs.value)})`
     },
     validate(inputs) {
       if (!inputs.selector) return 'Selector wajib diisi'
-      if (!inputs.value && inputs.value !== 0) return 'Nilai wajib diisi'
+      if (inputs.value === undefined || inputs.value === null || inputs.value === '') return 'Nilai wajib diisi'
       return null
     }
   },
@@ -110,15 +110,15 @@ export default [
     inputs: [
       { name: 'label',    type: 'text',     label: 'Label',    placeholder: 'input tanggal lahir', required: true },
       { name: 'selector', type: 'selector', label: 'Selector', placeholder: '#birthdate',          required: true },
-      { name: 'value',    type: 'text',     label: 'Tanggal',  placeholder: '2000-01-01',          required: true }
+      { name: 'value',    type: 'value',    label: 'Tanggal',  placeholder: '2000-01-01',          required: true }
     ],
     output: null,
     codegen(inputs) {
-      return `await please.datepicker('${inputs.label || ''}', '${inputs.selector || ''}', '${inputs.value || ''}')`
+      return `await please.datepicker('${inputs.label || ''}', '${inputs.selector || ''}', ${resolveValue(inputs.value)})`
     },
     validate(inputs) {
       if (!inputs.selector) return 'Selector wajib diisi'
-      if (!inputs.value) return 'Tanggal wajib diisi'
+      if (!inputs.value)    return 'Tanggal wajib diisi'
       return null
     }
   },
@@ -132,17 +132,17 @@ export default [
     colorBg: 'rgba(16,185,129,0.1)',
     description: 'Upload file ke input type=file',
     inputs: [
-      { name: 'label',    type: 'text',     label: 'Label',       placeholder: 'input upload foto', required: true },
-      { name: 'selector', type: 'selector', label: 'Selector',    placeholder: 'input[type=file]',  required: true },
-      { name: 'path',     type: 'text',     label: 'Path file',   placeholder: '/path/to/file.jpg', required: true }
+      { name: 'label',    type: 'text',     label: 'Label',     placeholder: 'input upload foto', required: true },
+      { name: 'selector', type: 'selector', label: 'Selector',  placeholder: 'input[type=file]',  required: true },
+      { name: 'path',     type: 'value',    label: 'Path file', placeholder: '/path/to/file.jpg', required: true }
     ],
     output: null,
     codegen(inputs) {
-      return `await please.uploadFile('${inputs.label || ''}', '${inputs.selector || ''}', '${inputs.path || ''}')`
+      return `await please.uploadFile('${inputs.label || ''}', '${inputs.selector || ''}', ${resolveValue(inputs.path)})`
     },
     validate(inputs) {
       if (!inputs.selector) return 'Selector wajib diisi'
-      if (!inputs.path) return 'Path file wajib diisi'
+      if (!inputs.path)     return 'Path file wajib diisi'
       return null
     }
   },

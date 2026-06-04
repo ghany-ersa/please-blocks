@@ -7,10 +7,12 @@
 import { computed, ref } from 'vue'
 import { useCanvasStore }   from '@/stores/canvasStore.js'
 import { useBlockRegistry } from '@/stores/blockRegistry.js'
+import { useDataRegistry }  from '@/stores/dataRegistry.js'
 import { generateSpec, generateIndex } from '@/core/codegen/specGenerator.js'
 
 const canvas   = useCanvasStore()
 const registry = useBlockRegistry()
+const dataReg  = useDataRegistry()
 const mode     = ref('spec')  // 'spec' | 'index'
 
 // Feature yang sedang aktif
@@ -21,7 +23,7 @@ const activeFeature = computed(() =>
 // Generate kode setiap kali state berubah (computed otomatis reaktif)
 const generatedCode = computed(() => {
   if (mode.value === 'index') return generateIndex(canvas.features)
-  return generateSpec(activeFeature.value, registry)
+  return generateSpec(activeFeature.value, registry, dataReg.entries)
 })
 
 // Syntax highlighting sederhana — cukup untuk preview tanpa dependency eksternal
