@@ -74,11 +74,16 @@ function onDrop(e) {
     return
   }
 
-  // Drop dari reorder (step yang dipindah)
+  // Drop dari reorder ke area kosong di bawah semua step
   const reorderData = e.dataTransfer.getData('step-reorder')
   if (reorderData) {
-    // Reorder belum diimplementasi di Sprint 1, skip
-    return
+    const { stepId, testCaseId, fromIndex } = JSON.parse(reorderData)
+    if (testCaseId === props.testCase.id) {
+      const lastIndex = props.testCase.steps.length - 1
+      if (fromIndex !== lastIndex) {
+        canvas.moveStep(props.testCase.id, fromIndex, lastIndex)
+      }
+    }
   }
 }
 </script>

@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useBlockRegistry } from '@/stores/blockRegistry.js'
 import { useCanvasStore } from '@/stores/canvasStore.js'
 import { useDataRegistry } from '@/stores/dataRegistry.js'
@@ -27,6 +27,9 @@ const validation = computed(() => {
 })
 const hasError = computed(() => !validation.value.valid)
 
+// 'before' | 'after' | null
+const dropPosition = ref(null)
+
 function onSelect() {
   canvas.selectStep(props.step.id)
   emit('select', props.step)
@@ -37,7 +40,6 @@ function onRemove(e) {
   canvas.removeStep(props.step.id)
 }
 
-// Drag untuk reorder steps
 function onDragStart(e) {
   e.dataTransfer.effectAllowed = 'move'
   e.dataTransfer.setData('step-reorder', JSON.stringify({
@@ -46,16 +48,53 @@ function onDragStart(e) {
     fromIndex:  props.index
   }))
 }
+
+function onDragOver(e) {
+  const reorderData = e.dataTransfer.types.includes('step-reorder')
+  if (!reorderData) return
+  e.preventDefault()
+  e.stopPropagation()
+  e.dataTransfer.dropEffect = 'move'
+  const rect = e.currentTarget.getBoundingClientRect()
+  dropPosition.value = (e.clientY - rect.top) < rect.height / 2 ? 'before' : 'after'
+}
+
+function onDragLeave(e) {
+  if (!e.currentTarget.contains(e.relatedTarget)) {
+    dropPosition.value = null
+  }
+}
+
+function onDrop(e) {
+  const raw = e.dataTransfer.getData('step-reorder')
+  if (!raw) return
+  e.preventDefault()
+  e.stopPropagation()
+
+  const { stepId, testCaseId, fromIndex } = JSON.parse(raw)
+  if (testCaseId !== props.testCaseId || stepId === props.step.id) {
+    dropPosition.value = null
+    return
+  }
+
+  const toIndex = dropPosition.value === 'before' ? props.index : props.index + 1
+  const adjusted = fromIndex < toIndex ? toIndex - 1 : toIndex
+  canvas.moveStep(props.testCaseId, fromIndex, adjusted)
+  dropPosition.value = null
+}
 </script>
 
 <template>
   <div
     v-if="block"
     class="step-item"
-    :class="{ active: isActive, 'has-error': hasError }"
+    :class="{ active: isActive, 'has-error': hasError, 'drop-before': dropPosition === 'before', 'drop-after': dropPosition === 'after' }"
     :style="{ '--step-color': block.color, '--step-bg': block.colorBg }"
     draggable="true"
     @dragstart="onDragStart"
+    @dragover="onDragOver"
+    @dragleave="onDragLeave"
+    @drop="onDrop"
     @click="onSelect"
   >
     <span class="step-num">{{ index + 1 }}</span>
@@ -173,4 +212,6 @@ function onDragStart(e) {
   color: #fca5a5;
   font-size: 10px;
 }
+.step-item.drop-before { box-shadow: 0 -2px 0 #a855f7; }
+.step-item.drop-after  { box-shadow: 0  2px 0 #a855f7; }
 </style>
