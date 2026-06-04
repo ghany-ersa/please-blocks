@@ -36,40 +36,29 @@ export function processDataFiles(files, env = {}) {
  */
 export function generateDataFile(fileDef, env = {}) {
   const lines = [
-    `// data/${fileDef.filename}.js`,
-    `// Auto-generated oleh Please Blocks IDE`,
     `require('dotenv').config()`,
-    ``
+    ``,
+    `const base_url = process.env.BASE_URL`,
+    ``,
+    `module.exports = {`
   ]
 
-  // Hanya include base_url jika ada URL group
-  const hasUrl = Object.values(fileDef.groups).some(group =>
-    Object.values(group).some(entry =>
-      typeof entry === 'object' && 'url' in entry
-    )
-  )
-  if (hasUrl) {
-    lines.push(`const base_url = process.env.BASE_URL`, ``)
-  }
-
-  lines.push(`module.exports = {`)
-
   for (const [groupName, entries] of Object.entries(fileDef.groups)) {
-    lines.push(`  ${groupName}: {`)
+    lines.push(`    ${groupName}: {`)
     for (const [entryName, fields] of Object.entries(entries)) {
       if (typeof fields === 'object' && fields !== null) {
-        lines.push(`    ${entryName}: {`)
+        lines.push(`        ${entryName}: {`)
         for (const [fieldName, value] of Object.entries(fields)) {
           const val = formatFieldValue(fieldName, value, env)
-          lines.push(`      ${fieldName}: ${val},`)
+          lines.push(`            ${fieldName}: ${val},`)
         }
-        lines.push(`    },`)
+        lines.push(`        },`)
       } else {
         const val = formatFieldValue(entryName, fields, env)
-        lines.push(`    ${entryName}: ${val},`)
+        lines.push(`        ${entryName}: ${val},`)
       }
     }
-    lines.push(`  },`)
+    lines.push(`    },`)
   }
 
   lines.push(`}`)

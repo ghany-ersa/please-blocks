@@ -115,30 +115,41 @@ function guessPlaceholder(paramName, compDef) {
  * Generate kode file components/[name].js dari satu component definition.
  * Dipakai oleh Code Generator (Sprint 5).
  */
-export function generateComponentFile(compDef) {
+export function generateComponentFile(compDef, blockRegistry = null) {
   const lines = [
     `let please`,
     ``,
     `class ${compDef.name} {`,
-    `  constructor(master) {`,
-    `    please = master`,
-    `  }`,
+    `    constructor(master) {`,
+    `        please = master`,
+    `    }`,
   ]
 
   for (const method of compDef.methods) {
     const params = method.params.join(', ')
-    lines.push(``, `  async ${method.name}(${params}) {`)
+    lines.push(``, `    async ${method.name}(${params}) {`)
 
-    // Generate steps
-    // (steps adalah array {blockId, inputs} — akan di-resolve oleh specGenerator)
-    if (method.steps?.length) {
-      lines.push(`    // ${method.steps.length} step(s)`)
-      lines.push(`    // (Implementasi di-generate dari Component Builder)`)
+    if (method.steps?.length && blockRegistry) {
+      for (const step of method.steps) {
+        const block = blockRegistry.getById?.(step.blockId)
+        if (block) {
+          try {
+            lines.push(`        ${block.codegen(step.inputs || {})}`)
+          } catch {
+            lines.push(`        // [!] error pada step: ${step.blockId}`)
+          }
+        }
+      }
+    } else if (method.steps?.length) {
+      // blockRegistry tidak tersedia — fallback placeholder per step
+      for (const step of method.steps) {
+        lines.push(`        // step: ${step.blockId}`)
+      }
     } else {
-      lines.push(`    // Belum ada step`)
+      lines.push(`        // TODO: implementasi`)
     }
 
-    lines.push(`  }`)
+    lines.push(`    }`)
   }
 
   lines.push(`}`, ``, `module.exports = ${compDef.name}`)

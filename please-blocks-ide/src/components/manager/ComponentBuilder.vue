@@ -24,6 +24,40 @@ const activeMethodId = ref(null)
 const editingName    = ref(false)
 const draftName      = ref('')
 
+// Mini palette — search + filter kategori
+const paletteSearch  = ref('')
+const expandedCats   = ref({})   // { [catId]: boolean }
+
+const filteredPalette = computed(() => {
+  const q = paletteSearch.value.trim().toLowerCase()
+  return registry.byCategory
+    .map(cat => ({
+      ...cat,
+      blocks: cat.blocks.filter(b =>
+        !q ||
+        b.label.toLowerCase().includes(q) ||
+        b.description?.toLowerCase().includes(q)
+      )
+    }))
+    .filter(cat => cat.blocks.length > 0)
+})
+
+function isCatOpen(catId) {
+  return expandedCats.value[catId] !== false  // default open
+}
+function toggleCat(catId) {
+  expandedCats.value[catId] = !isCatOpen(catId)
+}
+
+// Drag dari mini palette — sama persis dengan BlockCard: setData('text/plain', blockId)
+function onPaletteDragStart(e, block) {
+  e.dataTransfer.effectAllowed = 'copy'
+  e.dataTransfer.setData('text/plain', block.id)
+}
+
+// Highlight drop zone
+const isDropOver = ref(false)
+
 // Computed helpers
 const activeComp = computed(() =>
   compStore.components.find(c => c.id === activeCompId.value) || null
@@ -104,10 +138,18 @@ function removeParam(paramName) {
 function onStepDragOver(e) {
   e.preventDefault()
   e.dataTransfer.dropEffect = 'copy'
+  isDropOver.value = true
+}
+
+function onStepDragLeave(e) {
+  if (!e.currentTarget.contains(e.relatedTarget)) {
+    isDropOver.value = false
+  }
 }
 
 function onStepDrop(e) {
   e.preventDefault()
+  isDropOver.value = false
   const blockId = e.dataTransfer.getData('text/plain')
   if (!blockId || !activeMethod.value) return
   compStore.addMethodStep(activeCompId.value, activeMethodId.value, blockId)
@@ -136,7 +178,50 @@ const activeTab = ref('builder')
       </div>
 
       <!-- BUILDER TAB -->
-      <div v-if="activeTab === 'builder'" class="modal-body three-col">
+      <div v-if="activeTab === 'builder'" class="modal-body four-col">
+
+        <!-- Kolom 0: Mini Palette -->
+        <div class="col-palette">
+          <div class="col-title">🧩 Blok</div>
+          <div class="palette-search-wrap">
+            <input
+              v-model="paletteSearch"
+              class="palette-search-input"
+              placeholder="Cari blok..."
+            />
+          </div>
+          <div class="palette-scroll">
+            <div
+              v-for="cat in filteredPalette"
+              :key="cat.id"
+              class="mini-cat"
+            >
+              <button class="mini-cat-header" @click="toggleCat(cat.id)">
+                <span>{{ cat.meta.icon }}</span>
+                <span class="mini-cat-label">{{ cat.meta.label }}</span>
+                <span class="mini-cat-count">{{ cat.blocks.length }}</span>
+                <span class="mini-cat-arrow" :class="{ open: isCatOpen(cat.id) }">›</span>
+              </button>
+              <div v-show="isCatOpen(cat.id)" class="mini-cat-blocks">
+                <div
+                  v-for="block in cat.blocks"
+                  :key="block.id"
+                  class="mini-block"
+                  :style="{ '--bc': block.color, '--bg': block.colorBg }"
+                  draggable="true"
+                  @dragstart="onPaletteDragStart($event, block)"
+                  :title="block.description"
+                >
+                  <span class="mini-block-icon">{{ block.icon }}</span>
+                  <span class="mini-block-label">{{ block.label }}</span>
+                </div>
+              </div>
+            </div>
+            <div v-if="filteredPalette.length === 0" class="palette-empty">
+              Tidak ada blok
+            </div>
+          </div>
+        </div>
 
         <!-- Kolom 1: Component list -->
         <div class="col-comps">
@@ -234,7 +319,9 @@ const activeTab = ref('builder')
           <!-- Step list (drop target) -->
           <div
             class="step-list"
+            :class="{ 'drop-active': isDropOver }"
             @dragover="onStepDragOver"
+            @dragleave="onStepDragLeave"
             @drop="onStepDrop"
           >
             <div
@@ -252,10 +339,15 @@ const activeTab = ref('builder')
               <button class="item-del small" @click="removeStep(idx)">×</button>
             </div>
 
-            <div v-if="!activeMethod.steps.length" class="drop-hint">
-              <span>Drag blok dari palette ke sini</span>
+            <div
+              v-if="!activeMethod.steps.length || isDropOver"
+              class="drop-hint"
+              :class="{ 'drop-hint--active': isDropOver }"
+            >
+              <span v-if="isDropOver">＋ Lepas untuk tambah step</span>
+              <span v-else>Drag blok dari palette di kiri ke sini</span>
             </div>
-            <div v-else class="drop-hint-small">
+            <div v-else-if="activeMethod.steps.length" class="drop-hint-small">
               <span>+ Drag blok untuk tambah step</span>
             </div>
           </div>
@@ -294,8 +386,8 @@ const activeTab = ref('builder')
   z-index: 100;
 }
 .modal {
-  width: 860px; max-width: 96vw;
-  height: 580px; max-height: 90vh;
+  width: 1060px; max-width: 97vw;
+  height: 600px; max-height: 92vh;
   background: #111827; border: 1px solid #1e293b;
   border-radius: 12px; display: flex; flex-direction: column;
   overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,0.5);
@@ -323,12 +415,52 @@ const activeTab = ref('builder')
 
 /* Body */
 .modal-body  { flex: 1; overflow: hidden; display: flex; }
-.three-col   { flex-direction: row; }
+.four-col    { flex-direction: row; }
 
 /* Columns */
-.col-comps   { width: 190px; min-width: 190px; border-right: 1px solid #1e293b; display: flex; flex-direction: column; overflow: hidden; }
-.col-methods { width: 200px; min-width: 200px; border-right: 1px solid #1e293b; display: flex; flex-direction: column; overflow: hidden; }
+.col-palette { width: 160px; min-width: 160px; border-right: 1px solid #1e293b; display: flex; flex-direction: column; overflow: hidden; background: #0f1117; }
+.col-comps   { width: 170px; min-width: 170px; border-right: 1px solid #1e293b; display: flex; flex-direction: column; overflow: hidden; }
+.col-methods { width: 190px; min-width: 190px; border-right: 1px solid #1e293b; display: flex; flex-direction: column; overflow: hidden; }
 .col-steps   { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+/* Mini palette */
+.palette-search-wrap { padding: 5px 7px; border-bottom: 1px solid #1e293b; flex-shrink: 0; }
+.palette-search-input {
+  width: 100%; background: rgba(255,255,255,0.04); border: 1px solid #1e293b;
+  border-radius: 4px; padding: 4px 7px; font-size: 10px; color: #e2e8f0;
+  outline: none; transition: border-color 0.12s;
+}
+.palette-search-input:focus { border-color: #334155; }
+.palette-scroll { flex: 1; overflow-y: auto; padding: 4px 0; }
+.palette-empty  { font-size: 10px; color: #1e293b; padding: 12px 10px; text-align: center; }
+
+.mini-cat { margin-bottom: 2px; }
+.mini-cat-header {
+  width: 100%; display: flex; align-items: center; gap: 4px;
+  padding: 4px 8px; background: none; border: none; cursor: pointer;
+  color: #475569; transition: color 0.1s; text-align: left;
+}
+.mini-cat-header:hover { color: #64748b; }
+.mini-cat-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; flex: 1; }
+.mini-cat-count { font-size: 8px; color: #334155; background: rgba(255,255,255,0.04); border-radius: 8px; padding: 0 4px; }
+.mini-cat-arrow { font-size: 12px; transition: transform 0.2s; display: inline-block; transform: rotate(90deg); }
+.mini-cat-arrow.open { transform: rotate(90deg); }
+.mini-cat-blocks { padding: 2px 4px 2px 8px; }
+
+.mini-block {
+  display: flex; align-items: center; gap: 5px;
+  padding: 4px 7px; border-radius: 5px;
+  background: var(--bg); border: 1px solid transparent;
+  cursor: grab; transition: border-color 0.12s;
+  user-select: none; margin-bottom: 2px;
+}
+.mini-block:hover { border-color: var(--bc); }
+.mini-block:active { cursor: grabbing; }
+.mini-block-icon  { font-size: 10px; flex-shrink: 0; }
+.mini-block-label {
+  font-size: 9.5px; font-weight: 600; color: var(--bc);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 
 .col-title {
   font-size: 9.5px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
@@ -426,11 +558,19 @@ const activeTab = ref('builder')
 .step-label { font-size: 10px; font-weight: 600; flex: 1; }
 
 .drop-hint, .drop-hint-small {
-  text-align: center; padding: 8px;
+  text-align: center; padding: 10px 8px;
   border: 1px dashed #1e293b; border-radius: 5px;
+  transition: border-color 0.15s, background 0.15s;
 }
 .drop-hint span, .drop-hint-small span { font-size: 10px; color: #374151; }
-.drop-hint-small { border-style: dashed; margin-top: 4px; }
+.drop-hint-small { margin-top: 4px; }
+.drop-hint--active {
+  border-color: #ec4899;
+  background: rgba(236,72,153,0.06);
+}
+.drop-hint--active span { color: #ec4899; font-weight: 600; }
+
+.step-list.drop-active { background: rgba(236,72,153,0.03); }
 
 .step-hint {
   padding: 8px 12px; border-top: 1px solid #1e293b; flex-shrink: 0;

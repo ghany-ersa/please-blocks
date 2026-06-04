@@ -37,12 +37,7 @@ export function generateSpec(feature, blockRegistry, dataEntries = []) {
   const components  = collectComponents(feature, blockRegistry)
   const importsMap  = collectImportsPerFile(feature, dataEntries)
 
-  const lines = [
-    `// feature/${slugify(feature.label)}.spec.js`,
-    `// Auto-generated oleh Please Blocks IDE`,
-    `// Jangan edit manual — ubah melalui canvas`,
-    ''
-  ]
+  const lines = []
 
   // Import app (please + components)
   const compList = ['please', ...components].join(', ')
@@ -62,7 +57,7 @@ export function generateSpec(feature, blockRegistry, dataEntries = []) {
   )
 
   if (!testCaseBlocks.length) {
-    lines.push('  // Belum ada test case')
+    lines.push('    // Belum ada test case')
   } else {
     lines.push(...testCaseBlocks)
   }
@@ -77,14 +72,14 @@ export function generateSpec(feature, blockRegistry, dataEntries = []) {
 function generateTestCase(tc, blockRegistry) {
   const stepLines = tc.steps.map(step => generateStep(step, blockRegistry))
   const body = stepLines.length
-    ? stepLines.map(l => `    ${l}`).join('\n')
-    : '    // Belum ada step'
+    ? stepLines.map(l => `        ${l}`).join('\n')
+    : '        // Belum ada step'
 
   return [
     '',
-    `  it('${tc.label}', async () => {`,
+    `    it('${tc.label}', async () => {`,
     body,
-    `  })`
+    `    })`
   ].join('\n')
 }
 
@@ -108,16 +103,14 @@ function generateStep(step, blockRegistry) {
 export function generateIndex(features) {
   if (!features.length) return '// Belum ada feature'
   const lines = [
-    '// index.js — aktifkan atau nonaktifkan spec yang ingin dijalankan',
-    '// Toggle fitur melalui canvas (ikon ▶/⏸ di header feature)',
-    ''
+    '// Aktifkan atau nonaktifkan spec yang ingin dijalankan',
   ]
   for (const f of features) {
-    const path    = `'./feature/${slugify(f.label)}.spec'`
-    const enabled = f.enabled !== false  // default true jika undefined
+    const requirePath = `'./feature/${slugify(f.label)}.spec'`
+    const enabled     = f.enabled !== false
     lines.push(enabled
-      ? `require(${path})`
-      : `// require(${path})   // ← dinonaktifkan`
+      ? `require(${requirePath})`
+      : `// require(${requirePath})`
     )
   }
   return lines.join('\n')
