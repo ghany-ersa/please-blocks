@@ -22,6 +22,10 @@ function onUpdateInput(fieldName, value) {
   canvas.updateStepInputs(props.step.id, { [fieldName]: value })
 }
 
+function onUpdateNote(note) {
+  canvas.updateStepNote(props.step.id, note)
+}
+
 function onReorder(fromIndex, toIndex) {
   canvas.moveStep(props.testCaseId, fromIndex, toIndex)
 }
@@ -41,6 +45,7 @@ function onReorder(fromIndex, toIndex) {
     @step-click="emit('step-click', $event)"
     @remove="onRemove"
     @update-input="onUpdateInput"
+    @update-note="onUpdateNote"
     @reorder="onReorder"
   />
 </template>

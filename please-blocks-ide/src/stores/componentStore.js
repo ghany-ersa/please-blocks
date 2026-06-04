@@ -177,6 +177,15 @@ export const useComponentStore = defineStore('componentStore', {
       }
     },
 
+    updateMethodStepNote(componentId, methodId, stepIdx, note) {
+      const c = this.components.find(c => c.id === componentId)
+      const m = c?.methods.find(m => m.id === methodId)
+      if (m?.steps[stepIdx]) {
+        m.steps[stepIdx].note = note
+        this.persist()
+      }
+    },
+
     // Tambah / hapus parameter method
     addParam(componentId, methodId, paramName) {
       const c = this.components.find(c => c.id === componentId)

@@ -213,7 +213,16 @@ export const useCanvasStore = defineStore('canvas', {
       for (const f of this.features) {
         for (const tc of f.testCases) {
           const step = tc.steps.find(s => s.id === stepId)
-          if (step) { step.inputs = { ...step.inputs, ...inputs }; return }
+          if (step) { step.inputs = { ...step.inputs, ...inputs }; this.persist(); return }
+        }
+      }
+    },
+
+    updateStepNote(stepId, note) {
+      for (const f of this.features) {
+        for (const tc of f.testCases) {
+          const step = tc.steps.find(s => s.id === stepId)
+          if (step) { step.note = note; this.persist(); return }
         }
       }
     },

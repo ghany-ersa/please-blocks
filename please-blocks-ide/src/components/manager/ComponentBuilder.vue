@@ -340,6 +340,10 @@ function updateStepInput(stepIdx, fieldName, value) {
   )
 }
 
+function updateStepNote(stepIdx, note) {
+  compStore.updateMethodStepNote(activeCompId.value, activeMethodId.value, stepIdx, note)
+}
+
 // Tab: 'builder' | 'preview'
 const activeTab = ref('builder')
 </script>
@@ -578,6 +582,7 @@ const activeTab = ref('builder')
               :method-params="methodParamsWithSchema"
               @remove="removeStep(idx)"
               @update-input="(field, val) => updateStepInput(idx, field, val)"
+              @update-note="(note) => updateStepNote(idx, note)"
             />
 
             <div

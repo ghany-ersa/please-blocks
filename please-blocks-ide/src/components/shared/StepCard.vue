@@ -41,7 +41,7 @@ const props = defineProps({
   methodParams: { type: Array,   default: () => [] }
 })
 
-const emit = defineEmits(['select', 'step-click', 'remove', 'update-input', 'reorder'])
+const emit = defineEmits(['select', 'step-click', 'remove', 'update-input', 'update-note', 'reorder'])
 
 const registry  = useBlockRegistry()
 const canvas    = useCanvasStore()
@@ -266,6 +266,19 @@ function onDrop(e) {
           @update:model-value="emit('update-input', field.name, $event)"
         />
       </template>
+
+      <!-- Note / konteks opsional -->
+      <div class="sc-note-field">
+        <label class="sc-note-label">Konteks <span class="sc-note-opt">opsional</span></label>
+        <textarea
+          class="sc-note-input"
+          :value="step.note || ''"
+          placeholder="Tulis konteks atau tujuan step ini..."
+          rows="2"
+          @input="emit('update-note', $event.target.value)"
+          @click.stop
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -395,6 +408,49 @@ function onDrop(e) {
   background: rgba(0,0,0,0.2);
   border-radius: 0 0 4px 4px;
 }
+
+/* Note field di expanded form */
+.sc-note-field {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+.sc-note-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 9.5px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+.sc-note-opt {
+  font-size: 8px;
+  font-weight: 400;
+  color: #334155;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.sc-note-input {
+  width: 100%;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid #1e293b;
+  border-radius: 4px;
+  padding: 5px 8px;
+  font-size: 10px;
+  color: #94a3b8;
+  font-style: italic;
+  line-height: 1.5;
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+.sc-note-input:focus { border-color: #334155; color: #e2e8f0; }
+.sc-note-input::placeholder { color: #334155; font-style: italic; }
 
 /* ── Unknown block ───────────────────────────────────────── */
 .step-unknown {
