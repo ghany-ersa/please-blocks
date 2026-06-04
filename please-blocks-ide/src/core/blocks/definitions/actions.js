@@ -1,7 +1,7 @@
 // Definisi blok kategori Actions
 // Mapping ke: please.click(), fill(), fillAndEnter(), clear(), datepicker(), uploadFile(), scrollTo()
 
-import { resolveValue } from './helpers.js'
+import { resolveValue, resolveString } from './helpers.js'
 
 export default [
   {
@@ -19,7 +19,7 @@ export default [
     ],
     output: null,
     codegen(inputs) {
-      const args = [`'${inputs.label || ''}'`, `'${inputs.selector || ''}'`]
+      const args = [resolveString(inputs.label), resolveString(inputs.selector)]
       if (inputs.wait) args.push(inputs.wait)
       return `await please.click(${args.join(', ')})`
     },
@@ -44,7 +44,7 @@ export default [
     ],
     output: null,
     codegen(inputs) {
-      return `await please.fill('${inputs.label || ''}', '${inputs.selector || ''}', ${resolveValue(inputs.value)})`
+      return `await please.fill(${resolveString(inputs.label)}, ${resolveString(inputs.selector)}, ${resolveValue(inputs.value)})`
     },
     validate(inputs) {
       if (!inputs.selector) return 'Selector wajib diisi'
@@ -68,7 +68,7 @@ export default [
     ],
     output: null,
     codegen(inputs) {
-      return `await please.fillAndEnter('${inputs.label || ''}', '${inputs.selector || ''}', ${resolveValue(inputs.value)})`
+      return `await please.fillAndEnter(${resolveString(inputs.label)}, ${resolveString(inputs.selector)}, ${resolveValue(inputs.value)})`
     },
     validate(inputs) {
       if (!inputs.selector) return 'Selector wajib diisi'
@@ -91,7 +91,7 @@ export default [
     ],
     output: null,
     codegen(inputs) {
-      return `await please.clear('${inputs.label || ''}', '${inputs.selector || ''}')`
+      return `await please.clear(${resolveString(inputs.label)}, ${resolveString(inputs.selector)})`
     },
     validate(inputs) {
       if (!inputs.selector) return 'Selector wajib diisi'
@@ -114,7 +114,7 @@ export default [
     ],
     output: null,
     codegen(inputs) {
-      return `await please.datepicker('${inputs.label || ''}', '${inputs.selector || ''}', ${resolveValue(inputs.value)})`
+      return `await please.datepicker(${resolveString(inputs.label)}, ${resolveString(inputs.selector)}, ${resolveValue(inputs.value)})`
     },
     validate(inputs) {
       if (!inputs.selector) return 'Selector wajib diisi'
@@ -138,7 +138,7 @@ export default [
     ],
     output: null,
     codegen(inputs) {
-      return `await please.uploadFile('${inputs.label || ''}', '${inputs.selector || ''}', ${resolveValue(inputs.path)})`
+      return `await please.uploadFile(${resolveString(inputs.label)}, ${resolveString(inputs.selector)}, ${resolveValue(inputs.path)})`
     },
     validate(inputs) {
       if (!inputs.selector) return 'Selector wajib diisi'
@@ -161,7 +161,7 @@ export default [
     ],
     output: null,
     codegen(inputs) {
-      return `await please.scrollTo('${inputs.label || ''}', '${inputs.selector || ''}')`
+      return `await please.scrollTo(${resolveString(inputs.label)}, ${resolveString(inputs.selector)})`
     },
     validate(inputs) {
       if (!inputs.selector) return 'Selector wajib diisi'

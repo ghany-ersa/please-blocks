@@ -21,7 +21,8 @@ const props = defineProps({
   label:       { type: String,  default: '' },
   placeholder: { type: String,  default: 'Ketik nilai atau pilih dari data...' },
   required:    { type: Boolean, default: false },
-  error:       { type: String,  default: '' }
+  error:       { type: String,  default: '' },
+  extraVars:   { type: Array,   default: () => [] }
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -83,7 +84,7 @@ const dataOptions = computed(() => {
     .filter(e => !q || e.path.toLowerCase().includes(q))
 })
 
-// Canvas variables dari blok Get Text / Get Value
+// Canvas variables dari blok Get Text / Get Value (tidak include extraVars)
 const varOptions = computed(() => {
   const vars = []
   for (const f of canvas.features) {
@@ -97,6 +98,11 @@ const varOptions = computed(() => {
   }
   const q = searchQ.value.toLowerCase()
   return vars.filter(v => !q || v.varName.toLowerCase().includes(q))
+})
+
+const filteredExtraVars = computed(() => {
+  const q = searchQ.value.toLowerCase()
+  return props.extraVars.filter(p => !q || p.varName.toLowerCase().includes(q))
 })
 
 function selectData(entry) {
@@ -226,6 +232,20 @@ watch(open, (v) => {
         </div>
         <div class="hvi-list">
 
+          <!-- Method params -->
+          <template v-if="filteredExtraVars.length">
+            <div class="hvi-group-lbl">⚙️ Parameter Method</div>
+            <div
+              v-for="p in filteredExtraVars"
+              :key="'param-' + p.varName"
+              class="hvi-option hvi-option-param"
+              @click="selectVar(p)"
+            >
+              <span class="opt-icon">⚙️</span>
+              <span class="opt-path" style="color:#a78bfa">{{ p.varName }}</span>
+              <span class="opt-type" style="color:#7c3aed;background:rgba(124,58,237,0.1)">param</span>
+            </div>
+          </template>
           <!-- DataRef entries (primitif) -->
           <template v-if="dataOptions.length">
             <div class="hvi-group-lbl">📊 Data Factory</div>
@@ -260,7 +280,7 @@ watch(open, (v) => {
 
           <!-- Empty -->
           <div
-            v-if="!dataOptions.length && !varOptions.length"
+            v-if="!dataOptions.length && !varOptions.length && !filteredExtraVars.length"
             class="hvi-empty"
           >
             {{ searchQ
@@ -366,6 +386,7 @@ watch(open, (v) => {
   padding: 5px 10px; cursor: pointer; transition: background 0.1s;
 }
 .hvi-option:hover { background: rgba(255,255,255,0.04); }
+.hvi-option-param:hover { background: rgba(124,58,237,0.08); }
 .opt-icon { font-size: 10px; flex-shrink: 0; }
 .opt-body { flex: 1; min-width: 0; }
 .opt-path {

@@ -1,6 +1,8 @@
 // Definisi blok kategori Navigation
 // Mapping ke: please.goTo(), please.checkWhere()
 
+import { resolveValue } from './helpers.js'
+
 /**
  * URL Object schema yang diterima oleh blok navigasi.
  * Object harus memiliki kedua field ini agar please.goTo() / please.checkWhere() bisa berjalan.
@@ -41,8 +43,7 @@ export default [
     ],
     output: null,
     codegen(inputs) {
-      const target = inputs.urlTarget?.path || inputs.urlTarget || 'URL.login'
-      return `await please.goTo(${target})`
+      return `await please.goTo(${resolveValue(inputs.urlTarget)})`
     },
     validate(inputs) {
       if (!inputs.urlTarget) return 'URL target wajib dipilih'
@@ -70,8 +71,7 @@ export default [
     ],
     output: null,
     codegen(inputs) {
-      const target = inputs.urlExpected?.path || inputs.urlExpected || 'URL.dashboard'
-      return `await please.checkWhere(${target})`
+      return `await please.checkWhere(${resolveValue(inputs.urlExpected)})`
     },
     validate(inputs) {
       if (!inputs.urlExpected) return 'Halaman yang diharapkan wajib dipilih'

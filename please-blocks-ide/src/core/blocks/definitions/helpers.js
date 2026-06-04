@@ -31,3 +31,25 @@ export function resolveValue(val) {
   const escaped = String(val).replace(/\\/g, '\\\\').replace(/'/g, "\\'")
   return `'${escaped}'`
 }
+
+/**
+ * resolveString — untuk field yang seharusnya string literal di kode (label, selector, dll).
+ *
+ * Bedanya dengan resolveValue: hasilnya selalu dipakai sebagai argumen string.
+ * - Plain string        → 'some text'       (sama dengan resolveValue)
+ * - varref / dataref   → nama variabel tanpa quotes (identifier JS, bukan string literal)
+ *
+ * Contoh: selector = { type:'varref', varName:'user' }
+ *   resolveString(selector) → user          ← identifier JS
+ *   resolveValue(selector)  → user          ← sama, tapi semantiknya beda di konteks string field
+ *
+ * Dipakai di codegen untuk mengganti `'${inputs.label}'` / `'${inputs.selector}'`
+ * agar param method dan dataref tidak menghasilkan '[object Object]'.
+ */
+export function resolveString(val) {
+  if (val === null || val === undefined || val === '') return "''"
+  if (typeof val === 'object' && val.type === 'dataref') return val.path
+  if (typeof val === 'object' && val.type === 'varref')  return val.varName
+  const escaped = String(val).replace(/\\/g, '\\\\').replace(/'/g, "\\'")
+  return `'${escaped}'`
+}

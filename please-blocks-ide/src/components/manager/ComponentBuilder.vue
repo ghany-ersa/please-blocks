@@ -9,7 +9,7 @@
  *   QA buat component → tambah method → drag block ke step list
  *   → Save → ComponentFactory generate block defs → blok muncul di palette
  */
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { useComponentStore } from '@/stores/componentStore.js'
 import { useBlockRegistry }  from '@/stores/blockRegistry.js'
 import { useCanvasStore }    from '@/stores/canvasStore.js'
@@ -74,10 +74,49 @@ const activeMethod = computed(() =>
   activeComp.value?.methods.find(m => m.id === activeMethodId.value) || null
 )
 
-// Code preview untuk component aktif
+// Code preview — pass registry agar codegen step berjalan penuh
 const previewCode = computed(() =>
-  activeComp.value ? generateComponentFile(activeComp.value) : '// Pilih component'
+  activeComp.value
+    ? generateComponentFile(activeComp.value, registry)
+    : '// Pilih component'
 )
+
+// Syntax highlighting (sama persis dengan canvas CodePreview)
+function highlight(code) {
+  if (!code) return ''
+  let h = code
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+  h = h.replace(/(\/\/[^\n]*)/g,       '<span class="cm">$1</span>')
+  h = h.replace(/(`[^`\n]*`)/g,        '<span class="str">$1</span>')
+  h = h.replace(/'([^'<]*)'/g,         "'<span class=\"str\">$1</span>'")
+  h = h.replace(
+    /\b(const|let|var|await|async|function|return|if|else|for|of|new|this|require|module)\b/g,
+    '<span class="kw">$1</span>'
+  )
+  h = h.replace(
+    /\b(please|[A-Z]{2,})\.([\w]+)/g,
+    '<span class="obj">$1</span>.<span class="fn">$2</span>'
+  )
+  h = h.replace(
+    /\b([A-Z][A-Z_]*)\.([a-zA-Z.]+)/g,
+    '<span class="data">$1</span>.<span class="data-key">$2</span>'
+  )
+  return h
+}
+
+const highlightedPreview = computed(() => highlight(previewCode.value))
+
+// Copy
+const copied = ref(false)
+async function copyPreview() {
+  try {
+    await navigator.clipboard.writeText(previewCode.value)
+    copied.value = true
+    setTimeout(() => { copied.value = false }, 1800)
+  } catch { /* ignore */ }
+}
 
 // ── Component actions ─────────────────────────────────────────────
 function addComponent() {
@@ -166,6 +205,106 @@ function addParam() {
 function removeParam(paramName) {
   compStore.removeParam(activeCompId.value, activeMethodId.value, paramName)
 }
+
+// ── Param type dropdown ────────────────────────────────────────────
+
+// Semua object entries dari dataRegistry (type === 'object' && fields != null)
+const dataObjectOptions = computed(() => {
+  return dataReg.entries
+    .filter(e => e.type === 'object' && e.fields?.length)
+    .map(e => ({
+      path:   e.path,
+      fields: e.fields,
+      group:  e.group,
+      schema: { requiredFields: e.fields, description: `${e.path} object`, example: e.path }
+    }))
+})
+
+// Nilai saat ini untuk satu param: 'string' | 'URL' | 'Account' | 'URL.login' | ...
+function getParamValue(paramName) {
+  const ps = activeMethod.value?.paramSchemas?.[paramName]
+  if (!ps || ps.inputType === 'value') return 'string'
+  // Cek apakah ini specific object (punya path di schema.example)
+  if (ps.schema?.example) return ps.schema.example
+  return ps.inputType
+}
+
+function getParamDisplayLabel(paramName) {
+  return getParamValue(paramName)
+}
+
+// Param type dropdown state — satu dropdown per param (pakai paramName sebagai key)
+const openParamDropdown = ref(null)   // nama param yang dropdownnya terbuka
+const paramDropStyle    = ref({})
+const paramTriggerRefs  = ref({})     // { [paramName]: el }
+
+function toggleParamDropdown(paramName, event) {
+  event.stopPropagation()
+  if (openParamDropdown.value === paramName) {
+    openParamDropdown.value = null
+    return
+  }
+  openParamDropdown.value = paramName
+  nextTick(() => {
+    const el = paramTriggerRefs.value[paramName]
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    paramDropStyle.value = {
+      top:   `${rect.bottom + window.scrollY}px`,
+      left:  `${rect.left  + window.scrollX}px`,
+      minWidth: `140px`
+    }
+  })
+}
+
+function closeParamDropdown() {
+  openParamDropdown.value = null
+}
+
+function onParamDropdownOutside(e) {
+  if (!e.target.closest('.ptd-trigger') && !e.target.closest('.ptd-dropdown')) {
+    closeParamDropdown()
+  }
+}
+
+watch(openParamDropdown, (val) => {
+  if (val) document.addEventListener('click', onParamDropdownOutside)
+  else     document.removeEventListener('click', onParamDropdownOutside)
+})
+
+function selectParamType(paramName, choice) {
+  // choice: 'string' | 'dataref' | path dari object (misal 'URL.login')
+  if (choice === 'string') {
+    compStore.setParamSchema(activeCompId.value, activeMethodId.value, paramName, 'value', null)
+  } else if (choice === 'dataref') {
+    compStore.setParamSchema(activeCompId.value, activeMethodId.value, paramName, 'dataref', null)
+  } else {
+    // Specific object — cari dari dataObjectOptions
+    const obj = dataObjectOptions.value.find(o => o.path === choice)
+    if (obj) {
+      compStore.setParamSchema(activeCompId.value, activeMethodId.value, paramName, 'dataref', obj.schema)
+    }
+  }
+  closeParamDropdown()
+}
+
+function getParamSchema(paramName) {
+  return activeMethod.value?.paramSchemas?.[paramName] || null
+}
+
+// Computed: extraVars dengan schema untuk StepCard
+const methodParamsWithSchema = computed(() => {
+  if (!activeMethod.value) return []
+  return activeMethod.value.params.map(name => {
+    const ps = activeMethod.value.paramSchemas?.[name]
+    return {
+      varName:   name,
+      label:     name,
+      inputType: ps?.inputType || 'value',
+      schema:    ps?.schema    || null
+    }
+  })
+})
 
 // ── Step drag & drop dalam method ──────────────────────────────────
 function onStepDragOver(e) {
@@ -364,12 +503,62 @@ const activeTab = ref('builder')
                 v-for="p in activeMethod.params" :key="p"
                 class="param-tag"
               >
-                {{ p }}
+                {{ p }}:
+                <!-- Dropdown tipe param -->
+                <button
+                  :ref="el => { if (el) paramTriggerRefs[p] = el }"
+                  class="ptd-trigger"
+                  :class="{ active: openParamDropdown === p }"
+                  @click="toggleParamDropdown(p, $event)"
+                  :title="`Tipe param ${p}`"
+                >{{ getParamDisplayLabel(p) }} ›</button>
                 <button @click.stop="removeParam(p)" class="param-del">×</button>
               </span>
               <button class="param-add" @click="addParam">+ param</button>
             </div>
           </div>
+
+          <!-- Param type dropdown — teleport ke body -->
+          <Teleport to="body">
+            <div
+              v-if="openParamDropdown"
+              class="ptd-dropdown"
+              :style="paramDropStyle"
+            >
+              <!-- String -->
+              <div class="ptd-option" :class="{ active: getParamValue(openParamDropdown) === 'string' }" @click="selectParamType(openParamDropdown, 'string')">
+                <span class="ptd-icon">T</span>
+                <span class="ptd-label">String</span>
+                <span class="ptd-desc">nilai teks biasa</span>
+              </div>
+
+              <!-- Data Ref generik -->
+              <!-- <div class="ptd-option" :class="{ active: getParamValue(openParamDropdown) === 'dataref' }" @click="selectParamType(openParamDropdown, 'dataref')">
+                <span class="ptd-icon">🔗</span>
+                <span class="ptd-label">Data Ref</span>
+                <span class="ptd-desc">object apapun dari data</span>
+              </div> -->
+
+              <!-- Separator + list data objects -->
+              <template v-if="dataObjectOptions.length">
+                <div class="ptd-separator">Data Objects</div>
+                <div
+                  v-for="obj in dataObjectOptions"
+                  :key="obj.path"
+                  class="ptd-option ptd-option-obj"
+                  :class="{ active: getParamValue(openParamDropdown) === obj.path }"
+                  @click="selectParamType(openParamDropdown, obj.path)"
+                >
+                  <span class="ptd-icon">📦</span>
+                  <div class="ptd-body">
+                    <span class="ptd-label">{{ obj.path }}</span>
+                    <span class="ptd-desc">{{ obj.fields.join(', ') }}</span>
+                  </div>
+                </div>
+              </template>
+              <div v-else class="ptd-empty">Belum ada data object. Buka Data Manager.</div>
+            </div>
+          </Teleport>
 
           <!-- Step list (drop target) -->
           <div
@@ -386,6 +575,7 @@ const activeTab = ref('builder')
               :index="idx"
               :editable="true"
               :draggable="false"
+              :method-params="methodParamsWithSchema"
               @remove="removeStep(idx)"
               @update-input="(field, val) => updateStepInput(idx, field, val)"
             />
@@ -421,8 +611,11 @@ const activeTab = ref('builder')
           <span class="preview-file">
             components/{{ activeComp?.name?.toLowerCase() || '?' }}.js
           </span>
+          <button class="preview-copy" :class="{ done: copied }" @click="copyPreview">
+            {{ copied ? '✓ Copied' : '⎘ Copy' }}
+          </button>
         </div>
-        <pre class="preview-code">{{ previewCode }}</pre>
+        <pre class="preview-code" v-html="highlightedPreview"></pre>
       </div>
 
     </div>
@@ -586,6 +779,53 @@ const activeTab = ref('builder')
   font-family: monospace;
 }
 .param-del { background: none; border: none; cursor: pointer; color: #10b981; font-size: 10px; padding: 0; }
+
+/* Param type trigger button */
+.ptd-trigger {
+  background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2);
+  border-radius: 3px; color: #6ee7b7; font-size: 8px; padding: 1px 4px;
+  cursor: pointer; font-family: monospace; white-space: nowrap;
+  max-width: 80px; overflow: hidden; text-overflow: ellipsis;
+  transition: border-color 0.1s;
+}
+.ptd-trigger:hover, .ptd-trigger.active { border-color: rgba(16,185,129,0.5); background: rgba(16,185,129,0.14); }
+
+/* Param type dropdown */
+.ptd-dropdown {
+  position: fixed; z-index: 9999;
+  background: #111827; border: 1px solid #1e293b;
+  border-radius: 6px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  min-width: 180px; padding: 4px 0;
+  overflow: hidden;
+}
+.ptd-option {
+  display: flex; align-items: center; gap: 7px;
+  padding: 5px 10px; cursor: pointer;
+  transition: background 0.1s;
+}
+.ptd-option:hover    { background: rgba(255,255,255,0.04); }
+.ptd-option.active   { background: rgba(16,185,129,0.08); }
+.ptd-option-obj      { padding-left: 10px; }
+.ptd-icon {
+  font-size: 10px; width: 14px; text-align: center;
+  color: #10b981; font-weight: 700; flex-shrink: 0;
+}
+.ptd-body { display: flex; flex-direction: column; min-width: 0; }
+.ptd-label {
+  font-size: 10px; font-weight: 600; color: #e2e8f0;
+  font-family: monospace;
+}
+.ptd-option-obj .ptd-label { color: #38bdf8; font-size: 10px; }
+.ptd-desc {
+  font-size: 8.5px; color: #334155;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ptd-separator {
+  font-size: 8px; font-weight: 700; color: #334155;
+  padding: 6px 10px 2px; text-transform: uppercase; letter-spacing: 0.06em;
+  border-top: 1px solid #1e293b; margin-top: 2px;
+}
+.ptd-empty { font-size: 9px; color: #334155; padding: 8px 10px; text-align: center; }
 .param-add {
   font-size: 9px; background: none; border: 1px dashed rgba(16,185,129,0.3);
   border-radius: 3px; padding: 1px 5px; color: #10b981; cursor: pointer;
@@ -633,18 +873,35 @@ const activeTab = ref('builder')
 .empty-col-msg { font-size: 10px; color: #374151; text-align: center; padding: 16px 12px; }
 
 /* Preview tab */
-.preview-body { flex-direction: column; }
+.preview-body { flex-direction: column; background: #0a0d14; }
 .preview-actions {
-  display: flex; align-items: center; gap: 10px;
-  padding: 8px 16px; border-bottom: 1px solid #1e293b; flex-shrink: 0;
-  background: #0f1117;
+  display: flex; align-items: center; gap: 8px;
+  padding: 0 12px; height: 36px;
+  border-bottom: 1px solid #1e293b; flex-shrink: 0;
+  background: #111827;
 }
-.preview-file { font-family: monospace; font-size: 11px; color: #64748b; flex: 1; }
+.preview-file { font-family: monospace; font-size: 10px; color: #64748b; flex: 1; }
+.preview-copy {
+  padding: 3px 8px; font-size: 9.5px;
+  background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.25);
+  border-radius: 4px; color: #6366f1; cursor: pointer; white-space: nowrap;
+  transition: all 0.15s;
+}
+.preview-copy.done { background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.3); color: #10b981; }
+.preview-copy:hover:not(.done) { background: rgba(99,102,241,0.2); }
 .preview-code {
   flex: 1; overflow: auto; margin: 0;
-  padding: 14px 16px;
-  font-family: 'SF Mono','Fira Code',monospace; font-size: 10px;
-  line-height: 1.7; color: #94a3b8;
+  padding: 12px 16px;
+  font-family: 'SF Mono','Fira Code','Consolas',monospace; font-size: 10px;
+  line-height: 1.75; color: #94a3b8;
   white-space: pre; background: #0a0d14;
 }
+/* Syntax token colors — identik dengan canvas CodePreview */
+.preview-code :deep(.cm)       { color: #334155; font-style: italic; }
+.preview-code :deep(.kw)       { color: #c084fc; }
+.preview-code :deep(.str)      { color: #fbbf24; }
+.preview-code :deep(.fn)       { color: #6ee7b7; }
+.preview-code :deep(.obj)      { color: #6ee7b7; }
+.preview-code :deep(.data)     { color: #38bdf8; }
+.preview-code :deep(.data-key) { color: #7dd3fc; }
 </style>

@@ -213,6 +213,7 @@ function onDrop(e) {
         :test-case-id="testCase.id"
         :index="idx"
         :selected="sel.isSelected(idx)"
+        :has-selection="sel.hasSelection.value"
         @step-click="sel.onStepClick(idx, $event)"
       />
 

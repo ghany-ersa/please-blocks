@@ -30,12 +30,15 @@ import DataRefSelect    from '@/components/inspector/inputs/DataRefSelect.vue'
 import HybridValueInput from '@/components/inspector/inputs/HybridValueInput.vue'
 
 const props = defineProps({
-  step:       { type: Object,  required: true },
-  index:      { type: Number,  required: true },
-  selected:   { type: Boolean, default: false },
-  draggable:  { type: Boolean, default: false },
-  testCaseId: { type: String,  default: '' },
-  editable:   { type: Boolean, default: true }
+  step:         { type: Object,  required: true },
+  index:        { type: Number,  required: true },
+  selected:     { type: Boolean, default: false },
+  hasSelection: { type: Boolean, default: false },
+  selectable:   { type: Boolean, default: false },
+  draggable:    { type: Boolean, default: false },
+  testCaseId:   { type: String,  default: '' },
+  editable:     { type: Boolean, default: true },
+  methodParams: { type: Array,   default: () => [] }
 })
 
 const emit = defineEmits(['select', 'step-click', 'remove', 'update-input', 'reorder'])
@@ -45,7 +48,14 @@ const canvas    = useCanvasStore()
 const dataReg   = useDataRegistry()
 const compStore = useComponentStore()
 
-const block    = computed(() => registry.getById(props.step.blockId))
+const block     = computed(() => registry.getById(props.step.blockId))
+const extraVars = computed(() =>
+  props.methodParams.map(p =>
+    typeof p === 'string'
+      ? { varName: p, label: p, inputType: 'value', schema: null }
+      : { varName: p.varName, label: p.varName, inputType: p.inputType || 'value', schema: p.schema || null }
+  )
+)
 const isActive = computed(() => canvas.activeStepId === props.step.id)
 
 const validation = computed(() => {
@@ -74,21 +84,20 @@ const preview = computed(() => {
 })
 
 // ── Click handling ────────────────────────────────────────────────
-function onClick(e) {
-  emit('step-click', e)
-  if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
+function onHeaderClick(e) {
+  if (props.editable && block.value?.inputs?.length) {
+    toggleExpand()
+  } else {
+    // Tidak ada expand — header click = select step biasa
     canvas.selectStep(props.step.id)
     emit('select', props.step)
   }
 }
 
-function onHeaderClick(e) {
-  // Jika editable: klik header toggle expand (tidak emit select)
-  if (props.editable && block.value?.inputs?.length) {
-    toggleExpand()
-  } else {
-    onClick(e)
-  }
+// Checkbox diklik — toggle selection
+function onCheckboxClick(e) {
+  e.stopPropagation()
+  emit('step-click', e)
 }
 
 function onDblClick(e) {
@@ -173,7 +182,19 @@ function onDrop(e) {
   >
     <!-- ── Collapsed header ─────────────────────────────────── -->
     <div class="sc-header" @click="onHeaderClick">
-      <span class="sc-num">{{ index + 1 }}</span>
+      <!-- Checkbox area (selectable mode: canvas) -->
+      <span
+        v-if="selectable"
+        class="sc-checkbox-wrap"
+        :class="{ visible: selected || hasSelection }"
+        @click.stop="onCheckboxClick"
+      >
+        <span class="sc-checkbox" :class="{ checked: selected }">
+          {{ selected ? '☑' : '☐' }}
+        </span>
+      </span>
+      <!-- Nomor (visible saat tidak ada selection atau bukan selectable) -->
+      <span v-if="!selectable || (!selected && !hasSelection)" class="sc-num">{{ index + 1 }}</span>
 
       <!-- Chevron (hanya jika editable dan ada fields) -->
       <span
@@ -215,6 +236,7 @@ function onDrop(e) {
           :required="field.required"
           :schema="field.schema || null"
           :input-type="field.type"
+          :extra-vars="extraVars"
           :model-value="step.inputs[field.name] ?? ''"
           @update:model-value="emit('update-input', field.name, $event)"
         />
@@ -223,6 +245,7 @@ function onDrop(e) {
           :label="field.label"
           :placeholder="field.placeholder"
           :required="field.required"
+          :extra-vars="extraVars"
           :model-value="step.inputs[field.name] ?? ''"
           @update:model-value="emit('update-input', field.name, $event)"
         />
@@ -290,6 +313,29 @@ function onDrop(e) {
   text-align: right;
   flex-shrink: 0;
 }
+
+/* Checkbox selection */
+.sc-checkbox-wrap {
+  min-width: 14px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s;
+  cursor: pointer;
+}
+.sc-checkbox-wrap.visible { opacity: 1; }
+.step-card:hover .sc-checkbox-wrap { opacity: 1; }
+.sc-checkbox {
+  font-size: 12px;
+  color: #475569;
+  line-height: 1;
+  user-select: none;
+  transition: color 0.1s;
+}
+.sc-checkbox.checked { color: #a855f7; }
+.sc-checkbox-wrap:hover .sc-checkbox { color: #a855f7; }
 .sc-chevron {
   font-size: 11px;
   color: #475569;

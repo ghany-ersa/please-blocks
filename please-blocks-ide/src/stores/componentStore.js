@@ -192,8 +192,19 @@ export const useComponentStore = defineStore('componentStore', {
       const m = c?.methods.find(m => m.id === methodId)
       if (m) {
         m.params = m.params.filter(p => p !== paramName)
+        if (m.paramSchemas) delete m.paramSchemas[paramName]
         this.processAndRegister()
       }
+    },
+
+    // Set tipe/schema untuk satu param (disimpan di method.paramSchemas)
+    setParamSchema(componentId, methodId, paramName, inputType, schema = null) {
+      const c = this.components.find(c => c.id === componentId)
+      const m = c?.methods.find(m => m.id === methodId)
+      if (!m) return
+      if (!m.paramSchemas) m.paramSchemas = {}
+      m.paramSchemas[paramName] = { inputType, schema }
+      this.processAndRegister()
     },
 
     // ── ComponentBuilder navigation ───────────────────────────────

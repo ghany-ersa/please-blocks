@@ -43,13 +43,18 @@ function buildMethodBlock(compDef, method) {
   const label    = `${compDef.exportName}.${method.name}`
 
   // Inputs: satu input per parameter method
-  const inputs = method.params.map(paramName => ({
-    name:        paramName,
-    type:        guessInputType(paramName),
-    label:       formatParamLabel(paramName),
-    placeholder: guessPlaceholder(paramName, compDef),
-    required:    true
-  }))
+  // Gunakan paramSchemas jika tersedia, fallback ke guess
+  const inputs = method.params.map(paramName => {
+    const ps = method.paramSchemas?.[paramName]
+    return {
+      name:        paramName,
+      type:        ps?.inputType || guessInputType(paramName),
+      schema:      ps?.schema    || null,
+      label:       formatParamLabel(paramName),
+      placeholder: guessPlaceholder(paramName, compDef),
+      required:    true
+    }
+  })
 
   return {
     id:          blockId,

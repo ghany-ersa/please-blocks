@@ -3,10 +3,11 @@ import { useCanvasStore } from '@/stores/canvasStore.js'
 import StepCard from '@/components/shared/StepCard.vue'
 
 const props = defineProps({
-  step:       { type: Object,  required: true },
-  testCaseId: { type: String,  required: true },
-  index:      { type: Number,  required: true },
-  selected:   { type: Boolean, default: false }
+  step:         { type: Object,  required: true },
+  testCaseId:   { type: String,  required: true },
+  index:        { type: Number,  required: true },
+  selected:     { type: Boolean, default: false },
+  hasSelection: { type: Boolean, default: false }
 })
 
 const emit = defineEmits(['select', 'step-click'])
@@ -31,6 +32,8 @@ function onReorder(fromIndex, toIndex) {
     :step="step"
     :index="index"
     :selected="selected"
+    :has-selection="hasSelection"
+    :selectable="true"
     :draggable="true"
     :editable="true"
     :test-case-id="testCaseId"

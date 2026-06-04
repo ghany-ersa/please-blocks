@@ -21,7 +21,9 @@ const props = defineProps({
   required:    { type: Boolean, default: false },
   error:       { type: String,  default: '' },
   inputType:   { type: String,  default: 'dataref' },  // 'dataref' | 'value' | 'varref'
-  schema:      { type: Object,  default: null }         // block input schema (optional)
+  schema:      { type: Object,  default: null },        // block input schema (optional)
+  // Variabel tambahan yang di-inject dari luar (mis. param method di ComponentBuilder)
+  extraVars:   { type: Array,   default: () => [] }    // [{ varName, label }]
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -77,9 +79,16 @@ const hasCompatibleOptions = computed(() =>
   !props.schema || dataOptions.value.some(e => e.compat === 'ok')
 )
 
-// Canvas variables
+// Canvas variables + extraVars (mis. param method dari ComponentBuilder)
 const varOptions = computed(() => {
   const vars = []
+
+  // Param method yang di-inject dari luar (ditampilkan pertama)
+  for (const p of props.extraVars) {
+    vars.push({ varName: p.varName, label: p.label || p.varName, isParam: true })
+  }
+
+  // Canvas variables dari step output
   for (const f of canvas.features) {
     for (const tc of f.testCases) {
       for (const step of tc.steps) {
@@ -170,6 +179,15 @@ watch(open, (val) => {
   else     document.removeEventListener('click', onOutsideClick)
 })
 
+// Cek apakah schema param kompatibel dengan schema field yang sedang diisi
+// (keduanya harus punya requiredFields yang sama / superset)
+function paramSchemaCompatible(param) {
+  if (!props.schema || !param.schema) return true
+  const needed  = props.schema.requiredFields  || []
+  const has     = param.schema.requiredFields  || []
+  return needed.every(f => has.includes(f))
+}
+
 // ── Schema hint text ─────────────────────────────────────────────
 const schemaHint = computed(() => {
   if (!props.schema) return ''
@@ -230,6 +248,39 @@ const schemaHint = computed(() => {
         </div>
 
         <div class="drs-list">
+
+          <!-- Method params (extraVars) -->
+          <template v-if="extraVars.length">
+            <div class="drs-group-label">⚙️ Parameter Method</div>
+            <div
+              v-for="p in extraVars.filter(p => !searchQ || p.varName.toLowerCase().includes(searchQ.toLowerCase()))"
+              :key="'param-' + p.varName"
+              class="drs-option drs-option-param"
+              :class="{
+                'compat-warn': schema && p.schema && !paramSchemaCompatible(p)
+              }"
+              @click="selectVar({ varName: p.varName })"
+            >
+              <span class="opt-icon">⚙️</span>
+              <div class="opt-body">
+                <span class="opt-path" style="color:#a78bfa">{{ p.varName }}</span>
+                <!-- Tampilkan schema hint jika ada -->
+                <span v-if="p.schema?.requiredFields" class="opt-fields">
+                  butuh: {{ p.schema.requiredFields.join(', ') }}
+                </span>
+              </div>
+              <!-- Compat marker jika field schema yang diminta berbeda dengan schema param -->
+              <span
+                v-if="schema && p.schema && !paramSchemaCompatible(p)"
+                class="opt-compat warn"
+                :title="`Param ini butuh: ${p.schema.requiredFields?.join(', ')}, tapi field ini butuh: ${schema.requiredFields?.join(', ')}`"
+              >⚠</span>
+              <span class="opt-type" style="color:#7c3aed;background:rgba(124,58,237,0.1)">
+                {{ p.inputType === 'dataref' && p.schema ? p.schema.description?.split(' ')[0] || 'obj' : p.inputType || 'param' }}
+              </span>
+            </div>
+          </template>
+          
           <!-- DataRef entries -->
           <template v-if="dataOptions.length">
             <div class="drs-group-label">📊 Data Registry</div>
@@ -258,10 +309,10 @@ const schemaHint = computed(() => {
           </template>
 
           <!-- Canvas variables -->
-          <template v-if="(inputType === 'varref' || inputType === 'value') && varOptions.length">
+          <template v-if="(inputType === 'varref' || inputType === 'value') && varOptions.filter(v => !v.isParam).length">
             <div class="drs-group-label">📌 Canvas Variables</div>
             <div
-              v-for="v in varOptions"
+              v-for="v in varOptions.filter(v => !v.isParam)"
               :key="v.varName"
               class="drs-option"
               @click="selectVar(v)"
@@ -281,7 +332,7 @@ const schemaHint = computed(() => {
           </template>
 
           <!-- Empty -->
-          <div v-if="!dataOptions.length && !varOptions.length && !inlineValue" class="drs-empty">
+          <div v-if="!dataOptions.length && !varOptions.length && !extraVars.length && !inlineValue" class="drs-empty">
             {{ searchQ
               ? `Tidak ada hasil untuk "${searchQ}"`
               : 'Belum ada data. Buka Data Manager.' }}
@@ -370,6 +421,7 @@ const schemaHint = computed(() => {
   padding: 5px 10px; cursor: pointer; transition: background 0.1s;
 }
 .drs-option:hover { background: rgba(255,255,255,0.04); }
+.drs-option-param:hover { background: rgba(124,58,237,0.08); }
 
 /* Kompatibilitas */
 .drs-option.compat-ok { }

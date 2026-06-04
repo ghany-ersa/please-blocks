@@ -1,7 +1,7 @@
 // Definisi blok kategori Assertions
 // Mapping ke: please.see(), equal(), notEqual(), getText(), getValue(), fail()
 
-import { resolveValue } from './helpers.js'
+import { resolveValue, resolveString } from './helpers.js'
 
 export default [
   {
@@ -19,7 +19,7 @@ export default [
     ],
     output: null,
     codegen(inputs) {
-      return `await please.see('${inputs.label || ''}', '${inputs.selector || ''}', ${resolveValue(inputs.expected)})`
+      return `await please.see(${resolveString(inputs.label)}, ${resolveString(inputs.selector)}, ${resolveValue(inputs.expected)})`
     },
     validate(inputs) {
       if (!inputs.selector) return 'Selector wajib diisi'
@@ -44,7 +44,7 @@ export default [
     output: 'text',
     codegen(inputs) {
       const varName = inputs.varName || 'result'
-      return `const ${varName} = await please.getText('${inputs.label || ''}', '${inputs.selector || ''}')`
+      return `const ${varName} = await please.getText(${resolveString(inputs.label)}, ${resolveString(inputs.selector)})`
     },
     validate(inputs) {
       if (!inputs.selector) return 'Selector wajib diisi'
@@ -69,7 +69,7 @@ export default [
     output: 'value',
     codegen(inputs) {
       const varName = inputs.varName || 'result'
-      return `const ${varName} = await please.getValue('${inputs.label || ''}', '${inputs.selector || ''}')`
+      return `const ${varName} = await please.getValue(${resolveString(inputs.label)}, ${resolveString(inputs.selector)})`
     },
     validate(inputs) {
       if (!inputs.selector) return 'Selector wajib diisi'
@@ -96,7 +96,7 @@ export default [
       const actual   = inputs.actual?.varName ?? inputs.actual ?? 'actual'
       const expected = resolveValue(inputs.expected)
       const args     = [actual, expected]
-      if (inputs.message) args.push(`'${inputs.message}'`)
+      if (inputs.message) args.push(resolveString(inputs.message))
       return `await please.equal(${args.join(', ')})`
     },
     validate(inputs) {
@@ -124,7 +124,7 @@ export default [
       const actual   = inputs.actual?.varName ?? inputs.actual ?? 'actual'
       const expected = resolveValue(inputs.expected)
       const args     = [actual, expected]
-      if (inputs.message) args.push(`'${inputs.message}'`)
+      if (inputs.message) args.push(resolveString(inputs.message))
       return `await please.notEqual(${args.join(', ')})`
     },
     validate(inputs) {
