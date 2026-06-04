@@ -1,171 +1,91 @@
 // Definisi blok kategori Actions
 // Mapping ke: please.click(), fill(), fillAndEnter(), clear(), datepicker(), uploadFile(), scrollTo()
 
-import { resolveValue, resolveString } from './helpers.js'
+import { t }                          from './inputTemplates.js'
+import { v, createValidator }         from './validationHelpers.js'
+import { codegenLabelSelector, codegenLabelSelectorValue } from './codegenHelpers.js'
+
+const ACTION = { type: 'action', color: '#10b981', colorBg: 'rgba(16,185,129,0.1)', output: null }
 
 export default [
   {
+    ...ACTION,
     id: 'action.click',
-    type: 'action',
     label: 'Click',
     icon: '🖱️',
-    color: '#10b981',
-    colorBg: 'rgba(16,185,129,0.1)',
     description: 'Klik element di halaman',
-    inputs: [
-      { name: 'label',    type: 'text',     label: 'Label',     placeholder: 'button submit', required: true },
-      { name: 'selector', type: 'selector', label: 'Selector',  placeholder: '#submit',       required: true },
-      { name: 'wait',     type: 'number',   label: 'Wait (ms)', placeholder: 'opsional',      required: false }
-    ],
-    output: null,
-    codegen(inputs) {
-      const args = [resolveString(inputs.label), resolveString(inputs.selector)]
-      if (inputs.wait) args.push(inputs.wait)
-      return `await please.click(${args.join(', ')})`
-    },
-    validate(inputs) {
-      if (!inputs.selector) return 'Selector wajib diisi'
-      return null
-    }
+    inputs: [t.label('button submit'), t.selector('#submit'), t.wait()],
+    codegen: codegenLabelSelector('click', 'wait'),
+    validate: createValidator(v.selector())
   },
 
   {
+    ...ACTION,
     id: 'action.fill',
-    type: 'action',
     label: 'Fill Input',
     icon: '⌨️',
-    color: '#10b981',
-    colorBg: 'rgba(16,185,129,0.1)',
     description: 'Isi field dengan nilai tertentu',
-    inputs: [
-      { name: 'label',    type: 'text',     label: 'Label',    placeholder: 'input username', required: true },
-      { name: 'selector', type: 'selector', label: 'Selector', placeholder: '#username',      required: true },
-      { name: 'value',    type: 'value',    label: 'Nilai',    placeholder: 'student',        required: true }
-    ],
-    output: null,
-    codegen(inputs) {
-      return `await please.fill(${resolveString(inputs.label)}, ${resolveString(inputs.selector)}, ${resolveValue(inputs.value)})`
-    },
-    validate(inputs) {
-      if (!inputs.selector) return 'Selector wajib diisi'
-      if (inputs.value === undefined || inputs.value === null || inputs.value === '') return 'Nilai wajib diisi'
-      return null
-    }
+    inputs: [t.label('input username'), t.selector('#username'), t.value('student')],
+    codegen: codegenLabelSelectorValue('fill'),
+    validate: createValidator(v.selector(), v.value())
   },
 
   {
+    ...ACTION,
     id: 'action.fillAndEnter',
-    type: 'action',
     label: 'Fill & Enter',
     icon: '⏎',
-    color: '#10b981',
-    colorBg: 'rgba(16,185,129,0.1)',
     description: 'Isi field lalu tekan Enter',
-    inputs: [
-      { name: 'label',    type: 'text',     label: 'Label',    placeholder: 'input search', required: true },
-      { name: 'selector', type: 'selector', label: 'Selector', placeholder: '#search',      required: true },
-      { name: 'value',    type: 'value',    label: 'Nilai',    placeholder: 'kata kunci',   required: true }
-    ],
-    output: null,
-    codegen(inputs) {
-      return `await please.fillAndEnter(${resolveString(inputs.label)}, ${resolveString(inputs.selector)}, ${resolveValue(inputs.value)})`
-    },
-    validate(inputs) {
-      if (!inputs.selector) return 'Selector wajib diisi'
-      if (inputs.value === undefined || inputs.value === null || inputs.value === '') return 'Nilai wajib diisi'
-      return null
-    }
+    inputs: [t.label('input search'), t.selector('#search'), t.value('kata kunci')],
+    codegen: codegenLabelSelectorValue('fillAndEnter'),
+    validate: createValidator(v.selector(), v.value())
   },
 
   {
+    ...ACTION,
     id: 'action.clear',
-    type: 'action',
     label: 'Clear Input',
     icon: '🗑️',
-    color: '#10b981',
-    colorBg: 'rgba(16,185,129,0.1)',
     description: 'Kosongkan nilai dari sebuah input field',
-    inputs: [
-      { name: 'label',    type: 'text',     label: 'Label',    placeholder: 'input username', required: true },
-      { name: 'selector', type: 'selector', label: 'Selector', placeholder: '#username',      required: true }
-    ],
-    output: null,
-    codegen(inputs) {
-      return `await please.clear(${resolveString(inputs.label)}, ${resolveString(inputs.selector)})`
-    },
-    validate(inputs) {
-      if (!inputs.selector) return 'Selector wajib diisi'
-      return null
-    }
+    inputs: [t.label('input username'), t.selector('#username')],
+    codegen: codegenLabelSelector('clear'),
+    validate: createValidator(v.selector())
   },
 
   {
+    ...ACTION,
     id: 'action.datepicker',
-    type: 'action',
     label: 'Date Picker',
     icon: '📅',
-    color: '#10b981',
-    colorBg: 'rgba(16,185,129,0.1)',
     description: 'Isi input date picker dengan format tanggal',
-    inputs: [
-      { name: 'label',    type: 'text',     label: 'Label',    placeholder: 'input tanggal lahir', required: true },
-      { name: 'selector', type: 'selector', label: 'Selector', placeholder: '#birthdate',          required: true },
-      { name: 'value',    type: 'value',    label: 'Tanggal',  placeholder: '2000-01-01',          required: true }
-    ],
-    output: null,
-    codegen(inputs) {
-      return `await please.datepicker(${resolveString(inputs.label)}, ${resolveString(inputs.selector)}, ${resolveValue(inputs.value)})`
-    },
-    validate(inputs) {
-      if (!inputs.selector) return 'Selector wajib diisi'
-      if (!inputs.value)    return 'Tanggal wajib diisi'
-      return null
-    }
+    inputs: [t.label('input tanggal lahir'), t.selector('#birthdate'), t.value('2000-01-01', 'Tanggal')],
+    codegen: codegenLabelSelectorValue('datepicker'),
+    validate: createValidator(v.selector(), (inputs) => inputs.value ? null : 'Tanggal wajib diisi')
   },
 
   {
+    ...ACTION,
     id: 'action.uploadFile',
-    type: 'action',
     label: 'Upload File',
     icon: '📎',
-    color: '#10b981',
-    colorBg: 'rgba(16,185,129,0.1)',
     description: 'Upload file ke input type=file',
     inputs: [
-      { name: 'label',    type: 'text',     label: 'Label',     placeholder: 'input upload foto', required: true },
-      { name: 'selector', type: 'selector', label: 'Selector',  placeholder: 'input[type=file]',  required: true },
-      { name: 'path',     type: 'value',    label: 'Path file', placeholder: '/path/to/file.jpg', required: true }
+      t.label('input upload foto'),
+      t.selector('input[type=file]'),
+      { name: 'path', type: 'value', label: 'Path file', placeholder: '/path/to/file.jpg', required: true }
     ],
-    output: null,
-    codegen(inputs) {
-      return `await please.uploadFile(${resolveString(inputs.label)}, ${resolveString(inputs.selector)}, ${resolveValue(inputs.path)})`
-    },
-    validate(inputs) {
-      if (!inputs.selector) return 'Selector wajib diisi'
-      if (!inputs.path)     return 'Path file wajib diisi'
-      return null
-    }
+    codegen: codegenLabelSelectorValue('uploadFile', 'path'),
+    validate: createValidator(v.selector(), v.path())
   },
 
   {
+    ...ACTION,
     id: 'action.scrollTo',
-    type: 'action',
     label: 'Scroll To',
     icon: '📜',
-    color: '#10b981',
-    colorBg: 'rgba(16,185,129,0.1)',
     description: 'Scroll halaman ke posisi element',
-    inputs: [
-      { name: 'label',    type: 'text',     label: 'Label',    placeholder: 'tombol submit', required: true },
-      { name: 'selector', type: 'selector', label: 'Selector', placeholder: '#submit',       required: true }
-    ],
-    output: null,
-    codegen(inputs) {
-      return `await please.scrollTo(${resolveString(inputs.label)}, ${resolveString(inputs.selector)})`
-    },
-    validate(inputs) {
-      if (!inputs.selector) return 'Selector wajib diisi'
-      return null
-    }
+    inputs: [t.label('tombol submit'), t.selector('#submit')],
+    codegen: codegenLabelSelector('scrollTo'),
+    validate: createValidator(v.selector())
   }
 ]

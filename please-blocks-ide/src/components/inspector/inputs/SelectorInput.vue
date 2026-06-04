@@ -54,19 +54,10 @@ const selectorType = computed(() => {
 </template>
 
 <style scoped>
-.field       { margin-bottom: 10px; }
-.field-label {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 9.5px;
-  font-weight: 600;
-  color: #64748b;
-  margin-bottom: 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-.required { color: #ef4444; }
+@import '@/styles/fieldInput.css';
+
+.field-label { display: flex; align-items: center; gap: 5px; }
+.required    { margin-left: 0; }
 .sel-badge {
   font-size: 8px;
   padding: 1px 5px;
@@ -77,32 +68,6 @@ const selectorType = computed(() => {
   letter-spacing: 0.04em;
   margin-left: auto;
 }
-.field-input {
-  width: 100%;
-  background: #0f1117;
-  border: 1px solid #334155;
-  border-radius: 5px;
-  padding: 5px 8px;
-  font-size: 11px;
-  color: #e2e8f0;
-  outline: none;
-  transition: border-color 0.15s;
-}
-.field-input.mono { font-family: 'SF Mono', 'Fira Code', monospace; }
-.field-input:focus  { border-color: #6366f1; }
-.field-input.has-error { border-color: #ef4444; }
-.field-input::placeholder { color: #334155; }
-
-.sel-hints {
-  display: flex;
-  gap: 8px;
-  margin-top: 4px;
-}
-.sel-hints span {
-  font-size: 9px;
-  color: #334155;
-  font-family: monospace;
-  cursor: default;
-}
-.field-error { font-size: 9px; color: #ef4444; margin-top: 3px; display: block; }
+.sel-hints { display: flex; gap: 8px; margin-top: 4px; }
+.sel-hints span { font-size: 9px; color: #334155; font-family: monospace; cursor: default; }
 </style>

@@ -12,8 +12,7 @@ import { validateSchema }    from '@/core/blocks/schemaValidator.js'
 import TextInput        from './inputs/TextInput.vue'
 import SelectorInput    from './inputs/SelectorInput.vue'
 import NumberInput      from './inputs/NumberInput.vue'
-import DataRefSelect    from './inputs/DataRefSelect.vue'
-import HybridValueInput from './inputs/HybridValueInput.vue'
+import ValueInput       from './inputs/ValueInput.vue'
 
 const canvas   = useCanvasStore()
 const registry = useBlockRegistry()
@@ -152,25 +151,14 @@ function updateField(name, value) {
             @update:model-value="updateField(inputDef.name, $event)"
           />
 
-          <DataRefSelect
-            v-else-if="inputDef.type === 'dataref' || inputDef.type === 'varref'"
+          <ValueInput
+            v-else-if="inputDef.type === 'dataref' || inputDef.type === 'varref' || inputDef.type === 'value'"
             :label="inputDef.label"
             :placeholder="inputDef.placeholder"
             :required="inputDef.required"
             :error="errors[inputDef.name]"
             :schema="inputDef.schema || null"
             :input-type="inputDef.type"
-            :model-value="localInputs[inputDef.name] ?? ''"
-            @update:model-value="updateField(inputDef.name, $event)"
-          />
-
-          <!-- value: hybrid — plain text ATAU DataRef, bisa di-toggle -->
-          <HybridValueInput
-            v-else-if="inputDef.type === 'value'"
-            :label="inputDef.label"
-            :placeholder="inputDef.placeholder"
-            :required="inputDef.required"
-            :error="errors[inputDef.name]"
             :model-value="localInputs[inputDef.name] ?? ''"
             @update:model-value="updateField(inputDef.name, $event)"
           />

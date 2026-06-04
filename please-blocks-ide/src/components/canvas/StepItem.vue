@@ -1,5 +1,6 @@
 <script setup>
-import { useCanvasStore } from '@/stores/canvasStore.js'
+import { computed } from 'vue'
+import { useStepActions } from '@/composables/useStepActions.js'
 import StepCard from '@/components/shared/StepCard.vue'
 
 const props = defineProps({
@@ -12,23 +13,9 @@ const props = defineProps({
 
 const emit = defineEmits(['select', 'step-click'])
 
-const canvas = useCanvasStore()
-
-function onRemove() {
-  canvas.removeStep(props.step.id)
-}
-
-function onUpdateInput(fieldName, value) {
-  canvas.updateStepInputs(props.step.id, { [fieldName]: value })
-}
-
-function onUpdateNote(note) {
-  canvas.updateStepNote(props.step.id, note)
-}
-
-function onReorder(fromIndex, toIndex) {
-  canvas.moveStep(props.testCaseId, fromIndex, toIndex)
-}
+const stepId     = computed(() => props.step.id)
+const testCaseId = computed(() => props.testCaseId)
+const { onRemove, onUpdateInput, onUpdateNote, onReorder } = useStepActions(stepId, testCaseId)
 </script>
 
 <template>

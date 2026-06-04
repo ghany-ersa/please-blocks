@@ -26,8 +26,7 @@ import { validateStep }      from '@/core/blocks/stepValidator.js'
 import TextInput        from '@/components/inspector/inputs/TextInput.vue'
 import SelectorInput    from '@/components/inspector/inputs/SelectorInput.vue'
 import NumberInput      from '@/components/inspector/inputs/NumberInput.vue'
-import DataRefSelect    from '@/components/inspector/inputs/DataRefSelect.vue'
-import HybridValueInput from '@/components/inspector/inputs/HybridValueInput.vue'
+import ValueInput       from '@/components/inspector/inputs/ValueInput.vue'
 
 const props = defineProps({
   step:         { type: Object,  required: true },
@@ -229,22 +228,13 @@ function onDrop(e) {
           :model-value="step.inputs[field.name] ?? ''"
           @update:model-value="emit('update-input', field.name, $event)"
         />
-        <DataRefSelect
-          v-else-if="field.type === 'dataref' || field.type === 'varref'"
+        <ValueInput
+          v-else-if="field.type === 'dataref' || field.type === 'varref' || field.type === 'value'"
           :label="field.label"
           :placeholder="field.placeholder"
           :required="field.required"
           :schema="field.schema || null"
           :input-type="field.type"
-          :extra-vars="extraVars"
-          :model-value="step.inputs[field.name] ?? ''"
-          @update:model-value="emit('update-input', field.name, $event)"
-        />
-        <HybridValueInput
-          v-else-if="field.type === 'value'"
-          :label="field.label"
-          :placeholder="field.placeholder"
-          :required="field.required"
           :extra-vars="extraVars"
           :model-value="step.inputs[field.name] ?? ''"
           @update:model-value="emit('update-input', field.name, $event)"
