@@ -5,11 +5,15 @@
  * Saat Electron tersedia, gantikan runSimulation() dengan IPC ke main process.
  */
 import { ref, computed, watch, nextTick } from 'vue'
-import { useRunnerStore } from '@/stores/runnerStore.js'
-import { useCanvasStore  } from '@/stores/canvasStore.js'
+import { useRunnerStore }    from '@/stores/runnerStore.js'
+import { useCanvasStore  }   from '@/stores/canvasStore.js'
+import { useBlockRegistry }  from '@/stores/blockRegistry.js'
+import { useDataRegistry  }  from '@/stores/dataRegistry.js'
 
-const runner = useRunnerStore()
-const canvas = useCanvasStore()
+const runner   = useRunnerStore()
+const canvas   = useCanvasStore()
+const registry = useBlockRegistry()
+const dataReg  = useDataRegistry()
 
 const logEl = ref(null)
 
@@ -44,7 +48,7 @@ const statusColor = computed(() => {
 })
 
 function run() {
-  runner.runSimulation(canvas.features)
+  runner.runSimulation(canvas.features, registry, dataReg.entries)
 }
 function stop() {
   runner.stopRun()
