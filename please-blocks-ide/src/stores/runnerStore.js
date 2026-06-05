@@ -37,7 +37,10 @@ export const useRunnerStore = defineStore('runner', {
     _simTimer: null,
 
     // Apakah modal Report Viewer sedang tampil
-    showReport: false
+    showReport: false,
+
+    // Browser target: 'chrome' | 'firefox' | 'edge' | 'safari'
+    browserTarget: 'chrome'
   }),
 
   getters: {
@@ -89,8 +92,11 @@ export const useRunnerStore = defineStore('runner', {
 
       this.stats.total = allTcs.filter(tc => tc.enabled).length
 
+      const browserLabel = { chrome: 'Google Chrome', firefox: 'Mozilla Firefox', edge: 'Microsoft Edge', safari: 'Safari' }[this.browserTarget] || this.browserTarget
       this._addLog('cmd', `$ npx mocha index.js --reporter spec`)
-      await this._delay(250)
+      await this._delay(150)
+      this._addLog('info', `Browser: ${browserLabel}`)
+      await this._delay(100)
       this._addLog('info', `Menjalankan ${this.stats.total} test case...`)
       await this._delay(200)
 

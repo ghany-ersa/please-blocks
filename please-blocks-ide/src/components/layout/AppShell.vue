@@ -10,6 +10,7 @@ import EnvEditor         from '@/components/manager/EnvEditor.vue'
 import TestRunner        from '@/components/runner/TestRunner.vue'
 import ExportModal       from '@/components/export/ExportModal.vue'
 import ReportViewer      from '@/components/runner/ReportViewer.vue'
+import BrowserPicker     from '@/components/runner/BrowserPicker.vue'
 import { useRunnerStore }     from '@/stores/runnerStore.js'
 import { useCanvasStore  }   from '@/stores/canvasStore.js'
 import { useBlockRegistry }  from '@/stores/blockRegistry.js'
@@ -101,7 +102,7 @@ const runnerStatusColor = computed(() => {
       <div class="topbar-left">
         <span class="logo">🧩</span>
         <span class="app-name">Please Blocks</span>
-        <span class="app-version">v0.6 — Sprint 6</span>
+        <span class="app-version">v0.7 — Sprint 7</span>
       </div>
       <div class="topbar-center">
         <span class="project-name">my-automation-tests</span>
@@ -128,6 +129,9 @@ const runnerStatusColor = computed(() => {
         >
           📋 Laporan
         </button>
+
+        <!-- Browser picker -->
+        <BrowserPicker />
 
         <!-- Run button — langsung trigger runner -->
         <button
@@ -216,7 +220,7 @@ const runnerStatusColor = computed(() => {
       <span v-if="runnerStatusLabel">·</span>
 
       <span class="status-dot" :class="runner.status"></span>
-      <span>Sprint 6 — Report Viewer</span>
+      <span>Sprint 7 — Multi-browser + Selector Inspector</span>
     </footer>
   </div>
 </template>
