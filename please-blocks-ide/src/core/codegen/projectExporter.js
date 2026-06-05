@@ -94,6 +94,13 @@ export function exportProject(canvas, blockRegistry, dataRegistry, componentStor
     category: 'config'
   })
 
+  // ── README.md ─────────────────────────────────────────────────
+  files.push({
+    path:     'README.md',
+    content:  generateReadme(projectName, canvas.features),
+    category: 'readme'
+  })
+
   return files
 }
 
@@ -167,4 +174,71 @@ function generateGitignore() {
     'report/',
     '*.log',
   ].join('\n')
+}
+
+function generateReadme(projectName, features) {
+  const featureList = features
+    .map(f => `- ${f.enabled !== false ? '✅' : '⏸'} ${f.label} (${f.testCases.length} test case)`)
+    .join('\n')
+
+  return `# ${projectName}
+
+Project automation test yang di-generate oleh **Please Blocks IDE**.
+
+## Prasyarat
+
+- Node.js v18 atau lebih baru
+- Google Chrome (atau browser lain yang sudah diinstall WebDriver-nya)
+- ChromeDriver yang sesuai dengan versi Chrome: https://chromedriver.chromium.org/downloads
+
+## Cara Menjalankan
+
+### 1. Install dependencies
+
+\`\`\`bash
+npm install
+\`\`\`
+
+### 2. Siapkan file .env
+
+\`\`\`bash
+cp .env.example .env
+\`\`\`
+
+Buka file \`.env\` dan isi nilai yang sesuai (BASE_URL, credentials, dll).
+
+### 3. Jalankan test
+
+\`\`\`bash
+npm test
+\`\`\`
+
+### 4. Lihat laporan HTML (opsional)
+
+\`\`\`bash
+npm run report
+\`\`\`
+
+Laporan akan tersimpan di folder \`report/index.html\`.
+
+## Struktur Project
+
+\`\`\`
+${projectName}/
+├── app.js              # Setup driver + instance please
+├── index.js            # Toggle feature yang dijalankan
+├── .env                # Variabel environment (tidak di-commit)
+├── .env.example        # Template variabel environment
+├── components/         # Reusable action classes
+├── data/               # Test data dan URL
+└── feature/            # Test spec files
+\`\`\`
+
+## Features
+
+${featureList || '(belum ada feature)'}
+
+---
+*Di-generate oleh Please Blocks IDE — ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}*
+`
 }

@@ -6,6 +6,7 @@
  * Juga menyediakan "Download Semua" sebagai ZIP via browser API.
  */
 import { ref, computed } from 'vue'
+import JSZip              from 'jszip'
 import { useCanvasStore }     from '@/stores/canvasStore.js'
 import { useBlockRegistry }   from '@/stores/blockRegistry.js'
 import { useDataRegistry }    from '@/stores/dataRegistry.js'
@@ -35,14 +36,16 @@ const catColor = {
   index:     '#a855f7',
   data:      '#0ea5e9',
   component: '#ec4899',
-  config:    '#64748b'
+  config:    '#64748b',
+  readme:    '#10b981'
 }
 const catIcon = {
   spec:      '🧪',
   index:     '📋',
   data:      '📊',
   component: '📦',
-  config:    '⚙️'
+  config:    '⚙️',
+  readme:    '📖'
 }
 
 // Copy
@@ -54,34 +57,43 @@ async function copyFile() {
   setTimeout(() => { copied.value = false }, 1800)
 }
 
-// Download semua sebagai ZIP (browser native CompressionStream)
+const projectName = computed(() => 'my-automation-tests')
+
+// Download semua sebagai ZIP dengan struktur folder lengkap
 const downloading = ref(false)
 async function downloadAll() {
   downloading.value = true
   try {
-    // Karena CompressionStream belum universal, gunakan pendekatan download per-file
-    // tapi dalam satu waktu (hanya file utama: spec + index + data)
+    const zip    = new JSZip()
+    const folder = zip.folder(projectName.value)
+
     for (const f of files.value) {
-      await downloadSingle(f, 50)
+      folder.file(f.path, f.content)
     }
+
+    const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' })
+    triggerDownload(blob, `${projectName.value}.zip`)
   } finally {
     downloading.value = false
   }
 }
 
-async function downloadSingle(file, delay = 0) {
-  return new Promise(resolve => {
-    setTimeout(() => {
-      const blob = new Blob([file.content], { type: 'text/javascript' })
-      const url  = URL.createObjectURL(blob)
-      const a    = document.createElement('a')
-      a.href     = url
-      a.download = file.path.split('/').pop()
-      a.click()
-      URL.revokeObjectURL(url)
-      resolve()
-    }, delay)
-  })
+// Download file tunggal
+function downloadSingle(file) {
+  const mime = file.path.endsWith('.json') ? 'application/json'
+             : file.path.endsWith('.md')   ? 'text/markdown'
+             : 'text/plain'
+  const blob = new Blob([file.content], { type: mime })
+  triggerDownload(blob, file.path.split('/').pop())
+}
+
+function triggerDownload(blob, filename) {
+  const url = URL.createObjectURL(blob)
+  const a   = document.createElement('a')
+  a.href     = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
 }
 
 // Highlight syntax sederhana (sama dengan CodePreview)
@@ -109,7 +121,7 @@ function highlight(code) {
         <span class="file-count">{{ files.length }} file</span>
         <div class="modal-actions">
           <button class="btn-dl" @click="downloadAll" :disabled="downloading">
-            {{ downloading ? '⏳ Downloading...' : '⬇ Download Semua' }}
+            {{ downloading ? '⏳ Membuat ZIP...' : '⬇ Download ZIP' }}
           </button>
         </div>
         <button class="modal-close" @click="emit('close')">×</button>
