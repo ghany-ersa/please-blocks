@@ -51,6 +51,37 @@ export async function readProject(projectPath) {
 }
 
 /**
+ * Tulis semua file project ke disk (tanpa menjalankan mocha).
+ * Dipakai tombol "Simpan ke Project".
+ *
+ * @param {string} projectPath - absolute path folder project
+ * @param {Array}  files       - [{ path, content }] dari exportProject()
+ * @returns {Promise<{ ok: boolean, written?: string[], errors?: Array, error?: string }>}
+ */
+export async function writeProject(projectPath, files) {
+  let res
+  try {
+    res = await fetch(`${BASE}/files/write`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ projectPath, files })
+    })
+  } catch (err) {
+    return { ok: false, error: `Tidak dapat terhubung ke server: ${err.message}` }
+  }
+
+  let data
+  try {
+    data = await res.json()
+  } catch {
+    return { ok: false, error: `Server membalas respons non-JSON (status ${res.status}).` }
+  }
+
+  if (!res.ok) return { ok: false, error: data.error || `Gagal menulis (status ${res.status})` }
+  return { ok: true, written: data.written, errors: data.errors }
+}
+
+/**
  * Mulai run sungguhan via server.
  *
  * @param {Object}   opts

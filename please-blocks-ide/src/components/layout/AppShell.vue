@@ -15,6 +15,7 @@ import ReportViewer      from '@/components/runner/ReportViewer.vue'
 import BrowserPicker     from '@/components/runner/BrowserPicker.vue'
 import DirectoryPicker   from '@/components/shared/DirectoryPicker.vue'
 import { exportProject } from '@/core/codegen/projectExporter.js'
+import { writeProject }  from '@/services/runnerService.js'
 import { useRunnerStore }     from '@/stores/runnerStore.js'
 import { useCanvasStore  }   from '@/stores/canvasStore.js'
 import { useBlockRegistry }  from '@/stores/blockRegistry.js'
@@ -53,6 +54,45 @@ const showDirectoryPicker  = ref(false)
 // Cek ketersediaan server saat app boot
 onMounted(() => runner.checkServer())
 
+// ── Simpan ke Project (tulis semua file ke disk) ───────────────
+const saveState   = ref('idle')   // 'idle' | 'saving' | 'saved' | 'error'
+const saveMessage = ref('')
+const pendingSave = ref(false)    // tandai picker dibuka demi save
+
+async function triggerSave() {
+  if (!runner.serverAvailable) {
+    saveState.value = 'error'
+    saveMessage.value = 'Server tidak aktif — jalankan npm run dev.'
+    return
+  }
+  // Belum ada folder → minta pilih dulu, lalu lanjut save
+  if (!runner.projectPath) {
+    pendingSave.value = true
+    showDirectoryPicker.value = true
+    return
+  }
+  await doSave()
+}
+
+async function doSave() {
+  saveState.value = 'saving'
+  saveMessage.value = ''
+  const files = exportProject(canvas, registry, dataReg, compStore)
+  const res = await writeProject(runner.projectPath, files)
+
+  if (res.ok && (!res.errors || res.errors.length === 0)) {
+    saveState.value = 'saved'
+    saveMessage.value = `${res.written?.length || files.length} file tersimpan`
+  } else if (res.ok) {
+    saveState.value = 'error'
+    saveMessage.value = `${res.errors.length} file gagal ditulis`
+  } else {
+    saveState.value = 'error'
+    saveMessage.value = res.error || 'Gagal menyimpan'
+  }
+  setTimeout(() => { if (saveState.value !== 'saving') saveState.value = 'idle' }, 2500)
+}
+
 function triggerRun() {
   runner.open()
   if (runner.canRunReal) {
@@ -66,6 +106,10 @@ function triggerRun() {
 function onDirectorySelected(path) {
   runner.projectPath        = path
   showDirectoryPicker.value = false
+  if (pendingSave.value) {
+    pendingSave.value = false
+    doSave()
+  }
 }
 
 // Toggle right panel
@@ -146,6 +190,19 @@ const runnerStatusColor = computed(() => {
         </button>
         <button class="topbar-btn import" @click="showImportModal = true" title="Import .spec.js ke canvas">📥 Import</button>
         <button class="topbar-btn import" @click="showProjectImportModal = true" title="Import seluruh folder project">📁 Import Project</button>
+        <button
+          v-if="runner.serverAvailable"
+          class="topbar-btn save"
+          :class="saveState"
+          :disabled="saveState === 'saving' || canvas.features.length === 0"
+          @click="triggerSave"
+          :title="runner.projectPath ? `Simpan semua file ke ${runner.projectPath}` : 'Pilih folder lalu simpan'"
+        >
+          {{ saveState === 'saving' ? '⏳ Menyimpan...'
+           : saveState === 'saved' ? `✓ ${saveMessage}`
+           : saveState === 'error' ? `✗ ${saveMessage}`
+           : '💾 Simpan ke Project' }}
+        </button>
         <button class="topbar-btn export" @click="showExportModal = true" title="Export project">📦 Export</button>
         <button
           v-if="runner.status === 'passed' || runner.status === 'failed'"
@@ -327,6 +384,11 @@ const runnerStatusColor = computed(() => {
 .topbar-btn.export:hover        { background: rgba(168,85,247,0.18); }
 .topbar-btn.import              { background: rgba(14,165,233,0.08); border-color: rgba(14,165,233,0.25); color: #38bdf8; }
 .topbar-btn.import:hover        { background: rgba(14,165,233,0.18); }
+.topbar-btn.save                { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.25); color: #34d399; }
+.topbar-btn.save:hover:not(:disabled) { background: rgba(16,185,129,0.18); }
+.topbar-btn.save:disabled       { opacity: 0.6; cursor: default; }
+.topbar-btn.save.saved          { background: rgba(16,185,129,0.2); border-color: #10b981; color: #6ee7b7; }
+.topbar-btn.save.error          { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); color: #f87171; }
 .topbar-btn.run                 { background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.3); color: #10b981; }
 .topbar-btn.run:hover:not(:disabled) { background: rgba(16,185,129,0.2); border-color: #10b981; }
 .topbar-btn.run.running         { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.3); color: #f59e0b; cursor: default; }
