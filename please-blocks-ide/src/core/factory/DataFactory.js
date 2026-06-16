@@ -36,9 +36,7 @@ export function processDataFiles(files, env = {}) {
  */
 export function generateDataFile(fileDef, env = {}) {
   const lines = [
-    `require('dotenv').config()`,
-    ``,
-    `const base_url = process.env.BASE_URL`,
+    `require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') })`,
     ``,
     `module.exports = {`
   ]
@@ -96,13 +94,23 @@ function resolveEnvRefs(obj, env) {
 }
 
 function formatFieldValue(fieldName, value, env) {
-  if (typeof value === 'string' && value.startsWith('process.env.')) return value
-  if (fieldName === 'url' && typeof value === 'string') {
-    const base  = env.BASE_URL || ''
-    const path  = base ? value.replace(base, '') : value
-    return path !== value ? `\`\${base_url}${path}\`` : `'${value}'`
+  if (typeof value !== 'string') return String(value)
+
+  // Nilai murni process.env.VAR — tulis langsung
+  if (/^process\.env\.[A-Z_]+$/.test(value.trim())) return value
+
+  // Nilai yang mengandung process.env.VAR diikuti path tambahan
+  // misal: "process.env.BASE_URL/login" → `${process.env.BASE_URL}/login`
+  if (value.includes('process.env.')) {
+    const templateVal = value.replace(/(process\.env\.[A-Z_]+)/g, '${$1}')
+    return `\`${templateVal}\``
   }
-  if (typeof value === 'number') return String(value)
-  if (typeof value === 'boolean') return String(value)
-  return `'${String(value).replace(/'/g, "\\'")}'`
+
+  // URL field: jika nilai mengandung BASE_URL → ganti dengan ${process.env.BASE_URL}
+  if (fieldName === 'url' && env.BASE_URL && value.startsWith(env.BASE_URL)) {
+    const path = value.slice(env.BASE_URL.length)
+    return `\`\${process.env.BASE_URL}${path}\``
+  }
+
+  return `'${value.replace(/'/g, "\\'")}'`
 }

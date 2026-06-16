@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import BlockPalette      from '@/components/palette/BlockPalette.vue'
 import CanvasEditor      from '@/components/canvas/CanvasEditor.vue'
 import BlockInspector    from '@/components/inspector/BlockInspector.vue'
@@ -11,6 +11,8 @@ import TestRunner        from '@/components/runner/TestRunner.vue'
 import ExportModal       from '@/components/export/ExportModal.vue'
 import ReportViewer      from '@/components/runner/ReportViewer.vue'
 import BrowserPicker     from '@/components/runner/BrowserPicker.vue'
+import DirectoryPicker   from '@/components/shared/DirectoryPicker.vue'
+import { exportProject } from '@/core/codegen/projectExporter.js'
 import { useRunnerStore }     from '@/stores/runnerStore.js'
 import { useCanvasStore  }   from '@/stores/canvasStore.js'
 import { useBlockRegistry }  from '@/stores/blockRegistry.js'
@@ -42,6 +44,25 @@ function closeComponentBuilder() {
 }
 const showEnvEditor        = ref(false)
 const showExportModal      = ref(false)
+const showDirectoryPicker  = ref(false)
+
+// Cek ketersediaan server saat app boot
+onMounted(() => runner.checkServer())
+
+function triggerRun() {
+  runner.open()
+  if (runner.canRunReal) {
+    const files = exportProject(canvas, registry, dataReg, compStore)
+    runner.runReal(files, runner.projectPath)
+  } else {
+    runner.runSimulation(canvas.features, registry, dataReg.entries)
+  }
+}
+
+function onDirectorySelected(path) {
+  runner.projectPath        = path
+  showDirectoryPicker.value = false
+}
 
 // Toggle right panel
 const showRightPanel = ref(true)
@@ -102,7 +123,7 @@ const runnerStatusColor = computed(() => {
       <div class="topbar-left">
         <span class="logo">🧩</span>
         <span class="app-name">Please Blocks</span>
-        <span class="app-version">v0.7 — Sprint 7</span>
+        <span class="app-version">v0.8 — Sprint 8</span>
       </div>
       <div class="topbar-center">
         <span class="project-name">my-automation-tests</span>
@@ -133,15 +154,26 @@ const runnerStatusColor = computed(() => {
         <!-- Browser picker -->
         <BrowserPicker />
 
-        <!-- Run button — langsung trigger runner -->
+        <!-- Project path button (hanya tampil jika server tersedia) -->
+        <button
+          v-if="runner.serverAvailable"
+          class="topbar-btn project-path"
+          :class="{ 'has-path': !!runner.projectPath }"
+          @click="showDirectoryPicker = true"
+          :title="runner.projectPath || 'Pilih folder project untuk real run'"
+        >
+          📁 {{ runner.projectPath ? '...' + runner.projectPath.slice(-20) : 'Set Folder' }}
+        </button>
+
+        <!-- Run button -->
         <button
           class="topbar-btn run"
-          :class="{ running: runner.isRunning }"
-          :disabled="runner.isRunning"
-          @click="runner.visible ? runner.runSimulation(canvas.features, registry, dataReg.entries) : (runner.open(), runner.runSimulation(canvas.features, registry, dataReg.entries))"
-          title="Jalankan semua test"
+          :class="{ running: runner.isRunning, 'run-real': runner.canRunReal }"
+          :disabled="runner.isRunning || canvas.features.length === 0"
+          @click="triggerRun"
+          :title="runner.canRunReal ? 'Jalankan test sungguhan (mocha)' : 'Jalankan simulasi'"
         >
-          {{ runner.isRunning ? '⏳ Berjalan...' : '▶ Run' }}
+          {{ runner.isRunning ? '⏳ Berjalan...' : runner.canRunReal ? '▶ Run Real' : '▶ Run' }}
         </button>
 
         <!-- Toggle runner panel -->
@@ -200,12 +232,24 @@ const runnerStatusColor = computed(() => {
     <EnvEditor         v-if="showEnvEditor"        @close="showEnvEditor = false" />
     <ExportModal       v-if="showExportModal"      @close="showExportModal = false" />
     <ReportViewer      v-if="runner.showReport"   @close="runner.showReport = false" />
+    <DirectoryPicker
+      v-if="showDirectoryPicker"
+      @select="onDirectorySelected"
+      @close="showDirectoryPicker = false"
+    />
 
     <!-- Status bar -->
     <footer class="statusbar">
       <span>please-test v1.0.0</span>
       <span>·</span>
       <span>mocha + selenium-webdriver</span>
+      <span
+        class="server-badge"
+        :class="runner.serverAvailable ? 'online' : 'offline'"
+        :title="runner.serverAvailable ? 'Server Express aktif — real run tersedia' : 'Server tidak aktif — mode simulasi'"
+      >
+        {{ runner.serverAvailable ? '● server' : '○ simulasi' }}
+      </span>
       <span class="spacer"></span>
 
       <!-- Runner status inline di statusbar -->
@@ -220,7 +264,7 @@ const runnerStatusColor = computed(() => {
       <span v-if="runnerStatusLabel">·</span>
 
       <span class="status-dot" :class="runner.status"></span>
-      <span>Sprint 7 — Multi-browser + Selector Inspector</span>
+      <span>Sprint 8 — Real Runner (Jalur B)</span>
     </footer>
   </div>
 </template>
@@ -401,4 +445,39 @@ const runnerStatusColor = computed(() => {
   transition: opacity 0.15s;
 }
 .status-runner:hover { opacity: 0.75; }
+
+/* Server badge di statusbar */
+.server-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 8px;
+  letter-spacing: 0.04em;
+}
+.server-badge.online  { color: #10b981; background: rgba(16,185,129,0.1); }
+.server-badge.offline { color: #475569; background: rgba(71,85,105,0.1); }
+
+/* Project path button */
+.topbar-btn.project-path {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: rgba(14,165,233,0.06);
+  border-color: rgba(14,165,233,0.2);
+  color: #38bdf8;
+  font-family: monospace;
+  font-size: 9px;
+}
+.topbar-btn.project-path.has-path { color: #7dd3fc; }
+.topbar-btn.project-path:hover { background: rgba(14,165,233,0.14); }
+
+/* Run real button */
+.topbar-btn.run.run-real {
+  background: rgba(16,185,129,0.18);
+  border-color: rgba(16,185,129,0.5);
+  color: #34d399;
+  font-weight: 700;
+}
+
 </style>

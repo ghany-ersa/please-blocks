@@ -50,16 +50,12 @@ export function exportProject(canvas, blockRegistry, dataRegistry, componentStor
     })
   }
 
-  // ── .env.example ─────────────────────────────────────────────
-  const envLines = [
-    '# Salin file ini menjadi .env dan isi dengan nilai yang sesuai',
-    '# cp .env.example .env',
-    ''
-  ]
+  // ── .env ──────────────────────────────────────────────────────
+  const envLines = ['# Di-generate oleh Please Blocks IDE', '']
   for (const [key, val] of Object.entries(dataRegistry.env)) {
     envLines.push(`${key}=${val}`)
   }
-  files.push({ path: '.env.example', content: envLines.join('\n'), category: 'config' })
+  files.push({ path: '.env', content: envLines.join('\n'), category: 'config' })
 
   // ── Component files ───────────────────────────────────────────
   for (const comp of componentStore.components) {
@@ -156,7 +152,7 @@ function generatePackageJson(name = 'my-automation-tests') {
       report: 'mocha --recursive --timeout 100000 index.js --reporter mochawesome --reporter-options code=false,charts=true,assetsDir=report/assets,reportDir=report,reportFilename=index,reportPageTitle=Test Report'
     },
     dependencies: {
-      'please-test':         '^1.0.0',
+      'please-test':         '^1.0.1',
       'selenium-webdriver':  '^4.0.0'
     },
     devDependencies: {
@@ -199,13 +195,10 @@ Project automation test yang di-generate oleh **Please Blocks IDE**.
 npm install
 \`\`\`
 
-### 2. Siapkan file .env
+### 2. Periksa file .env
 
-\`\`\`bash
-cp .env.example .env
-\`\`\`
-
-Buka file \`.env\` dan isi nilai yang sesuai (BASE_URL, credentials, dll).
+File \`.env\` sudah di-generate otomatis oleh Please Blocks IDE.
+Buka dan sesuaikan nilainya jika diperlukan (BASE_URL, credentials, dll).
 
 ### 3. Jalankan test
 
@@ -227,8 +220,7 @@ Laporan akan tersimpan di folder \`report/index.html\`.
 ${projectName}/
 ├── app.js              # Setup driver + instance please
 ├── index.js            # Toggle feature yang dijalankan
-├── .env                # Variabel environment (tidak di-commit)
-├── .env.example        # Template variabel environment
+├── .env                # Variabel environment (di-generate otomatis)
 ├── components/         # Reusable action classes
 ├── data/               # Test data dan URL
 └── feature/            # Test spec files

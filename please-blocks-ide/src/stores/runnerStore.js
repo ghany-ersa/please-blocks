@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { validateTestCase } from '@/core/blocks/stepValidator.js'
+import { checkServerHealth, startRun as startRealRun } from '@/services/runnerService.js'
 
 /**
  * runnerStore.js
@@ -40,17 +41,27 @@ export const useRunnerStore = defineStore('runner', {
     showReport: false,
 
     // Browser target: 'chrome' | 'firefox' | 'edge' | 'safari'
-    browserTarget: 'chrome'
+    browserTarget: 'chrome',
+
+    // true = server Express tersedia, false = fallback ke simulasi
+    serverAvailable: false,
+
+    // Absolute path folder project test untuk real run
+    projectPath: '',
+
+    // Handle untuk stop real run
+    _realRunHandle: null
   }),
 
   getters: {
-    isRunning:  (s) => s.status === 'running',
-    isIdle:     (s) => s.status === 'idle',
-    hasFailed:  (s) => s.status === 'failed',
-    hasPassed:  (s) => s.status === 'passed',
-    logCount:   (s) => s.logs.length,
-    failCount:  (s) => s.stats.failed,
-    passCount:  (s) => s.stats.passed
+    isRunning:   (s) => s.status === 'running',
+    isIdle:      (s) => s.status === 'idle',
+    hasFailed:   (s) => s.status === 'failed',
+    hasPassed:   (s) => s.status === 'passed',
+    logCount:    (s) => s.logs.length,
+    failCount:   (s) => s.stats.failed,
+    passCount:   (s) => s.stats.passed,
+    canRunReal:  (s) => s.serverAvailable && !!s.projectPath
   },
 
   actions: {
@@ -162,7 +173,89 @@ export const useRunnerStore = defineStore('runner', {
     stopRun() {
       if (this.status !== 'running') return
       this.status = 'stopped'
-      this._addLog('warn', '⏹  Runner dihentikan oleh pengguna')
+      if (this._realRunHandle) {
+        this._realRunHandle.stop()
+        this._realRunHandle = null
+      } else {
+        this._addLog('warn', '⏹  Runner dihentikan oleh pengguna')
+      }
+    },
+
+    // Cek ketersediaan server (dipanggil saat app boot)
+    async checkServer() {
+      this.serverAvailable = await checkServerHealth()
+    },
+
+    /**
+     * Jalankan test sungguhan via Express server.
+     * @param {Array}  files       - hasil exportProject()
+     * @param {string} projectPath - absolute path folder project
+     */
+    async runReal(files, projectPath) {
+      if (this.status === 'running') return
+      this.clearLogs()
+      this.status      = 'running'
+      this.visible     = true
+      this.projectPath = projectPath
+
+      const startTime = Date.now()
+
+      this._addLog('info', `📁 Project: ${projectPath}`)
+
+      // Parse statistik dari log mocha secara real-time
+      const tcPassed = new Set()
+      const tcFailed = new Set()
+
+      const handle = await startRealRun({
+        projectPath,
+        files,
+        browser: this.browserTarget,
+
+        onLog: ({ level, text }) => {
+          this._addLog(level, text)
+
+          // Parse "N passing" dari mocha spec reporter
+          const passMatch = text.match(/(\d+) passing/)
+          if (passMatch) this.stats.passed = parseInt(passMatch[1])
+
+          const failMatch = text.match(/(\d+) failing/)
+          if (failMatch) this.stats.failed = parseInt(failMatch[1])
+
+          const pendingMatch = text.match(/(\d+) pending/)
+          if (pendingMatch) this.stats.skipped = parseInt(pendingMatch[1])
+
+          // Deteksi baris "✓ nama test"
+          const passLine = text.match(/^\s+✓\s+(.+?)(?:\s+\(\d+ms\))?$/)
+          if (passLine) tcPassed.add(passLine[1].trim())
+
+          // Deteksi baris "N) nama test"
+          const failLine = text.match(/^\s+\d+\)\s+(.+)$/)
+          if (failLine) tcFailed.add(failLine[1].trim())
+        },
+
+        onDone: ({ exitCode }) => {
+          this.stats.duration = Date.now() - startTime
+          this.stats.total    = this.stats.passed + this.stats.failed + this.stats.skipped
+
+          this._addLog('info', '')
+          this._addLog(
+            this.stats.failed > 0 ? 'fail' : 'pass',
+            `${this.stats.passed} lulus, ${this.stats.failed} gagal, ${this.stats.skipped} dilewati (${this.stats.duration}ms)`
+          )
+
+          this.status         = exitCode === 0 ? 'passed' : 'failed'
+          this.showReport     = true
+          this._realRunHandle = null
+        },
+
+        onError: (msg) => {
+          this._addLog('fail', `⚠ ${msg}`)
+          this.status         = 'failed'
+          this._realRunHandle = null
+        }
+      })
+
+      this._realRunHandle = handle
     },
 
     _delay(ms) {

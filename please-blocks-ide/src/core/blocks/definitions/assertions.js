@@ -3,7 +3,8 @@
 
 import { t }                         from './inputTemplates.js'
 import { v, createValidator }        from './validationHelpers.js'
-import { codegenLabelSelectorValue, codegenGetVar, codegenAssert } from './codegenHelpers.js'
+import { codegenGetVar, codegenAssert } from './codegenHelpers.js'
+import { resolveString, resolveValue }  from './helpers.js'
 
 const ASSERTION = { type: 'assertion', color: '#f59e0b', colorBg: 'rgba(245,158,11,0.1)', output: null }
 
@@ -19,7 +20,12 @@ export default [
       t.selector('//div[@id="error"]'),
       t.expected('Your username is invalid!', 'Teks yang diharapkan')
     ],
-    codegen: codegenLabelSelectorValue('see', 'expected'),
+    codegen: (inputs) => {
+      const label    = resolveString(inputs.label)
+      const selector = resolveString(inputs.selector)
+      const expected = resolveValue(inputs.expected)
+      return `await please.equal(await please.see(${label}, ${selector}), ${expected})`
+    },
     validate: createValidator(v.selector(), v.expected('Teks yang diharapkan wajib diisi'))
   },
 
