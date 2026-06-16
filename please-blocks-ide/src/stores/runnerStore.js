@@ -10,6 +10,21 @@ import { checkServerHealth, startRun as startRealRun } from '@/services/runnerSe
  * sehingga QA tetap bisa melihat alur UI. Saat diintegrasikan ke Electron,
  * ganti simulasi dengan IPC ke main process (child_process mocha).
  */
+const SETTINGS_KEY = 'please-blocks:runner-settings'
+
+// Restore pengaturan persist (folder project + browser) dari localStorage
+function loadSettings() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')
+    return {
+      projectPath:   typeof saved.projectPath === 'string' ? saved.projectPath : '',
+      browserTarget: saved.browserTarget || 'chrome'
+    }
+  } catch {
+    return { projectPath: '', browserTarget: 'chrome' }
+  }
+}
+
 export const useRunnerStore = defineStore('runner', {
   state: () => ({
     // 'idle' | 'running' | 'passed' | 'failed' | 'stopped'
@@ -40,14 +55,14 @@ export const useRunnerStore = defineStore('runner', {
     // Apakah modal Report Viewer sedang tampil
     showReport: false,
 
-    // Browser target: 'chrome' | 'firefox' | 'edge' | 'safari'
-    browserTarget: 'chrome',
+    // Browser target: 'chrome' | 'firefox' | 'edge' | 'safari' (persist)
+    browserTarget: loadSettings().browserTarget,
 
     // true = server Express tersedia, false = fallback ke simulasi
     serverAvailable: false,
 
-    // Absolute path folder project test untuk real run
-    projectPath: '',
+    // Absolute path folder project test untuk real run (persist)
+    projectPath: loadSettings().projectPath,
 
     // Handle untuk stop real run
     _realRunHandle: null
@@ -61,13 +76,41 @@ export const useRunnerStore = defineStore('runner', {
     logCount:    (s) => s.logs.length,
     failCount:   (s) => s.stats.failed,
     passCount:   (s) => s.stats.passed,
-    canRunReal:  (s) => s.serverAvailable && !!s.projectPath
+    canRunReal:  (s) => s.serverAvailable && !!s.projectPath,
+
+    // Nama project = basename folder yang dipilih (fallback default)
+    projectName: (s) => {
+      if (!s.projectPath) return 'my-automation-tests'
+      const base = s.projectPath.replace(/[/\\]+$/, '').split(/[/\\]/).pop()
+      return base || 'my-automation-tests'
+    }
   },
 
   actions: {
     open()  { this.visible = true  },
     close() { this.visible = false },
     toggle(){ this.visible = !this.visible },
+
+    // ── Pengaturan persist (folder + browser) ─────────────────────
+    persistSettings() {
+      try {
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify({
+          projectPath:   this.projectPath,
+          browserTarget: this.browserTarget
+        }))
+      } catch { /* ignore */ }
+    },
+
+    // Set folder project + simpan agar bertahan saat refresh
+    setProjectPath(path) {
+      this.projectPath = path || ''
+      this.persistSettings()
+    },
+
+    setBrowserTarget(browser) {
+      this.browserTarget = browser
+      this.persistSettings()
+    },
 
     _uid() { return Date.now() + '-' + Math.random().toString(36).slice(2, 6) },
 
@@ -196,7 +239,7 @@ export const useRunnerStore = defineStore('runner', {
       this.clearLogs()
       this.status      = 'running'
       this.visible     = true
-      this.projectPath = projectPath
+      this.setProjectPath(projectPath)
 
       const startTime = Date.now()
 

@@ -5,9 +5,12 @@
  */
 import { Router }                                from 'express'
 import { writeFileSync, mkdirSync, readdirSync,
-         statSync, existsSync, readFileSync }     from 'fs'
+         statSync, existsSync, readFileSync, unlinkSync } from 'fs'
 import { join, dirname, resolve, sep }           from 'path'
 import { homedir }                               from 'os'
+
+// Folder yang sepenuhnya dikelola IDE — aman untuk prune (hapus file basi).
+const MANAGED_DIRS = ['feature', 'data', 'components']
 
 export const filesRouter = Router()
 
@@ -17,10 +20,14 @@ const MAX_FILES       = 200
 
 /**
  * POST /api/files/write
- * Body: { projectPath: string, files: [{ path, content }] }
+ * Body: { projectPath: string, files: [{ path, content }], prune?: boolean }
+ *
+ * prune=true → setelah menulis, hapus file basi di folder terkelola
+ * (feature/, data/, components/) yang TIDAK ada di payload — agar Save jadi
+ * sinkron penuh: rename/hapus feature di canvas ikut menghapus file lamanya.
  */
 filesRouter.post('/write', (req, res) => {
-  const { projectPath, files } = req.body
+  const { projectPath, files, prune = false } = req.body
 
   if (!projectPath || !Array.isArray(files)) {
     return res.status(400).json({ error: 'projectPath dan files diperlukan' })
@@ -40,8 +47,32 @@ filesRouter.post('/write', (req, res) => {
     }
   }
 
-  res.json({ ok: errors.length === 0, written, errors })
+  // Prune: hapus file di folder terkelola yang tidak lagi ditulis.
+  const removed = []
+  if (prune) {
+    const keep = new Set(files.map(f => normalizeRel(f.path)))
+    for (const dir of MANAGED_DIRS) {
+      const abs = join(projectPath, dir)
+      if (!existsSync(abs)) continue
+      let entries = []
+      try { entries = readdirSync(abs, { withFileTypes: true }) } catch { continue }
+      for (const e of entries) {
+        if (!e.isFile()) continue
+        const rel = `${dir}/${e.name}`
+        if (keep.has(rel)) continue
+        try { unlinkSync(join(abs, e.name)); removed.push(rel) }
+        catch (err) { errors.push({ path: rel, error: `gagal hapus: ${err.message}` }) }
+      }
+    }
+  }
+
+  res.json({ ok: errors.length === 0, written, removed, errors })
 })
+
+/** Samakan separator path payload ke bentuk 'dir/file'. */
+function normalizeRel(p) {
+  return String(p).replace(/\\/g, '/')
+}
 
 /**
  * GET /api/files/browse?path=/some/dir

@@ -16,7 +16,7 @@ const current = () => BROWSERS.find(b => b.id === runner.browserTarget) || BROWS
 
 function select(browser) {
   if (!browser.available) return
-  runner.browserTarget = browser.id
+  runner.setBrowserTarget(browser.id)
   open.value = false
 }
 

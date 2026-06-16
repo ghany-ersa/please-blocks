@@ -1,11 +1,23 @@
 <script setup>
-import { useCanvasStore } from '@/stores/canvasStore.js'
+import { useCanvasStore }    from '@/stores/canvasStore.js'
+import { useDataRegistry }   from '@/stores/dataRegistry.js'
+import { useComponentStore } from '@/stores/componentStore.js'
 import FeatureContainer from './FeatureContainer.vue'
 
-const canvas = useCanvasStore()
+const canvas    = useCanvasStore()
+const dataReg   = useDataRegistry()
+const compStore = useComponentStore()
 
 function addFeature() {
   canvas.addFeature()
+}
+
+// Demo lengkap: seed data (URL/ACCOUNT) + component Auth dulu, baru canvas —
+// agar dataref & component call di feature contoh ter-resolve dengan benar.
+function loadDemo() {
+  dataReg.reset()
+  compStore.reset()
+  canvas.seedDemoData()
 }
 
 // Drop pada area canvas kosong (bukan di dalam feature/testcase)
@@ -72,7 +84,7 @@ function onCanvasDragOver(e) {
         <h3>Canvas Kosong</h3>
         <p>Klik <strong>+ Feature</strong> untuk mulai, atau<br>drag blok dari palette ke sini</p>
         <button class="empty-btn" @click="addFeature">+ Tambah Feature Pertama</button>
-        <button class="empty-btn-secondary" @click="canvas.seedDemoData()">
+        <button class="empty-btn-secondary" @click="loadDemo">
           ✨ Muat Demo Data
         </button>
       </div>

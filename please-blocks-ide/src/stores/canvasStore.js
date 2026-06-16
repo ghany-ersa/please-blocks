@@ -104,7 +104,7 @@ export const useCanvasStore = defineStore('canvas', {
 
     updateFeatureLabel(featureId, label) {
       const f = this.features.find(f => f.id === featureId)
-      if (f) f.label = label
+      if (f) { f.label = label; this.persist() }
     },
 
     removeFeature(featureId) {
@@ -122,7 +122,7 @@ export const useCanvasStore = defineStore('canvas', {
 
     toggleFeatureCollapse(featureId) {
       const f = this.features.find(f => f.id === featureId)
-      if (f) f.collapsed = !f.collapsed
+      if (f) { f.collapsed = !f.collapsed; this.persist() }
     },
 
     // ── Test Cases ─────────────────────────────────────────────────
@@ -146,7 +146,7 @@ export const useCanvasStore = defineStore('canvas', {
     updateTestCaseLabel(testCaseId, label) {
       for (const f of this.features) {
         const tc = f.testCases.find(t => t.id === testCaseId)
-        if (tc) { tc.label = label; return }
+        if (tc) { tc.label = label; this.persist(); return }
       }
     },
 
@@ -168,7 +168,7 @@ export const useCanvasStore = defineStore('canvas', {
     toggleTestCaseCollapse(testCaseId) {
       for (const f of this.features) {
         const tc = f.testCases.find(t => t.id === testCaseId)
-        if (tc) { tc.collapsed = !tc.collapsed; return }
+        if (tc) { tc.collapsed = !tc.collapsed; this.persist(); return }
       }
     },
 

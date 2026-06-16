@@ -1,8 +1,9 @@
 <script setup>
 /**
  * ProjectImportModal.vue — Import by Project (Reverse Codegen)
- * Pilih folder project → baca via server → preview rekonstruksi penuh
- * (canvas + data + components) → konfirmasi import.
+ * Menyisipkan isi project LAIN ke workspace yang sedang aktif.
+ * TIDAK mengubah folder workspace (projectPath). Default: gabung (merge);
+ * opsi "ganti" untuk menimpa canvas/data/component aktif.
  */
 import { ref, computed } from 'vue'
 import DirectoryPicker      from '@/components/shared/DirectoryPicker.vue'
@@ -26,7 +27,7 @@ const projectPath  = ref(runner.projectPath || '')
 const showPicker   = ref(false)
 const loading      = ref(false)
 const error        = ref('')
-const replace      = ref(true)
+const replace      = ref(false)  // default: sisipkan (merge) ke workspace aktif
 const projectFiles = ref(null)   // raw dari server
 const analysis     = ref(null)   // hasil analyzeProject
 
@@ -67,11 +68,11 @@ const canImport  = computed(() => !!summary.value && summary.value.features + su
 
 function doImport() {
   if (!projectFiles.value || !canImport.value) return
+  // Import = menyisipkan isi project lain ke workspace AKTIF.
+  // TIDAK mengubah projectPath — folder workspace tetap apa adanya.
   importProject(projectFiles.value, {
     dataRegistry: dataReg, componentStore: compStore, blockRegistry: registry, canvas
   }, { replace: replace.value })
-  // sinkronkan projectPath agar real-run langsung bisa dipakai
-  runner.projectPath = projectPath.value
   emit('close')
 }
 

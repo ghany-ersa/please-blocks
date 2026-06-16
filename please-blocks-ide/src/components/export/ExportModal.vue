@@ -11,6 +11,7 @@ import { useCanvasStore }     from '@/stores/canvasStore.js'
 import { useBlockRegistry }   from '@/stores/blockRegistry.js'
 import { useDataRegistry }    from '@/stores/dataRegistry.js'
 import { useComponentStore }  from '@/stores/componentStore.js'
+import { useRunnerStore }     from '@/stores/runnerStore.js'
 import { exportProject }      from '@/core/codegen/projectExporter.js'
 
 const emit = defineEmits(['close'])
@@ -19,9 +20,10 @@ const canvas    = useCanvasStore()
 const registry  = useBlockRegistry()
 const dataReg   = useDataRegistry()
 const compStore = useComponentStore()
+const runner    = useRunnerStore()
 
 // Generate semua file
-const files = computed(() => exportProject(canvas, registry, dataReg, compStore))
+const files = computed(() => exportProject(canvas, registry, dataReg, compStore, runner.projectName))
 
 // Navigasi tab
 const activeFile = ref(null)
@@ -57,7 +59,7 @@ async function copyFile() {
   setTimeout(() => { copied.value = false }, 1800)
 }
 
-const projectName = computed(() => 'my-automation-tests')
+const projectName = computed(() => runner.projectName)
 
 // Download semua sebagai ZIP dengan struktur folder lengkap
 const downloading = ref(false)

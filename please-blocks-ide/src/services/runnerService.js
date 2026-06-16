@@ -64,7 +64,8 @@ export async function writeProject(projectPath, files) {
     res = await fetch(`${BASE}/files/write`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ projectPath, files })
+      // prune: true → Save sinkron penuh (hapus file feature/data/component basi)
+      body:    JSON.stringify({ projectPath, files, prune: true })
     })
   } catch (err) {
     return { ok: false, error: `Tidak dapat terhubung ke server: ${err.message}` }
@@ -78,7 +79,7 @@ export async function writeProject(projectPath, files) {
   }
 
   if (!res.ok) return { ok: false, error: data.error || `Gagal menulis (status ${res.status})` }
-  return { ok: true, written: data.written, errors: data.errors }
+  return { ok: true, written: data.written, removed: data.removed, errors: data.errors }
 }
 
 /**

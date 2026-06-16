@@ -12,10 +12,11 @@ import ExportModal       from '@/components/export/ExportModal.vue'
 import ImportModal       from '@/components/export/ImportModal.vue'
 import ProjectImportModal from '@/components/export/ProjectImportModal.vue'
 import ReportViewer      from '@/components/runner/ReportViewer.vue'
-import DirectoryPicker   from '@/components/shared/DirectoryPicker.vue'
 import TopbarMenu        from '@/components/layout/TopbarMenu.vue'
+import ProjectGate       from '@/components/layout/ProjectGate.vue'
 import { exportProject } from '@/core/codegen/projectExporter.js'
-import { writeProject }  from '@/services/runnerService.js'
+import { writeProject, readProject } from '@/services/runnerService.js'
+import { importProject } from '@/core/codegen/projectImporter.js'
 import { useRunnerStore }     from '@/stores/runnerStore.js'
 import { useCanvasStore  }   from '@/stores/canvasStore.js'
 import { useBlockRegistry }  from '@/stores/blockRegistry.js'
@@ -49,15 +50,78 @@ const showEnvEditor        = ref(false)
 const showExportModal      = ref(false)
 const showImportModal      = ref(false)
 const showProjectImportModal = ref(false)
-const showDirectoryPicker  = ref(false)
 
-// Cek ketersediaan server saat app boot
-onMounted(() => runner.checkServer())
+// ── Boot sync: disk = sumber kebenaran ─────────────────────────
+// Saat reload dengan projectPath tersimpan, sinkronkan canvas dari folder.
+const showReloadConfirm = ref(false)   // dialog "buang perubahan & muat dari disk?"
+let pendingDiskFiles = null            // hasil readProject yang menunggu konfirmasi
+
+onMounted(async () => {
+  await runner.checkServer()
+  if (!runner.projectPath) return       // belum ada project → gate menangani
+
+  // Server mati padahal ada projectPath → kembali ke gate (gate beri pesan).
+  if (!runner.serverAvailable) {
+    closeProject()
+    return
+  }
+
+  const res = await readProject(runner.projectPath)
+  if (!res.ok) {
+    // Folder tak terbaca (mis. dihapus/dipindah) → kembali ke gate.
+    closeProject()
+    return
+  }
+
+  if (diskMatchesCanvas(res.data.files)) {
+    // localStorage sudah sama dengan disk → tidak perlu apa-apa.
+    return
+  }
+  // Ada perbedaan (perubahan belum di-Save) → minta konfirmasi sebelum menimpa.
+  pendingDiskFiles = res.data.files
+  showReloadConfirm.value = true
+})
+
+// Bandingkan file terkelola hasil generate canvas saat ini vs isi disk.
+function diskMatchesCanvas(diskFiles) {
+  const current = exportProject(canvas, registry, dataReg, compStore, runner.projectName)
+  const managed = (p) => /^(feature|data|components)\//.test(p)
+
+  // Peta path → content untuk kedua sisi (hanya folder terkelola).
+  const mine = new Map(current.filter(f => managed(f.path)).map(f => [f.path, f.content]))
+  const disk = new Map()
+  for (const f of diskFiles.specs || [])      disk.set(`feature/${f.name}`, f.content)
+  for (const f of diskFiles.data || [])       disk.set(`data/${f.name}`, f.content)
+  for (const f of diskFiles.components || []) disk.set(`components/${f.name}`, f.content)
+
+  if (mine.size !== disk.size) return false
+  for (const [path, content] of mine) {
+    if (disk.get(path) !== content) return false
+  }
+  return true
+}
+
+function loadFromDisk() {
+  if (!pendingDiskFiles) return
+  registry.clearDynamicBlocks()
+  importProject(pendingDiskFiles, {
+    dataRegistry: dataReg, componentStore: compStore, blockRegistry: registry, canvas
+  }, { replace: true })
+  pendingDiskFiles = null
+  showReloadConfirm.value = false
+}
+
+// Pertahankan perubahan = tulis state canvas saat ini ke disk (seperti Save),
+// agar disk langsung sinkron dengan canvas.
+function keepLocal() {
+  pendingDiskFiles = null
+  showReloadConfirm.value = false
+  triggerSave()
+}
 
 // ── Simpan ke Project (tulis semua file ke disk) ───────────────
 const saveState   = ref('idle')   // 'idle' | 'saving' | 'saved' | 'error'
 const saveMessage = ref('')
-const pendingSave = ref(false)    // tandai picker dibuka demi save
 
 async function triggerSave() {
   if (!runner.serverAvailable) {
@@ -65,27 +129,19 @@ async function triggerSave() {
     saveMessage.value = 'Server tidak aktif — jalankan npm run dev.'
     return
   }
-  // Belum ada folder → minta pilih dulu, lalu lanjut save
-  if (!runner.projectPath) {
-    pendingSave.value = true
-    showDirectoryPicker.value = true
-    return
-  }
+  // projectPath dijamin ada (sudah lewat gate New/Open)
   await doSave()
 }
 
 async function doSave() {
   saveState.value = 'saving'
   saveMessage.value = ''
-  const files = exportProject(canvas, registry, dataReg, compStore)
+  const files = exportProject(canvas, registry, dataReg, compStore, runner.projectName)
   const res = await writeProject(runner.projectPath, files)
 
   if (res.ok && (!res.errors || res.errors.length === 0)) {
     saveState.value = 'saved'
-    saveMessage.value = `${res.written?.length || files.length} file tersimpan`
-  } else if (res.ok) {
-    saveState.value = 'error'
-    saveMessage.value = `${res.errors.length} file gagal ditulis`
+    saveMessage.value = 'Tersimpan'
   } else {
     saveState.value = 'error'
     saveMessage.value = res.error || 'Gagal menyimpan'
@@ -93,22 +149,19 @@ async function doSave() {
   setTimeout(() => { if (saveState.value !== 'saving') saveState.value = 'idle' }, 2500)
 }
 
+// Tutup project → kembali ke gate (canvas & data tetap di localStorage,
+// tapi user wajib pilih project lagi untuk melanjutkan).
+function closeProject() {
+  runner.setProjectPath('')
+}
+
 function triggerRun() {
   runner.open()
   if (runner.canRunReal) {
-    const files = exportProject(canvas, registry, dataReg, compStore)
+    const files = exportProject(canvas, registry, dataReg, compStore, runner.projectName)
     runner.runReal(files, runner.projectPath)
   } else {
     runner.runSimulation(canvas.features, registry, dataReg.entries)
-  }
-}
-
-function onDirectorySelected(path) {
-  runner.projectPath        = path
-  showDirectoryPicker.value = false
-  if (pendingSave.value) {
-    pendingSave.value = false
-    doSave()
   }
 }
 
@@ -164,7 +217,10 @@ const runnerStatusColor = computed(() => {
 </script>
 
 <template>
-  <div class="shell" :class="{ 'is-resizing': isResizing }">
+  <!-- Gate: pilih project dulu sebelum bisa akses canvas -->
+  <ProjectGate v-if="!runner.projectPath" />
+
+  <div v-else class="shell" :class="{ 'is-resizing': isResizing }">
 
     <!-- Top bar -->
     <header class="topbar">
@@ -184,6 +240,11 @@ const runnerStatusColor = computed(() => {
           <button class="menu-item" @click="showExportModal = true">
             <span class="mi">📦</span> Export ZIP
           </button>
+          <div class="menu-sep"></div>
+          <div class="menu-head">Project</div>
+          <button class="menu-item" @click="closeProject">
+            <span class="mi">✖</span> Close Project
+          </button>
         </TopbarMenu>
 
         <!-- Menu: Workspace (editor & panel) -->
@@ -201,32 +262,10 @@ const runnerStatusColor = computed(() => {
       </div>
 
       <div class="topbar-center">
-        <span class="project-name">my-automation-tests</span>
+        <span class="project-name" :title="runner.projectPath || 'Belum ada folder project'">{{ runner.projectName }}</span>
       </div>
 
       <div class="topbar-right">
-
-        <!-- Toggle Inspector & Code -->
-        <button
-          class="topbar-btn"
-          :class="{ active: showRightPanel }"
-          @click="showRightPanel = !showRightPanel"
-          title="Toggle Inspector & Code Preview"
-        >
-          🔍 Inspector
-        </button>
-
-        <!-- Folder project (di samping Simpan) -->
-        <button
-          v-if="runner.serverAvailable"
-          class="topbar-btn folder"
-          :class="{ 'has-path': !!runner.projectPath }"
-          @click="showDirectoryPicker = true"
-          :title="runner.projectPath || 'Pilih folder project'"
-        >
-          📂 {{ runner.projectPath ? '…' + runner.projectPath.slice(-16) : 'Set Folder' }}
-        </button>
-
         <!-- Save (primary) -->
         <button
           v-if="runner.serverAvailable"
@@ -240,6 +279,16 @@ const runnerStatusColor = computed(() => {
            : saveState === 'saved' ? `✓ ${saveMessage}`
            : saveState === 'error' ? `✗ ${saveMessage}`
            : '💾 Simpan' }}
+        </button>
+
+        <!-- Toggle Inspector & Code -->
+        <button
+          class="topbar-btn"
+          :class="{ active: showRightPanel }"
+          @click="showRightPanel = !showRightPanel"
+          title="Toggle Inspector & Code Preview"
+        >
+          🔍 Inspector
         </button>
 
         <!-- Laporan (kontekstual) -->
@@ -320,13 +369,7 @@ const runnerStatusColor = computed(() => {
     <EnvEditor         v-if="showEnvEditor"        @close="showEnvEditor = false" />
     <ExportModal       v-if="showExportModal"      @close="showExportModal = false" />
     <ImportModal       v-if="showImportModal"      @close="showImportModal = false" />
-    <ProjectImportModal v-if="showProjectImportModal" @close="showProjectImportModal = false" />
     <ReportViewer      v-if="runner.showReport"   @close="runner.showReport = false" />
-    <DirectoryPicker
-      v-if="showDirectoryPicker"
-      @select="onDirectorySelected"
-      @close="showDirectoryPicker = false"
-    />
 
     <!-- Status bar -->
     <footer class="statusbar">
@@ -356,6 +399,24 @@ const runnerStatusColor = computed(() => {
       <span class="status-dot" :class="runner.status"></span>
       <span>Sprint 8 — Real Runner (Jalur B)</span>
     </footer>
+  </div>
+
+  <!-- Project Import — di luar shell agar bisa dibuka dari gate maupun topbar -->
+  <ProjectImportModal v-if="showProjectImportModal" @close="showProjectImportModal = false" />
+
+  <!-- Konfirmasi reload: perubahan belum tersimpan vs isi disk -->
+  <div v-if="showReloadConfirm" class="confirm-overlay">
+    <div class="confirm-card">
+      <div class="confirm-title">⚠ Perubahan belum tersimpan</div>
+      <p class="confirm-body">
+        Canvas berbeda dengan isi folder project di disk. Muat ulang dari disk
+        akan <strong>membuang perubahan yang belum di-Save</strong>.
+      </p>
+      <div class="confirm-actions">
+        <button class="c-btn keep" @click="keepLocal">Pertahankan perubahan</button>
+        <button class="c-btn load" @click="loadFromDisk">Muat dari disk</button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -406,13 +467,6 @@ const runnerStatusColor = computed(() => {
 .topbar-divider {
   width: 1px; height: 20px; background: #1e293b; margin: 0 4px; flex-shrink: 0;
 }
-.topbar-btn.folder {
-  max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  font-family: monospace; font-size: 9px;
-  background: rgba(14,165,233,0.06); border-color: rgba(14,165,233,0.2); color: #38bdf8;
-}
-.topbar-btn.folder.has-path     { color: #7dd3fc; }
-.topbar-btn.folder:hover        { background: rgba(14,165,233,0.16); }
 .topbar-btn.save                { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.25); color: #34d399; }
 .topbar-btn.save:hover:not(:disabled) { background: rgba(16,185,129,0.18); }
 .topbar-btn.save:disabled       { opacity: 0.6; cursor: default; }
@@ -565,5 +619,26 @@ const runnerStatusColor = computed(() => {
   color: #34d399;
   font-weight: 700;
 }
+
+/* Konfirmasi reload */
+.confirm-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.65);
+  display: flex; align-items: center; justify-content: center;
+}
+.confirm-card {
+  width: 380px; max-width: 92vw;
+  background: #111827; border: 1px solid #1e293b; border-radius: 12px;
+  padding: 22px; box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+}
+.confirm-title { font-size: 14px; font-weight: 700; color: #f59e0b; margin-bottom: 8px; }
+.confirm-body  { font-size: 12px; color: #94a3b8; line-height: 1.6; }
+.confirm-body strong { color: #e2e8f0; }
+.confirm-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+.c-btn { padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+.c-btn.keep { background: transparent; border: 1px solid #334155; color: #94a3b8; }
+.c-btn.keep:hover { border-color: #475569; color: #e2e8f0; }
+.c-btn.load { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.35); color: #f87171; }
+.c-btn.load:hover { background: rgba(239,68,68,0.25); }
 
 </style>
