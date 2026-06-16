@@ -71,8 +71,9 @@ export function generateSpec(feature, blockRegistry, dataEntries = []) {
  */
 function generateTestCase(tc, blockRegistry) {
   const stepLines = tc.steps.map(step => generateStep(step, blockRegistry))
+  const indent = (block) => block.split('\n').map(l => `        ${l}`).join('\n')
   const body = stepLines.length
-    ? stepLines.map(l => `        ${l}`).join('\n')
+    ? stepLines.map(indent).join('\n')
     : '        // Belum ada step'
 
   return [
@@ -85,15 +86,31 @@ function generateTestCase(tc, blockRegistry) {
 
 /**
  * Generate satu baris kode dari satu Step.
+ * Jika step punya catatan (note) dari QA, prepend sebagai komentar di baris atas.
  */
 function generateStep(step, blockRegistry) {
   const block = blockRegistry.getById(step.blockId)
   if (!block) return `// [!] Block tidak ditemukan: ${step.blockId}`
+
+  let code
   try {
-    return block.codegen(step.inputs || {})
+    code = block.codegen(step.inputs || {})
   } catch (err) {
     return `// [!] Error pada '${step.blockId}': ${err.message}`
   }
+
+  return withNote(step.note, code)
+}
+
+/**
+ * Prepend catatan QA sebagai komentar di atas baris kode.
+ * Note multi-baris → tiap baris jadi komentar tersendiri.
+ */
+function withNote(note, code) {
+  const text = note?.trim()
+  if (!text) return code
+  const comment = text.split('\n').map(line => `// ${line.trim()}`).join('\n')
+  return `${comment}\n${code}`
 }
 
 /**
