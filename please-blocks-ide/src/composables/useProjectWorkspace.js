@@ -52,6 +52,16 @@ export function useProjectWorkspace({ onKeepLocal } = {}) {
     return { ok: true }
   }
 
+  // Buat project baru kosong di folder: reset semua state (tanpa seed default),
+  // lalu jadikan folder kerja. Demo data tersedia via tombol di canvas.
+  function newProject(path) {
+    canvas.clearCanvas()
+    registry.clearDynamicBlocks()
+    dataReg.setData({}, {})
+    compStore.setComponents([])
+    runner.setProjectPath(path)
+  }
+
   // Saat reload dengan projectPath tersimpan, sinkronkan canvas dari folder.
   async function syncOnBoot() {
     await runner.checkServer()
@@ -106,5 +116,5 @@ export function useProjectWorkspace({ onKeepLocal } = {}) {
     onKeepLocal?.()
   }
 
-  return { showReloadConfirm, closeProject, openProject, syncOnBoot, loadFromDisk, keepLocal }
+  return { showReloadConfirm, closeProject, openProject, newProject, syncOnBoot, loadFromDisk, keepLocal }
 }

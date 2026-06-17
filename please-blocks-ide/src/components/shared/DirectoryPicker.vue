@@ -1,10 +1,11 @@
 <script setup>
 /**
  * DirectoryPicker.vue
- * Modal browser direktori — navigasi folder via server /api/files/browse.
+ * Modal browser direktori — navigasi folder via service browseDirectory().
  * Emit 'select' dengan absolute path folder yang dipilih.
  */
 import { ref, onMounted } from 'vue'
+import { browseDirectory } from '@/model/services/runnerService.js'
 
 const emit = defineEmits(['select', 'close'])
 
@@ -18,20 +19,13 @@ const selected    = ref('')   // path yang sedang di-highlight
 async function browse(path = '') {
   loading.value = true
   error.value   = ''
-  try {
-    const url = path ? `/api/files/browse?path=${encodeURIComponent(path)}` : '/api/files/browse'
-    const res  = await fetch(url)
-    const data = await res.json()
-    if (!res.ok) { error.value = data.error || 'Gagal membaca direktori'; return }
-    currentPath.value = data.path
-    crumbs.value      = data.crumbs
-    items.value       = data.items
-    selected.value    = data.path   // default pilih folder saat ini
-  } catch (e) {
-    error.value = `Tidak dapat terhubung ke server: ${e.message}`
-  } finally {
-    loading.value = false
-  }
+  const res = await browseDirectory(path)
+  loading.value = false
+  if (!res.ok) { error.value = res.error; return }
+  currentPath.value = res.data.path
+  crumbs.value      = res.data.crumbs
+  items.value       = res.data.items
+  selected.value    = res.data.path   // default pilih folder saat ini
 }
 
 function enter(item) {

@@ -22,6 +22,23 @@ export async function checkServerHealth() {
 }
 
 /**
+ * Jelajah isi direktori untuk directory picker.
+ * @param {string} [path] - absolute path; kosong → home directory
+ * @returns {Promise<{ ok: boolean, data?: Object, error?: string }>}
+ */
+export async function browseDirectory(path = '') {
+  try {
+    const url = path ? `${BASE}/files/browse?path=${encodeURIComponent(path)}` : `${BASE}/files/browse`
+    const res = await fetch(url)
+    const data = await res.json()
+    if (!res.ok) return { ok: false, error: data.error || 'Gagal membaca direktori' }
+    return { ok: true, data }
+  } catch (e) {
+    return { ok: false, error: `Tidak dapat terhubung ke server: ${e.message}` }
+  }
+}
+
+/**
  * Baca seluruh file relevan dari folder project (Import by Project).
  *
  * @param {string} projectPath - absolute path folder project

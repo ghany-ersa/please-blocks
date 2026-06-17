@@ -9,19 +9,11 @@
  */
 import { ref } from 'vue'
 import DirectoryPicker from '@/components/shared/DirectoryPicker.vue'
-import { readProject } from '@/model/services/runnerService.js'
-import { importProject } from '@/model/core/codegen/projectImporter.js'
-import { useRunnerStore }    from '@/model/stores/runnerStore.js'
-import { useCanvasStore }    from '@/model/stores/canvasStore.js'
-import { useBlockRegistry }  from '@/model/stores/blockRegistry.js'
-import { useDataRegistry }   from '@/model/stores/dataRegistry.js'
-import { useComponentStore } from '@/model/stores/componentStore.js'
+import { useRunnerStore }       from '@/model/stores/runnerStore.js'
+import { useProjectWorkspace }  from '@/composables/useProjectWorkspace.js'
 
-const runner    = useRunnerStore()
-const canvas    = useCanvasStore()
-const registry  = useBlockRegistry()
-const dataReg   = useDataRegistry()
-const compStore = useComponentStore()
+const runner = useRunnerStore()   // hanya untuk serverAvailable di template
+const { openProject, newProject } = useProjectWorkspace()
 
 const mode    = ref(null)   // null | 'new' | 'open' → picker yang aktif
 const loading = ref(false)
@@ -37,36 +29,15 @@ async function onFolderSelected(path) {
   error.value = ''
 
   if (chosen === 'new') {
-    // New Project: workspace BENAR-BENAR kosong — tanpa seed default.
-    // (Demo data tersedia lewat tombol "Muat Demo Data" di canvas kosong.)
-    canvas.clearCanvas()
-    registry.clearDynamicBlocks()
-    dataReg.setData({}, {})
-    compStore.setComponents([])
-    runner.setProjectPath(path)
+    newProject(path)
     return
   }
 
-  // Open Project: baca folder → muat isinya sebagai workspace → set sebagai
-  // folder kerja (projectPath). replace=true karena ini MEMBUKA, bukan menyisip.
+  // Open: baca folder & muat sebagai workspace (orkestrasi di ViewModel).
   loading.value = true
-  const res = await readProject(path)
+  const res = await openProject(path)
   loading.value = false
-  if (!res.ok) { error.value = res.error; return }
-
-  try {
-    // Bersihkan total state lama dulu agar canvas murni mencerminkan isi folder.
-    // Pakai clear ke KOSONG (bukan reset() yang menyeed DEFAULT Auth/main —
-    // itu justru memunculkan "code lama" yang tidak ada di folder).
-    registry.clearDynamicBlocks()
-    importProject(res.data.files, {
-      dataRegistry: dataReg, componentStore: compStore, blockRegistry: registry, canvas
-    }, { replace: true })
-  } catch (err) {
-    error.value = `Gagal membuka project: ${err.message}`
-    return
-  }
-  runner.setProjectPath(path)
+  if (!res.ok) error.value = res.error
 }
 </script>
 
