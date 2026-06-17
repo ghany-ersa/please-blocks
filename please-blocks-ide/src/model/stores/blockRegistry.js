@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ALL_BUILT_IN_BLOCKS, CATEGORY_ORDER, CATEGORY_META } from '@/core/blocks/definitions/index.js'
+import { ALL_BUILT_IN_BLOCKS, CATEGORY_ORDER, CATEGORY_META } from '@/model/core/blocks/definitions/index.js'
 
 export const useBlockRegistry = defineStore('blockRegistry', {
   state: () => ({

@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { useCanvasStore } from '@/stores/canvasStore.js'
+import { useCanvasStore } from '@/model/stores/canvasStore.js'
 import TestCaseBlock from './TestCaseBlock.vue'
 
 const props = defineProps({

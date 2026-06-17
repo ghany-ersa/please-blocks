@@ -1,5 +1,5 @@
 <script setup>
-import { useCanvasStore } from '@/stores/canvasStore.js'
+import { useCanvasStore } from '@/model/stores/canvasStore.js'
 
 const props = defineProps({
   block: { type: Object, required: true }

@@ -6,7 +6,7 @@
  * Format output sesuai format .env standar (KEY=VALUE).
  */
 import { ref, computed } from 'vue'
-import { useDataRegistry } from '@/stores/dataRegistry.js'
+import { useDataRegistry } from '@/model/stores/dataRegistry.js'
 
 const emit = defineEmits(['close'])
 const dataReg = useDataRegistry()

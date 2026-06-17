@@ -12,9 +12,9 @@
  *   - VarRef      : { type: 'varref',  varName: 'headerText' }
  */
 import { ref, computed, watch } from 'vue'
-import { useDataRegistry }         from '@/stores/dataRegistry.js'
-import { useCanvasStore }          from '@/stores/canvasStore.js'
-import { checkEntryCompatibility } from '@/core/blocks/schemaValidator.js'
+import { useDataRegistry }         from '@/model/stores/dataRegistry.js'
+import { useCanvasStore }          from '@/model/stores/canvasStore.js'
+import { checkEntryCompatibility } from '@/model/core/blocks/schemaValidator.js'
 import { useDropdownControl }      from '@/composables/useDropdownControl.js'
 import DropdownOptionGroup         from '@/components/shared/DropdownOptionGroup.vue'
 

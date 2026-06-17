@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { mapArgNInputs } from '@/core/codegen/statementParser.js'
+import { mapArgNInputs } from '@/model/core/codegen/statementParser.js'
 
 // Helper — generate ID unik sederhana
 const uid = (prefix) => `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`

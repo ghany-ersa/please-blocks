@@ -5,10 +5,10 @@
  * Saat Electron tersedia, gantikan runSimulation() dengan IPC ke main process.
  */
 import { ref, computed, watch, nextTick } from 'vue'
-import { useRunnerStore }    from '@/stores/runnerStore.js'
-import { useCanvasStore  }   from '@/stores/canvasStore.js'
-import { useBlockRegistry }  from '@/stores/blockRegistry.js'
-import { useDataRegistry  }  from '@/stores/dataRegistry.js'
+import { useRunnerStore }    from '@/model/stores/runnerStore.js'
+import { useCanvasStore  }   from '@/model/stores/canvasStore.js'
+import { useBlockRegistry }  from '@/model/stores/blockRegistry.js'
+import { useDataRegistry  }  from '@/model/stores/dataRegistry.js'
 
 const runner   = useRunnerStore()
 const canvas   = useCanvasStore()

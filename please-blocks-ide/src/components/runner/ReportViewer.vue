@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue'
-import { useRunnerStore } from '@/stores/runnerStore.js'
-import { useCanvasStore  } from '@/stores/canvasStore.js'
+import { useRunnerStore } from '@/model/stores/runnerStore.js'
+import { useCanvasStore  } from '@/model/stores/canvasStore.js'
 
 const runner = useRunnerStore()
 const canvas = useCanvasStore()

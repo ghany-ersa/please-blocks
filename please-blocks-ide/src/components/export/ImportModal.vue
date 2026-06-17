@@ -5,9 +5,9 @@
  * preview + warning, lalu impor ke canvas (replace atau append).
  */
 import { ref, computed } from 'vue'
-import { useCanvasStore }   from '@/stores/canvasStore.js'
-import { useBlockRegistry } from '@/stores/blockRegistry.js'
-import { parseSpec }        from '@/core/codegen/specParser.js'
+import { useCanvasStore }   from '@/model/stores/canvasStore.js'
+import { useBlockRegistry } from '@/model/stores/blockRegistry.js'
+import { parseSpec }        from '@/model/core/codegen/specParser.js'
 
 const emit = defineEmits(['close'])
 

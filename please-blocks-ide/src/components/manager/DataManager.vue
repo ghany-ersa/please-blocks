@@ -11,8 +11,8 @@
  * Code Preview menampilkan output JS per file yang aktif.
  */
 import { ref, computed } from 'vue'
-import { useDataRegistry }  from '@/stores/dataRegistry.js'
-import { generateDataFile }  from '@/core/factory/DataFactory.js'
+import { useDataRegistry }  from '@/model/stores/dataRegistry.js'
+import { generateDataFile }  from '@/model/core/factory/DataFactory.js'
 
 const emit   = defineEmits(['close'])
 const dataReg = useDataRegistry()

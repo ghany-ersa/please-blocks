@@ -9,13 +9,13 @@
  */
 import { ref } from 'vue'
 import DirectoryPicker from '@/components/shared/DirectoryPicker.vue'
-import { readProject } from '@/services/runnerService.js'
-import { importProject } from '@/core/codegen/projectImporter.js'
-import { useRunnerStore }    from '@/stores/runnerStore.js'
-import { useCanvasStore }    from '@/stores/canvasStore.js'
-import { useBlockRegistry }  from '@/stores/blockRegistry.js'
-import { useDataRegistry }   from '@/stores/dataRegistry.js'
-import { useComponentStore } from '@/stores/componentStore.js'
+import { readProject } from '@/model/services/runnerService.js'
+import { importProject } from '@/model/core/codegen/projectImporter.js'
+import { useRunnerStore }    from '@/model/stores/runnerStore.js'
+import { useCanvasStore }    from '@/model/stores/canvasStore.js'
+import { useBlockRegistry }  from '@/model/stores/blockRegistry.js'
+import { useDataRegistry }   from '@/model/stores/dataRegistry.js'
+import { useComponentStore } from '@/model/stores/componentStore.js'
 
 const runner    = useRunnerStore()
 const canvas    = useCanvasStore()

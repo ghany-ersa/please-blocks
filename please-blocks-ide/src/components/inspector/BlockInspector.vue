@@ -5,10 +5,10 @@
  * Merender field input sesuai schema block.inputs[].
  */
 import { computed, watch, ref } from 'vue'
-import { useCanvasStore }    from '@/stores/canvasStore.js'
-import { useBlockRegistry }  from '@/stores/blockRegistry.js'
-import { useDataRegistry }   from '@/stores/dataRegistry.js'
-import { validateSchema }    from '@/core/blocks/schemaValidator.js'
+import { useCanvasStore }    from '@/model/stores/canvasStore.js'
+import { useBlockRegistry }  from '@/model/stores/blockRegistry.js'
+import { useDataRegistry }   from '@/model/stores/dataRegistry.js'
+import { validateSchema }    from '@/model/core/blocks/schemaValidator.js'
 import TextInput        from './inputs/TextInput.vue'
 import SelectorInput    from './inputs/SelectorInput.vue'
 import NumberInput      from './inputs/NumberInput.vue'

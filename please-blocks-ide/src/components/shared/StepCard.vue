@@ -18,11 +18,11 @@
  *   reorder         (fromIndex, toIndex) — drag selesai
  */
 import { ref, computed } from 'vue'
-import { useBlockRegistry }  from '@/stores/blockRegistry.js'
-import { useCanvasStore }    from '@/stores/canvasStore.js'
-import { useDataRegistry }   from '@/stores/dataRegistry.js'
-import { useComponentStore } from '@/stores/componentStore.js'
-import { validateStep }      from '@/core/blocks/stepValidator.js'
+import { useBlockRegistry }  from '@/model/stores/blockRegistry.js'
+import { useCanvasStore }    from '@/model/stores/canvasStore.js'
+import { useDataRegistry }   from '@/model/stores/dataRegistry.js'
+import { useComponentStore } from '@/model/stores/componentStore.js'
+import { validateStep }      from '@/model/core/blocks/stepValidator.js'
 import TextInput        from '@/components/inspector/inputs/TextInput.vue'
 import SelectorInput    from '@/components/inspector/inputs/SelectorInput.vue'
 import NumberInput      from '@/components/inspector/inputs/NumberInput.vue'

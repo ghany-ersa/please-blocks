@@ -1,7 +1,7 @@
 <script setup>
-import { useCanvasStore }    from '@/stores/canvasStore.js'
-import { useDataRegistry }   from '@/stores/dataRegistry.js'
-import { useComponentStore } from '@/stores/componentStore.js'
+import { useCanvasStore }    from '@/model/stores/canvasStore.js'
+import { useDataRegistry }   from '@/model/stores/dataRegistry.js'
+import { useComponentStore } from '@/model/stores/componentStore.js'
 import FeatureContainer from './FeatureContainer.vue'
 
 const canvas    = useCanvasStore()

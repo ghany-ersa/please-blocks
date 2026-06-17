@@ -1,8 +1,8 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'
-import { useDataRegistry } from './stores/dataRegistry.js'
-import { useComponentStore } from './stores/componentStore.js'
+import { useDataRegistry } from './model/stores/dataRegistry.js'
+import { useComponentStore } from './model/stores/componentStore.js'
 
 const app   = createApp(App)
 const pinia = createPinia()

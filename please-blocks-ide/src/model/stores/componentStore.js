@@ -9,8 +9,8 @@
  */
 
 import { defineStore } from 'pinia'
-import { buildComponentBlocks } from '@/core/factory/ComponentFactory.js'
-import { useBlockRegistry } from '@/stores/blockRegistry.js'
+import { buildComponentBlocks } from '@/model/core/factory/ComponentFactory.js'
+import { useBlockRegistry } from '@/model/stores/blockRegistry.js'
 
 const STORAGE_KEY = 'please-blocks:componentStore'
 

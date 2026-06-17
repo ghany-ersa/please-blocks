@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { useRunnerStore } from '@/stores/runnerStore.js'
+import { useRunnerStore } from '@/model/stores/runnerStore.js'
 
 const runner = useRunnerStore()
 const open   = ref(false)

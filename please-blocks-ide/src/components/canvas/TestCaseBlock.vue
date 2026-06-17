@@ -1,10 +1,10 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { useCanvasStore } from '@/stores/canvasStore.js'
-import { useBlockRegistry } from '@/stores/blockRegistry.js'
-import { useDataRegistry } from '@/stores/dataRegistry.js'
-import { useComponentStore } from '@/stores/componentStore.js'
-import { validateTestCase } from '@/core/blocks/stepValidator.js'
+import { useCanvasStore } from '@/model/stores/canvasStore.js'
+import { useBlockRegistry } from '@/model/stores/blockRegistry.js'
+import { useDataRegistry } from '@/model/stores/dataRegistry.js'
+import { useComponentStore } from '@/model/stores/componentStore.js'
+import { validateTestCase } from '@/model/core/blocks/stepValidator.js'
 import { useStepSelection } from '@/composables/useStepSelection.js'
 import StepItem from './StepItem.vue'
 

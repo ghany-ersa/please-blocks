@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
-import { validateTestCase } from '@/core/blocks/stepValidator.js'
-import { checkServerHealth, startRun as startRealRun } from '@/services/runnerService.js'
+import { validateTestCase } from '@/model/core/blocks/stepValidator.js'
+import { checkServerHealth, startRun as startRealRun } from '@/model/services/runnerService.js'
 
 /**
  * runnerStore.js

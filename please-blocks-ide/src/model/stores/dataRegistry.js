@@ -12,7 +12,7 @@
  */
 
 import { defineStore } from 'pinia'
-import { processDataFiles } from '@/core/factory/DataFactory.js'
+import { processDataFiles } from '@/model/core/factory/DataFactory.js'
 
 const STORAGE_KEY = 'please-blocks:dataRegistry-v2'
 

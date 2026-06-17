@@ -1,4 +1,4 @@
-import { useCanvasStore } from '@/stores/canvasStore.js'
+import { useCanvasStore } from '@/model/stores/canvasStore.js'
 
 export function useStepActions(stepId, testCaseId) {
   const canvas = useCanvasStore()
