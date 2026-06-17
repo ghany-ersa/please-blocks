@@ -14,24 +14,34 @@ import ProjectImportModal from '@/components/export/ProjectImportModal.vue'
 import ReportViewer      from '@/components/runner/ReportViewer.vue'
 import TopbarMenu        from '@/components/layout/TopbarMenu.vue'
 import ProjectGate       from '@/components/layout/ProjectGate.vue'
-import { exportProject } from '@/core/codegen/projectExporter.js'
-import { writeProject, readProject } from '@/services/runnerService.js'
-import { importProject } from '@/core/codegen/projectImporter.js'
-import { useRunnerStore }     from '@/stores/runnerStore.js'
-import { useCanvasStore  }   from '@/stores/canvasStore.js'
-import { useBlockRegistry }  from '@/stores/blockRegistry.js'
-import { useDataRegistry  }  from '@/stores/dataRegistry.js'
-import { useComponentStore } from '@/stores/componentStore.js'
+import { useRunnerStore }     from '@/model/stores/runnerStore.js'
+import { useComponentStore } from '@/model/stores/componentStore.js'
+import { useSaveProject }      from '@/composables/useSaveProject.js'
+import { useProjectWorkspace } from '@/composables/useProjectWorkspace.js'
+import { useTestRunnerControl }from '@/composables/useTestRunnerControl.js'
+import { usePanelResize }      from '@/composables/usePanelResize.js'
 
 const runner    = useRunnerStore()
-const canvas    = useCanvasStore()
-const registry  = useBlockRegistry()
-const dataReg   = useDataRegistry()
 const compStore = useComponentStore()
 
+// ── ViewModel (composables) ────────────────────────────────────
+const { saveState, saveMessage, triggerSave } = useSaveProject()
+const { showReloadConfirm, closeProject, syncOnBoot, loadFromDisk, keepLocal } =
+  useProjectWorkspace({ onKeepLocal: triggerSave })
+const { triggerRun } = useTestRunnerControl()
+const { inspectorHeightPct, isResizing, panelRef, startResize } = usePanelResize(55)
+
+onMounted(syncOnBoot)
+
+// ── State UI lokal (murni presentasi) ──────────────────────────
 const showDataManager      = ref(false)
 const showComponentBuilder = ref(false)
 const builderInitialCompId = ref(null)
+const showEnvEditor        = ref(false)
+const showExportModal      = ref(false)
+const showImportModal      = ref(false)
+const showProjectImportModal = ref(false)
+const showRightPanel       = ref(true)
 
 // Buka ComponentBuilder otomatis saat double-click block component di canvas
 watch(() => compStore.builderTargetCompId, (compId) => {
@@ -45,155 +55,6 @@ function closeComponentBuilder() {
   showComponentBuilder.value = false
   builderInitialCompId.value = null
   compStore.clearBuilderTarget()
-}
-const showEnvEditor        = ref(false)
-const showExportModal      = ref(false)
-const showImportModal      = ref(false)
-const showProjectImportModal = ref(false)
-
-// ── Boot sync: disk = sumber kebenaran ─────────────────────────
-// Saat reload dengan projectPath tersimpan, sinkronkan canvas dari folder.
-const showReloadConfirm = ref(false)   // dialog "buang perubahan & muat dari disk?"
-let pendingDiskFiles = null            // hasil readProject yang menunggu konfirmasi
-
-onMounted(async () => {
-  await runner.checkServer()
-  if (!runner.projectPath) return       // belum ada project → gate menangani
-
-  // Server mati padahal ada projectPath → kembali ke gate (gate beri pesan).
-  if (!runner.serverAvailable) {
-    closeProject()
-    return
-  }
-
-  const res = await readProject(runner.projectPath)
-  if (!res.ok) {
-    // Folder tak terbaca (mis. dihapus/dipindah) → kembali ke gate.
-    closeProject()
-    return
-  }
-
-  if (diskMatchesCanvas(res.data.files)) {
-    // localStorage sudah sama dengan disk → tidak perlu apa-apa.
-    return
-  }
-  // Ada perbedaan (perubahan belum di-Save) → minta konfirmasi sebelum menimpa.
-  pendingDiskFiles = res.data.files
-  showReloadConfirm.value = true
-})
-
-// Bandingkan file terkelola hasil generate canvas saat ini vs isi disk.
-function diskMatchesCanvas(diskFiles) {
-  const current = exportProject(canvas, registry, dataReg, compStore, runner.projectName)
-  const managed = (p) => /^(feature|data|components)\//.test(p)
-
-  // Peta path → content untuk kedua sisi (hanya folder terkelola).
-  const mine = new Map(current.filter(f => managed(f.path)).map(f => [f.path, f.content]))
-  const disk = new Map()
-  for (const f of diskFiles.specs || [])      disk.set(`feature/${f.name}`, f.content)
-  for (const f of diskFiles.data || [])       disk.set(`data/${f.name}`, f.content)
-  for (const f of diskFiles.components || []) disk.set(`components/${f.name}`, f.content)
-
-  if (mine.size !== disk.size) return false
-  for (const [path, content] of mine) {
-    if (disk.get(path) !== content) return false
-  }
-  return true
-}
-
-function loadFromDisk() {
-  if (!pendingDiskFiles) return
-  registry.clearDynamicBlocks()
-  importProject(pendingDiskFiles, {
-    dataRegistry: dataReg, componentStore: compStore, blockRegistry: registry, canvas
-  }, { replace: true })
-  pendingDiskFiles = null
-  showReloadConfirm.value = false
-}
-
-// Pertahankan perubahan = tulis state canvas saat ini ke disk (seperti Save),
-// agar disk langsung sinkron dengan canvas.
-function keepLocal() {
-  pendingDiskFiles = null
-  showReloadConfirm.value = false
-  triggerSave()
-}
-
-// ── Simpan ke Project (tulis semua file ke disk) ───────────────
-const saveState   = ref('idle')   // 'idle' | 'saving' | 'saved' | 'error'
-const saveMessage = ref('')
-
-async function triggerSave() {
-  if (!runner.serverAvailable) {
-    saveState.value = 'error'
-    saveMessage.value = 'Server tidak aktif — jalankan npm run dev.'
-    return
-  }
-  // projectPath dijamin ada (sudah lewat gate New/Open)
-  await doSave()
-}
-
-async function doSave() {
-  saveState.value = 'saving'
-  saveMessage.value = ''
-  const files = exportProject(canvas, registry, dataReg, compStore, runner.projectName)
-  const res = await writeProject(runner.projectPath, files)
-
-  if (res.ok && (!res.errors || res.errors.length === 0)) {
-    saveState.value = 'saved'
-    saveMessage.value = 'Tersimpan'
-  } else {
-    saveState.value = 'error'
-    saveMessage.value = res.error || 'Gagal menyimpan'
-  }
-  setTimeout(() => { if (saveState.value !== 'saving') saveState.value = 'idle' }, 2500)
-}
-
-// Tutup project → kembali ke gate (canvas & data tetap di localStorage,
-// tapi user wajib pilih project lagi untuk melanjutkan).
-function closeProject() {
-  runner.setProjectPath('')
-}
-
-function triggerRun() {
-  runner.open()
-  if (runner.canRunReal) {
-    const files = exportProject(canvas, registry, dataReg, compStore, runner.projectName)
-    runner.runReal(files, runner.projectPath)
-  } else {
-    runner.runSimulation(canvas.features, registry, dataReg.entries)
-  }
-}
-
-// Toggle right panel
-const showRightPanel = ref(true)
-
-// Resize handle — Inspector vs CodePreview
-const inspectorHeightPct = ref(55)
-const isResizing = ref(false)
-const panelRef   = ref(null)
-
-function startResize(e) {
-  isResizing.value = true
-  const startY   = e.clientY
-  const startPct = inspectorHeightPct.value
-
-  function onMove(ev) {
-    if (!panelRef.value) return
-    const panelH = panelRef.value.getBoundingClientRect().height
-    const delta  = ev.clientY - startY
-    const newPct = Math.min(80, Math.max(20, startPct + (delta / panelH) * 100))
-    inspectorHeightPct.value = newPct
-  }
-
-  function onUp() {
-    isResizing.value = false
-    window.removeEventListener('mousemove', onMove)
-    window.removeEventListener('mouseup', onUp)
-  }
-
-  window.addEventListener('mousemove', onMove)
-  window.addEventListener('mouseup', onUp)
 }
 
 // Status bar label runner

@@ -7,12 +7,13 @@
  */
 import { ref, computed } from 'vue'
 import JSZip              from 'jszip'
-import { useCanvasStore }     from '@/stores/canvasStore.js'
-import { useBlockRegistry }   from '@/stores/blockRegistry.js'
-import { useDataRegistry }    from '@/stores/dataRegistry.js'
-import { useComponentStore }  from '@/stores/componentStore.js'
-import { useRunnerStore }     from '@/stores/runnerStore.js'
-import { exportProject }      from '@/core/codegen/projectExporter.js'
+import { useCanvasStore }     from '@/model/stores/canvasStore.js'
+import { useBlockRegistry }   from '@/model/stores/blockRegistry.js'
+import { useDataRegistry }    from '@/model/stores/dataRegistry.js'
+import { useComponentStore }  from '@/model/stores/componentStore.js'
+import { useRunnerStore }     from '@/model/stores/runnerStore.js'
+import { exportProject }      from '@/model/core/codegen/projectExporter.js'
+import { useCodeHighlight }   from '@/composables/useCodeHighlight.js'
 
 const emit = defineEmits(['close'])
 
@@ -60,6 +61,7 @@ async function copyFile() {
 }
 
 const projectName = computed(() => runner.projectName)
+const { highlight } = useCodeHighlight()
 
 // Download semua sebagai ZIP dengan struktur folder lengkap
 const downloading = ref(false)
@@ -98,19 +100,6 @@ function triggerDownload(blob, filename) {
   URL.revokeObjectURL(url)
 }
 
-// Highlight syntax sederhana (sama dengan CodePreview)
-function highlight(code) {
-  if (!code) return ''
-  let h = code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-  h = h.replace(/(\/\/[^\n]*)/g, '<span class="cm">$1</span>')
-  h = h.replace(/(`[^`\n]*`)/g, '<span class="str">$1</span>')
-  h = h.replace(/'([^'<]*)'/g, "'<span class=\"str\">$1</span>'")
-  h = h.replace(/\b(const|let|var|await|async|function|return|require|module)\b/g, '<span class="kw">$1</span>')
-  h = h.replace(/\b(please|AUTH|CHECKOUT|[A-Z]{2,})\.([\w]+)/g, '<span class="obj">$1</span>.<span class="fn">$2</span>')
-  h = h.replace(/\b(describe|it)\b(?=\()/g, '<span class="flow">$1</span>')
-  h = h.replace(/\b([A-Z][A-Z_]*)\.([a-zA-Z.]+)/g, '<span class="data">$1</span>.<span class="data-key">$2</span>')
-  return h
-}
 </script>
 
 <template>

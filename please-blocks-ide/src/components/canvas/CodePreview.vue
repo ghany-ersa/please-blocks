@@ -5,15 +5,17 @@
  * Update reaktif setiap kali canvas berubah.
  */
 import { computed, ref } from 'vue'
-import { useCanvasStore }   from '@/stores/canvasStore.js'
-import { useBlockRegistry } from '@/stores/blockRegistry.js'
-import { useDataRegistry }  from '@/stores/dataRegistry.js'
-import { generateSpec, generateIndex } from '@/core/codegen/specGenerator.js'
+import { useCanvasStore }   from '@/model/stores/canvasStore.js'
+import { useBlockRegistry } from '@/model/stores/blockRegistry.js'
+import { useDataRegistry }  from '@/model/stores/dataRegistry.js'
+import { generateSpec, generateIndex } from '@/model/core/codegen/specGenerator.js'
+import { useCodeHighlight } from '@/composables/useCodeHighlight.js'
 
 const canvas   = useCanvasStore()
 const registry = useBlockRegistry()
 const dataReg  = useDataRegistry()
 const mode     = ref('spec')  // 'spec' | 'index'
+const { highlight } = useCodeHighlight()
 
 // Feature yang sedang aktif
 const activeFeature = computed(() =>
@@ -25,56 +27,6 @@ const generatedCode = computed(() => {
   if (mode.value === 'index') return generateIndex(canvas.features)
   return generateSpec(activeFeature.value, registry, dataReg.entries)
 })
-
-// Syntax highlighting sederhana — cukup untuk preview tanpa dependency eksternal
-function highlight(code) {
-  if (!code) return ''
-
-  // Escape HTML terlebih dulu
-  let h = code
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-
-  // Urutan penting: comments dulu, lalu strings, lalu keywords
-  // Comments // ...
-  h = h.replace(/(\/\/[^\n]*)/g,
-    '<span class="cm">$1</span>')
-
-  // Template literals `...`
-  h = h.replace(/(`[^`\n]*`)/g,
-    '<span class="str">$1</span>')
-
-  // Single-quote strings '...' (tidak kena yang sudah di-span)
-  h = h.replace(/'([^'<]*)'/g,
-    "'<span class=\"str\">$1</span>'")
-
-  // Keywords JS
-  h = h.replace(
-    /\b(const|let|var|await|async|function|return|if|else|for|of|new|this|require|module)\b/g,
-    '<span class="kw">$1</span>'
-  )
-
-  // please.method() dan COMP.method()
-  h = h.replace(
-    /\b(please|AUTH|CHECKOUT|[A-Z]{2,})\.([\w]+)/g,
-    '<span class="obj">$1</span>.<span class="fn">$2</span>'
-  )
-
-  // describe / it
-  h = h.replace(
-    /\b(describe|it)\b(?=\()/g,
-    '<span class="flow">$1</span>'
-  )
-
-  // Data references: URL.xxx, ACCOUNT.xxx
-  h = h.replace(
-    /\b([A-Z][A-Z_]*)\.([a-zA-Z.]+)/g,
-    '<span class="data">$1</span>.<span class="data-key">$2</span>'
-  )
-
-  return h
-}
 
 const highlightedCode = computed(() => highlight(generatedCode.value))
 

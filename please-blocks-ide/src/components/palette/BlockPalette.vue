@@ -1,25 +1,10 @@
 <script setup>
-import { ref, computed } from 'vue'
-import { useBlockRegistry } from '@/stores/blockRegistry.js'
+import { ref } from 'vue'
+import { usePaletteFilter } from '@/composables/usePaletteFilter.js'
 import CategorySection from './CategorySection.vue'
 
-const registry = useBlockRegistry()
 const search = ref('')
-
-const filteredCategories = computed(() => {
-  const q = search.value.trim().toLowerCase()
-  if (!q) return registry.byCategory
-
-  return registry.byCategory
-    .map(cat => ({
-      ...cat,
-      blocks: cat.blocks.filter(b =>
-        b.label.toLowerCase().includes(q) ||
-        b.description?.toLowerCase().includes(q)
-      )
-    }))
-    .filter(cat => cat.blocks.length > 0)
-})
+const { filteredCategories } = usePaletteFilter(search)
 </script>
 
 <template>

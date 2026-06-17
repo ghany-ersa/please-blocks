@@ -10,11 +10,13 @@
  *   → Save → ComponentFactory generate block defs → blok muncul di palette
  */
 import { ref, computed, watch, nextTick } from 'vue'
-import { useComponentStore } from '@/stores/componentStore.js'
-import { useBlockRegistry }  from '@/stores/blockRegistry.js'
-import { useCanvasStore }    from '@/stores/canvasStore.js'
-import { useDataRegistry }   from '@/stores/dataRegistry.js'
-import { generateComponentFile } from '@/core/factory/ComponentFactory.js'
+import { useComponentStore } from '@/model/stores/componentStore.js'
+import { useBlockRegistry }  from '@/model/stores/blockRegistry.js'
+import { useCanvasStore }    from '@/model/stores/canvasStore.js'
+import { useDataRegistry }   from '@/model/stores/dataRegistry.js'
+import { generateComponentFile } from '@/model/core/factory/ComponentFactory.js'
+import { useCodeHighlight } from '@/composables/useCodeHighlight.js'
+import { usePaletteFilter } from '@/composables/usePaletteFilter.js'
 import StepCard from '@/components/shared/StepCard.vue'
 
 const props = defineProps({
@@ -32,23 +34,10 @@ const activeMethodId = ref(null)
 const editingName    = ref(false)
 const draftName      = ref('')
 
-// Mini palette — search + filter kategori
+// Mini palette — search + filter kategori (lewat composable bersama)
 const paletteSearch  = ref('')
 const expandedCats   = ref({})   // { [catId]: boolean }
-
-const filteredPalette = computed(() => {
-  const q = paletteSearch.value.trim().toLowerCase()
-  return registry.byCategory
-    .map(cat => ({
-      ...cat,
-      blocks: cat.blocks.filter(b =>
-        !q ||
-        b.label.toLowerCase().includes(q) ||
-        b.description?.toLowerCase().includes(q)
-      )
-    }))
-    .filter(cat => cat.blocks.length > 0)
-})
+const { filteredCategories: filteredPalette } = usePaletteFilter(paletteSearch)
 
 function isCatOpen(catId) {
   return expandedCats.value[catId] !== false  // default open
@@ -81,31 +70,7 @@ const previewCode = computed(() =>
     : '// Pilih component'
 )
 
-// Syntax highlighting (sama persis dengan canvas CodePreview)
-function highlight(code) {
-  if (!code) return ''
-  let h = code
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-  h = h.replace(/(\/\/[^\n]*)/g,       '<span class="cm">$1</span>')
-  h = h.replace(/(`[^`\n]*`)/g,        '<span class="str">$1</span>')
-  h = h.replace(/'([^'<]*)'/g,         "'<span class=\"str\">$1</span>'")
-  h = h.replace(
-    /\b(const|let|var|await|async|function|return|if|else|for|of|new|this|require|module)\b/g,
-    '<span class="kw">$1</span>'
-  )
-  h = h.replace(
-    /\b(please|[A-Z]{2,})\.([\w]+)/g,
-    '<span class="obj">$1</span>.<span class="fn">$2</span>'
-  )
-  h = h.replace(
-    /\b([A-Z][A-Z_]*)\.([a-zA-Z.]+)/g,
-    '<span class="data">$1</span>.<span class="data-key">$2</span>'
-  )
-  return h
-}
-
+const { highlight } = useCodeHighlight()
 const highlightedPreview = computed(() => highlight(previewCode.value))
 
 // Copy

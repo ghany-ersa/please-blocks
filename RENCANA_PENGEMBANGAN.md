@@ -624,7 +624,7 @@ Prioritas: IDE bisa digunakan end-to-end untuk membuat dan menjalankan test.
 | ✅ | Save to Project | Tombol 💾 Simpan menulis seluruh file ke folder workspace via server (`POST /api/files/write` dengan `prune`). Sinkron penuh: rename/hapus feature ikut menghapus file basi di `feature/`/`data/`/`components/`. Nama project mengikuti basename folder |
 | ✅ | Workspace persistence + boot sync | `projectPath` & `browserTarget` persist ke localStorage. Saat reload: disk = sumber kebenaran — baca folder, bandingkan dengan canvas; jika beda tampilkan konfirmasi (Muat dari disk / Pertahankan perubahan = Save). Server mati saat reload → kembali ke gate |
 | ✅ | Topbar redesign + dual menu | Menu teks **File** & **Workspace** (TopbarMenu reusable) di kiri seperti app desktop; aksi (Simpan/Run/Laporan/toggle) di kanan. Brand pindah ke header sidebar untuk hindari duplikasi |
-| ⏳ | **Refactor arsitektur MVVM** | Pisahkan kode agar tidak campur aduk: **Model** (stores + core/codegen/factory) ↔ **ViewModel** (composables `useXxx` berisi logika & orkestrasi yang kini menumpuk di komponen, mis. `AppShell.vue`) ↔ **View** (komponen `.vue` murni presentasi). Lihat detail di [Rencana Refactor MVVM](#rencana-refactor-mvvm) |
+| ✅ | **Refactor arsitektur MVVM** | **Model** dipindah ke `src/model/{core,services,stores}`. **ViewModel** = composables di `src/composables/` (`useProjectWorkspace`, `useSaveProject`, `useTestRunnerControl`, `usePanelResize`, `useProjectImport`, `useCodeHighlight`, `usePaletteFilter`). **View** `.vue` jadi tipis (AppShell 217→78, ProjectImportModal 83→29 baris). Duplikasi `highlight()` (×3) & filter palette (×2) dihapus. Lihat [Rencana Refactor MVVM](#rencana-refactor-mvvm) |
 | ⏳ | Dark/Light theme | Tema IDE yang bisa disesuaikan |
 
 ### v3 — AI dan Cloud
@@ -664,3 +664,57 @@ Perubahan file di disk (baik dari IDE maupun editor eksternal) selalu ter-deteks
 
 **Pinia sebagai reactive backbone**  
 Semua store (blockRegistry, dataRegistry, canvasStore) berbasis Pinia. Komponen Vue langsung reaktif terhadap perubahan — tidak ada event bus manual.
+
+**Pemisahan MVVM (Model ▸ ViewModel ▸ View)** — *sudah diterapkan, lihat tabel v2*  
+- **Model** (`src/model/`): `core/` (codegen, factory, parser, blocks), `services/` (I/O ke server), `stores/` (Pinia). Tanpa Vue UI — dapat dites tanpa mount.  
+- **ViewModel** (`src/composables/useXxx.js`): memegang `fetch`, orkestrasi multi-store, dan aturan domain; mengembalikan state reaktif + method siap-pakai. Komponen berat menarik logikanya ke sini.  
+- **View** (`src/components/*.vue`): bind ke composable + render. Hindari `fetch`/orkestrasi multi-store langsung di komponen.  
+- Komponen yang isinya **murni state UI lokal** (navigasi tab, toggle inline-edit, posisi dropdown — mis. DataManager, ComponentBuilder) tidak dipaksa jadi composable; ekstraksi hanya untuk orkestrasi/I-O dan logika yang terduplikasi.
+
+---
+
+## Rencana Refactor MVVM
+
+### Masalah saat ini
+Logika orkestrasi menumpuk di dalam komponen `.vue`, bukan di lapisan tersendiri — sehingga View, aturan bisnis, dan akses data tercampur. Contoh konkret (jumlah baris `<script>`):
+
+| Komponen | Baris script | Logika yang seharusnya tidak di View |
+|---|---:|---|
+| `manager/ComponentBuilder.vue` | 349 | CRUD component/method/param, validasi, registrasi blok |
+| `layout/AppShell.vue` | 217 | Save+prune, boot-sync disk, gate, open/close project, run, resize |
+| `manager/DataManager.vue` | 199 | CRUD file/group/entry/field data, generate preview |
+| `inspector/inputs/ValueInput.vue` | 174 | Resolusi dataref/varref, parsing tipe nilai |
+
+### Target struktur (Model ▸ ViewModel ▸ View)
+
+```
+src/
+  model/                    ← MODEL: state + aturan domain (tanpa Vue UI)
+    stores/                 (Pinia: canvas, dataRegistry, blockRegistry, runner, component)
+    core/                   (codegen, factory, parser — sudah murni, pindahkan ke sini)
+    services/               (runnerService, dll — I/O ke server)
+  viewmodels/               ← VIEWMODEL: composables useXxx() yang menjembatani
+    useProjectWorkspace.js  (open/new/close, boot-sync disk, save+prune, projectName)
+    useSaveProject.js       (state idle/saving/saved/error → satu sumber)
+    useComponentBuilder.js  (semua CRUD + validasi dari ComponentBuilder.vue)
+    useDataManager.js       (CRUD data + preview)
+    useCanvasEditor.js      (add/drop feature, demo)
+    useTestRunner.js        (trigger run real/sim, parsing log → stats)
+  views/ (atau components/) ← VIEW: .vue hanya bind ke viewmodel + render
+```
+
+**Aturan pembagian:**
+- **Model** tidak tahu soal komponen/DOM. Boleh dites tanpa me-mount Vue (parser sudah begini).
+- **ViewModel** = composable `useXxx()` yang mengembalikan state reaktif + method siap-pakai. Semua `fetch`, orkestrasi multi-store, dan aturan (mis. urutan data→component→spec saat import) tinggal di sini.
+- **View** = `.vue` tipis: `const vm = useXxx()` lalu template bind. Idealnya `<script>` < ~40 baris, tanpa `fetch`/akses store langsung yang kompleks.
+
+### Urutan pengerjaan (inkremental, build tetap hijau tiap langkah)
+1. **Buat folder `viewmodels/`** + pindahkan logika `AppShell.vue` paling dulu (paling banyak menyentuh banyak store): `useProjectWorkspace` + `useSaveProject`. AppShell tinggal memanggil composable.
+2. **`useComponentBuilder` & `useDataManager`** — ekstrak CRUD dari dua manager besar.
+3. **`useCanvasEditor`, `useTestRunner`, `useInspectorInput`** — sisanya.
+4. **Pindahkan `core/`, `services/`, `stores/` ke `model/`** (rename folder + update path alias `@/model/...`). Lakukan terakhir agar diff import terisolasi.
+5. **Konvensi & lint guard** — dokumentasikan aturan; opsional tambah aturan ESLint ringan (mis. larang `fetch` di dalam `components/`).
+
+### Prinsip
+- Refactor **murni struktural** — tidak mengubah perilaku. Setiap langkah diverifikasi dengan `npx vite build` + smoke test alur (gate → open → edit → save → reload).
+- Tidak ada framework baru; cukup composable Vue + Pinia yang sudah ada. MVVM di sini = pola, bukan dependensi.

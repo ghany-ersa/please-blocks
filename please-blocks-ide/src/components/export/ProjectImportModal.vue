@@ -5,80 +5,26 @@
  * TIDAK mengubah folder workspace (projectPath). Default: gabung (merge);
  * opsi "ganti" untuk menimpa canvas/data/component aktif.
  */
-import { ref, computed } from 'vue'
-import DirectoryPicker      from '@/components/shared/DirectoryPicker.vue'
-import { readProject }      from '@/services/runnerService.js'
-import { analyzeProject, importProject } from '@/core/codegen/projectImporter.js'
-import { useCanvasStore }    from '@/stores/canvasStore.js'
-import { useBlockRegistry }  from '@/stores/blockRegistry.js'
-import { useDataRegistry }   from '@/stores/dataRegistry.js'
-import { useComponentStore } from '@/stores/componentStore.js'
-import { useRunnerStore }    from '@/stores/runnerStore.js'
+import { ref } from 'vue'
+import DirectoryPicker     from '@/components/shared/DirectoryPicker.vue'
+import { useProjectImport } from '@/composables/useProjectImport.js'
 
 const emit = defineEmits(['close'])
 
-const canvas    = useCanvasStore()
-const registry  = useBlockRegistry()
-const dataReg   = useDataRegistry()
-const compStore = useComponentStore()
-const runner    = useRunnerStore()
-
-const projectPath  = ref(runner.projectPath || '')
-const showPicker   = ref(false)
-const loading      = ref(false)
-const error        = ref('')
-const replace      = ref(false)  // default: sisipkan (merge) ke workspace aktif
-const projectFiles = ref(null)   // raw dari server
-const analysis     = ref(null)   // hasil analyzeProject
-
-const serverOk = computed(() => runner.serverAvailable)
+const showPicker = ref(false)
+const {
+  projectPath, loading, error, replace, analysis,
+  serverOk, summary, canImport,
+  load, doImport, blockLabel
+} = useProjectImport()
 
 async function onSelectFolder(path) {
   showPicker.value = false
-  projectPath.value = path
-  await load()
+  await load(path)
 }
 
-async function load() {
-  if (!projectPath.value) return
-  loading.value = true
-  error.value   = ''
-  analysis.value = null
-  projectFiles.value = null
-
-  const res = await readProject(projectPath.value)
-  loading.value = false
-  if (!res.ok) { error.value = res.error; return }
-
-  projectFiles.value = res.data.files
-  try {
-    analysis.value = analyzeProject(res.data.files)
-    // gabungkan warning dari server (file dilewati, folder hilang)
-    if (res.data.warnings?.length) analysis.value.warnings.unshift(...res.data.warnings)
-    if (res.data.skipped?.length) {
-      for (const s of res.data.skipped) analysis.value.warnings.push(`File dilewati (${s.reason}): ${s.name}`)
-    }
-  } catch (err) {
-    error.value = `Gagal menganalisis project: ${err.message}`
-  }
-}
-
-const summary    = computed(() => analysis.value?.summary || null)
-const canImport  = computed(() => !!summary.value && summary.value.features + summary.value.dataFiles + summary.value.components > 0)
-
-function doImport() {
-  if (!projectFiles.value || !canImport.value) return
-  // Import = menyisipkan isi project lain ke workspace AKTIF.
-  // TIDAK mengubah projectPath — folder workspace tetap apa adanya.
-  importProject(projectFiles.value, {
-    dataRegistry: dataReg, componentStore: compStore, blockRegistry: registry, canvas
-  }, { replace: replace.value })
-  emit('close')
-}
-
-function blockLabel(blockId) {
-  const b = registry.getById(blockId)
-  return b ? `${b.icon || ''} ${b.label}`.trim() : blockId
+function confirmImport() {
+  if (doImport()) emit('close')
 }
 </script>
 
@@ -189,7 +135,7 @@ function blockLabel(blockId) {
         </label>
         <span class="spacer"></span>
         <button class="btn-cancel" @click="emit('close')">Batal</button>
-        <button class="btn-import" :disabled="!canImport" @click="doImport">
+        <button class="btn-import" :disabled="!canImport" @click="confirmImport">
           📥 Import Project
         </button>
       </div>
