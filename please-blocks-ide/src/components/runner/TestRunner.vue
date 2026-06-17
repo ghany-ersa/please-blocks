@@ -7,13 +7,11 @@
 import { ref, computed, watch, nextTick } from 'vue'
 import { useRunnerStore }    from '@/model/stores/runnerStore.js'
 import { useCanvasStore  }   from '@/model/stores/canvasStore.js'
-import { useBlockRegistry }  from '@/model/stores/blockRegistry.js'
-import { useDataRegistry  }  from '@/model/stores/dataRegistry.js'
+import { useTestRunnerControl } from '@/composables/useTestRunnerControl.js'
 
 const runner   = useRunnerStore()
 const canvas   = useCanvasStore()
-const registry = useBlockRegistry()
-const dataReg  = useDataRegistry()
+const { runReal } = useTestRunnerControl()
 
 const logEl = ref(null)
 
@@ -48,7 +46,7 @@ const statusColor = computed(() => {
 })
 
 function run() {
-  runner.runSimulation(canvas.features, registry, dataReg.entries)
+  runReal()   // mocha sungguhan via server (fallback simulasi bila server mati)
 }
 function stop() {
   runner.stopRun()
@@ -97,9 +95,9 @@ const levelColor = {
           class="btn-run"
           :disabled="canvas.features.length === 0"
           @click="run"
-          title="Jalankan semua test"
+          :title="runner.canRunReal ? 'Jalankan test sungguhan (mocha via server)' : 'Server tidak aktif — fallback simulasi'"
         >
-          ▶ Run
+          ▶ Run Real
         </button>
         <button
           v-else

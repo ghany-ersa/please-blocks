@@ -16,7 +16,15 @@ export function useTestRunnerControl() {
   const dataReg   = useDataRegistry()
   const compStore = useComponentStore()
 
-  function triggerRun() {
+  // Validate: cek alur test via simulasi (cepat, tanpa server). Dipakai topbar.
+  function validate() {
+    runner.open()
+    runner.runSimulation(canvas.features, registry, dataReg.entries)
+  }
+
+  // Run Real: jalankan mocha sungguhan via server bila tersedia, selain itu
+  // fallback ke simulasi. Dipakai panel Test Runner.
+  function runReal() {
     runner.open()
     if (runner.canRunReal) {
       const files = exportProject(canvas, registry, dataReg, compStore, runner.projectName)
@@ -26,5 +34,5 @@ export function useTestRunnerControl() {
     }
   }
 
-  return { triggerRun }
+  return { validate, runReal }
 }

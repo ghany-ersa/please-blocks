@@ -32,7 +32,7 @@ const compStore = useComponentStore()
 const { saveState, saveMessage, isDirty, markSaved, triggerSave } = useSaveProject()
 const { showReloadConfirm, openProject, syncOnBoot, loadFromDisk, keepLocal } =
   useProjectWorkspace({ onKeepLocal: triggerSave })
-const { triggerRun } = useTestRunnerControl()
+const { validate } = useTestRunnerControl()
 const { inspectorHeightPct, isResizing, panelRef, startResize } = usePanelResize(55)
 
 // Setelah boot-sync (canvas == disk) → tandai tersimpan agar tidak tampak dirty.
@@ -157,15 +157,15 @@ const runnerStatusColor = computed(() => {
           📋 Laporan
         </button>
 
-        <!-- Run (primary) -->
+        <!-- Validate (primary) — simulasi cek alur test -->
         <button
           class="topbar-btn run"
-          :class="{ running: runner.isRunning, 'run-real': runner.canRunReal }"
+          :class="{ running: runner.isRunning }"
           :disabled="runner.isRunning || canvas.features.length === 0"
-          @click="triggerRun"
-          :title="runner.canRunReal ? 'Jalankan test sungguhan (mocha)' : 'Jalankan simulasi'"
+          @click="validate"
+          title="Validasi alur test (simulasi, tanpa browser)"
         >
-          {{ runner.isRunning ? '⏳ Berjalan...' : runner.canRunReal ? '▶ Run Real' : '▶ Run' }}
+          {{ runner.isRunning ? '⏳ Berjalan...' : '▶ Validate' }}
         </button>
 
         <!-- Toggle runner panel -->
