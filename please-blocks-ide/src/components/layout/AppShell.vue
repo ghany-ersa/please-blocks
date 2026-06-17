@@ -28,13 +28,14 @@ const canvas    = useCanvasStore()   // dipakai template untuk guard tombol (ada
 const compStore = useComponentStore()
 
 // ── ViewModel (composables) ────────────────────────────────────
-const { saveState, saveMessage, triggerSave } = useSaveProject()
+const { saveState, saveMessage, isDirty, markSaved, triggerSave } = useSaveProject()
 const { showReloadConfirm, openProject, syncOnBoot, loadFromDisk, keepLocal } =
   useProjectWorkspace({ onKeepLocal: triggerSave })
 const { triggerRun } = useTestRunnerControl()
 const { inspectorHeightPct, isResizing, panelRef, startResize } = usePanelResize(55)
 
-onMounted(syncOnBoot)
+// Setelah boot-sync (canvas == disk) → tandai tersimpan agar tidak tampak dirty.
+onMounted(async () => { await syncOnBoot(); markSaved() })
 
 // ── State UI lokal (murni presentasi) ──────────────────────────
 const showDataManager      = ref(false)
@@ -50,7 +51,8 @@ const showRightPanel       = ref(true)
 const showOpenPicker = ref(false)
 async function onOpenProject(path) {
   showOpenPicker.value = false
-  await openProject(path)
+  const res = await openProject(path)
+  if (res?.ok) markSaved()   // baru dibuka dari disk → belum dirty
 }
 
 // Buka ComponentBuilder otomatis saat double-click block component di canvas
@@ -141,14 +143,15 @@ const runnerStatusColor = computed(() => {
         <button
           v-if="runner.serverAvailable"
           class="topbar-btn save"
-          :class="saveState"
+          :class="[saveState, { dirty: isDirty && saveState === 'idle' }]"
           :disabled="saveState === 'saving' || canvas.features.length === 0"
           @click="triggerSave"
-          :title="runner.projectPath ? `Simpan semua file ke ${runner.projectPath}` : 'Pilih folder lalu simpan'"
+          :title="isDirty ? 'Ada perubahan belum tersimpan' : (runner.projectPath ? `Simpan semua file ke ${runner.projectPath}` : 'Pilih folder lalu simpan')"
         >
           {{ saveState === 'saving' ? '⏳ Menyimpan...'
            : saveState === 'saved' ? `✓ ${saveMessage}`
            : saveState === 'error' ? `✗ ${saveMessage}`
+           : isDirty ? '💾 Simpan •'
            : '💾 Simpan' }}
         </button>
 
@@ -344,6 +347,9 @@ const runnerStatusColor = computed(() => {
 .topbar-btn.save:disabled       { opacity: 0.6; cursor: default; }
 .topbar-btn.save.saved          { background: rgba(16,185,129,0.2); border-color: #10b981; color: #6ee7b7; }
 .topbar-btn.save.error          { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); color: #f87171; }
+/* ada perubahan belum tersimpan — aksen oranye + titik */
+.topbar-btn.save.dirty          { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.35); color: #fbbf24; }
+.topbar-btn.save.dirty:hover:not(:disabled) { background: rgba(245,158,11,0.2); }
 .topbar-btn.run                 { background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.3); color: #10b981; }
 .topbar-btn.run:hover:not(:disabled) { background: rgba(16,185,129,0.2); border-color: #10b981; }
 .topbar-btn.run.running         { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.3); color: #f59e0b; cursor: default; }
