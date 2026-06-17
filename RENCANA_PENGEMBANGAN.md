@@ -665,11 +665,23 @@ Perubahan file di disk (baik dari IDE maupun editor eksternal) selalu ter-deteks
 **Pinia sebagai reactive backbone**  
 Semua store (blockRegistry, dataRegistry, canvasStore) berbasis Pinia. Komponen Vue langsung reaktif terhadap perubahan — tidak ada event bus manual.
 
-**Pemisahan MVVM (Model ▸ ViewModel ▸ View)** — *sudah diterapkan, lihat tabel v2*  
-- **Model** (`src/model/`): `core/` (codegen, factory, parser, blocks), `services/` (I/O ke server), `stores/` (Pinia). Tanpa Vue UI — dapat dites tanpa mount.  
-- **ViewModel** (`src/composables/useXxx.js`): memegang `fetch`, orkestrasi multi-store, dan aturan domain; mengembalikan state reaktif + method siap-pakai. Komponen berat menarik logikanya ke sini.  
-- **View** (`src/components/*.vue`): bind ke composable + render. Hindari `fetch`/orkestrasi multi-store langsung di komponen.  
-- Komponen yang isinya **murni state UI lokal** (navigasi tab, toggle inline-edit, posisi dropdown — mis. DataManager, ComponentBuilder) tidak dipaksa jadi composable; ekstraksi hanya untuk orkestrasi/I-O dan logika yang terduplikasi.
+**Pemisahan MVVM (Model ▸ ViewModel ▸ View) — WAJIB untuk semua development ke depan**
+
+> ⚠️ **Aturan baku.** Setiap fitur/perubahan baru HARUS mengikuti pemisahan ini. PR yang melanggar (mis. `fetch` di dalam `.vue`) dianggap belum selesai.
+
+- **Model** (`src/model/`): `core/` (codegen, factory, parser, blocks), `services/` (I/O ke server), `stores/` (Pinia). Tanpa Vue UI — dapat dites tanpa mount. **Dilarang** mengimpor `vue` atau `@/components`.
+- **ViewModel** (`src/composables/useXxx.js`): memegang **semua** `fetch`/`service`, orkestrasi multi-store, dan aturan domain; mengembalikan state reaktif + method siap-pakai. Inilah satu-satunya tempat View boleh mengambil data sisi-server / mengoordinasi banyak store.
+- **View** (`src/components/*.vue`): bind ke composable + render. **Dilarang**: `fetch()` mentah, memanggil `@/model/services/*`, atau orkestrasi multi-store (mis. `importProject`, reset beberapa store sekaligus) langsung di komponen.
+
+**Yang boleh & tidak boleh di View:**
+| Boleh di View | Harus lewat ViewModel/Service |
+|---|---|
+| Panggil **fungsi murni** Model (codegen `generateSpec`/`exportProject`, validator `validateStep`) — stateless, tanpa IO | `fetch`/HTTP → service (`runnerService`) |
+| Baca 1 store untuk binding/guard (mis. `canvas.features.length`) | Orkestrasi 2+ store (open/new project, import, save+prune) → composable |
+| State UI lokal (tab aktif, toggle, posisi dropdown) | Boot-sync, dirty-detection, alur lintas-store |
+
+- Komponen yang isinya **murni state UI lokal** tidak dipaksa jadi composable; ekstraksi hanya untuk orkestrasi/I-O dan logika terduplikasi.
+- **Penamaan:** composable selalu `useXxx.js` di `src/composables/`; service di `src/model/services/`; tak ada `fetch` di luar `src/model/services/`.
 
 ---
 
