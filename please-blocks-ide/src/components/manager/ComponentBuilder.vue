@@ -67,7 +67,7 @@ const activeMethod = computed(() =>
 // Code preview — pass registry agar codegen step berjalan penuh
 const previewCode = computed(() =>
   activeComp.value
-    ? generateComponentFile(activeComp.value, registry)
+    ? generateComponentFile(activeComp.value, registry, dataReg.entries)
     : '// Pilih component'
 )
 
@@ -285,11 +285,74 @@ function onStepDragLeave(e) {
   }
 }
 
+// Pesan penolakan drop (mis. nested component yang circular) — transient
+const dropError = ref('')
+let dropErrorTimer = null
+function rejectDrop(msg) {
+  dropError.value = msg
+  clearTimeout(dropErrorTimer)
+  dropErrorTimer = setTimeout(() => { dropError.value = '' }, 4000)
+}
+
+/** Prefix component dari blockId comp.<name>.<method> → 'comp.<name>' (atau null). */
+function compPrefixOf(blockId) {
+  const parts = String(blockId).split('.')
+  return parts[0] === 'comp' && parts.length >= 3 ? `comp.${parts[1]}` : null
+}
+
+/** Component def dari prefix 'comp.<name>' (cocokkan by name lowercase). */
+function compByPrefix(prefix) {
+  const name = prefix.slice('comp.'.length)
+  return compStore.components.find(c => c.name.toLowerCase() === name) || null
+}
+
+/**
+ * Apakah memanggil component `targetPrefix` dari dalam component `ownerId`
+ * akan membentuk siklus? (target == owner, atau target—lewat step-nya—
+ * pada akhirnya memanggil owner lagi). DFS pada graf pemanggilan component.
+ */
+function wouldCreateCycle(ownerId, targetPrefix) {
+  const ownerComp = compStore.components.find(c => c.id === ownerId)
+  if (!ownerComp) return false
+  const ownerPrefix = `comp.${ownerComp.name.toLowerCase()}`
+  if (targetPrefix === ownerPrefix) return true   // self-reference
+
+  // Telusuri: dari target, bisakah mencapai owner lewat rantai pemanggilan?
+  const seen = new Set()
+  const stack = [targetPrefix]
+  while (stack.length) {
+    const prefix = stack.pop()
+    if (prefix === ownerPrefix) return true
+    if (seen.has(prefix)) continue
+    seen.add(prefix)
+    const comp = compByPrefix(prefix)
+    if (!comp) continue
+    for (const m of comp.methods) {
+      for (const s of m.steps || []) {
+        const p = compPrefixOf(s.blockId)
+        if (p) stack.push(p)
+      }
+    }
+  }
+  return false
+}
+
 function onStepDrop(e) {
   e.preventDefault()
   isDropOver.value = false
   const blockId = e.dataTransfer.getData('text/plain')
   if (!blockId || !activeMethod.value) return
+
+  // Nested component: cegah siklus (component memakai dirinya / rantai melingkar)
+  const targetPrefix = compPrefixOf(blockId)
+  if (targetPrefix && wouldCreateCycle(activeCompId.value, targetPrefix)) {
+    const self = `comp.${activeComp.value?.name.toLowerCase()}` === targetPrefix
+    rejectDrop(self
+      ? `Tidak bisa menyisipkan "${activeComp.value?.exportName}" ke dalam dirinya sendiri.`
+      : `Penyisipan ditolak: akan membentuk pemanggilan component yang melingkar (circular).`)
+    return
+  }
+
   compStore.addMethodStep(activeCompId.value, activeMethodId.value, blockId)
 }
 
@@ -395,7 +458,7 @@ const activeTab = ref('builder')
           <button class="add-btn" @click="addComponent">+ Component</button>
 
           <!-- Info blok yang di-generate -->
-          <div class="palette-preview" v-if="activeComp">
+          <!-- <div class="palette-preview" v-if="activeComp">
             <div class="pp-title">Blok di Palette:</div>
             <div v-for="m in activeComp.methods" :key="m.id" class="pp-block">
               📦 {{ activeComp.exportName }}.{{ m.name }}
@@ -403,7 +466,7 @@ const activeTab = ref('builder')
             <div v-if="!activeComp.methods.length" class="pp-empty">
               Tambah method untuk membuat blok
             </div>
-          </div>
+          </div> -->
         </div>
 
         <!-- Kolom 2: Method list -->
@@ -564,6 +627,8 @@ const activeTab = ref('builder')
             </div>
           </div>
 
+          <div v-if="dropError" class="drop-error">⚠ {{ dropError }}</div>
+
           <div class="step-hint">
             💡 Block ini akan di-generate sebagai method <code>{{ activeMethod.name }}()</code> di file <code>components/{{ activeComp?.name?.toLowerCase() }}.js</code>
           </div>
@@ -639,7 +704,7 @@ const activeTab = ref('builder')
 .four-col    { flex-direction: row; }
 
 /* Columns */
-.col-palette { width: 160px; min-width: 160px; border-right: 1px solid #1e293b; display: flex; flex-direction: column; overflow: hidden; background: #0f1117; }
+.col-palette { width: 240px; min-width: 240px; border-right: 1px solid #1e293b; display: flex; flex-direction: column; overflow: hidden; background: #0f1117; }
 .col-comps   { width: 170px; min-width: 170px; border-right: 1px solid #1e293b; display: flex; flex-direction: column; overflow: hidden; }
 .col-methods { width: 190px; min-width: 190px; border-right: 1px solid #1e293b; display: flex; flex-direction: column; overflow: hidden; }
 .col-steps   { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
@@ -836,6 +901,11 @@ const activeTab = ref('builder')
 
 .step-list.drop-active { background: rgba(236,72,153,0.03); }
 
+.drop-error {
+  margin: 6px 12px 0; padding: 6px 10px; flex-shrink: 0;
+  background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
+  border-radius: 5px; font-size: 10px; color: #f87171;
+}
 .step-hint {
   padding: 8px 12px; border-top: 1px solid #1e293b; flex-shrink: 0;
   font-size: 9.5px; color: #374151; line-height: 1.5;

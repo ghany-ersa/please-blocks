@@ -42,8 +42,8 @@ const { filteredCategories } = usePaletteFilter(search)
 
 <style scoped>
 .palette {
-  width: 196px;
-  min-width: 196px;
+  width: 240px;
+  min-width: 240px;
   height: 100%;
   background: #111827;
   border-right: 1px solid #1e293b;

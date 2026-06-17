@@ -59,7 +59,7 @@ export function exportProject(canvas, blockRegistry, dataRegistry, componentStor
 
   // ── Component files ───────────────────────────────────────────
   for (const comp of componentStore.components) {
-    const content = generateComponentFile(comp, blockRegistry)
+    const content = generateComponentFile(comp, blockRegistry, dataRegistry.entries)
     files.push({
       path:     `components/${comp.name.toLowerCase()}.js`,
       content,
@@ -130,6 +130,8 @@ function generateAppFile(compNames, compExports) {
     lines.push(`    please`)
     lines.push(`}`)
   } else {
+    // Nested component di-require & di-instansiasi sendiri di dalam tiap file
+    // component, jadi app.js cukup buat instance top-level.
     lines.push(`module.exports = {`)
     lines.push(`    please,`)
     for (let i = 0; i < compNames.length; i++) {

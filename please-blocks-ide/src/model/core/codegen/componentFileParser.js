@@ -58,6 +58,7 @@ export function parseComponentFile(source, { blockRegistry = null, componentInde
     if (member.kind === 'constructor') continue
     const methodName = member.key?.name || member.key?.value
     if (!methodName) continue
+    if (methodName === '_bind') continue   // wiring nested component, bukan method user
 
     const params = (member.params || []).map(p => paramName(p, warnings))
     const body = member.body?.type === 'BlockStatement' ? member.body.body : []
