@@ -15,7 +15,7 @@ defineEmits(['select'])
 
 <style scoped>
 .opt-group-label {
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
   color: #334155;
   padding: 6px 10px 3px;

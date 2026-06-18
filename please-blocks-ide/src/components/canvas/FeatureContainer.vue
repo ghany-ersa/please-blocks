@@ -129,7 +129,7 @@ function onSelect() {
 /* Toggle button */
 .feat-toggle {
   background: none; border: none; cursor: pointer;
-  font-size: 11px; padding: 0 4px; flex-shrink: 0;
+  font-size: 13px; padding: 0 4px; flex-shrink: 0;
   color: #475569; transition: color 0.15s;
 }
 .feat-toggle.enabled { color: #10b981; }
@@ -152,9 +152,9 @@ function onSelect() {
 }
 .feat-header:hover { background: rgba(168,85,247,0.05); }
 
-.feat-icon { font-size: 14px; flex-shrink: 0; }
+.feat-icon { font-size: 16px; flex-shrink: 0; }
 .feat-label {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   color: #a855f7;
   flex: 1;
@@ -168,12 +168,12 @@ function onSelect() {
   border: 1px solid #a855f7;
   border-radius: 4px;
   padding: 2px 6px;
-  font-size: 12px;
+  font-size: 14px;
   color: #e2e8f0;
   outline: none;
 }
 .feat-stats {
-  font-size: 9px;
+  font-size: 11px;
   color: #6b21a8;
   background: rgba(168,85,247,0.1);
   border-radius: 10px;
@@ -183,12 +183,12 @@ function onSelect() {
 }
 .feat-collapse {
   background: none; border: none; cursor: pointer;
-  color: #7c3aed; font-size: 16px; line-height: 1;
+  color: #7c3aed; font-size: 18px; line-height: 1;
   padding: 0; flex-shrink: 0;
 }
 .feat-remove {
   background: none; border: none; cursor: pointer;
-  color: #475569; font-size: 16px; line-height: 1;
+  color: #475569; font-size: 18px; line-height: 1;
   opacity: 0; padding: 0 2px;
   transition: opacity 0.1s, color 0.1s;
   flex-shrink: 0;
@@ -201,7 +201,7 @@ function onSelect() {
 }
 
 .feat-empty {
-  font-size: 10px;
+  font-size: 12px;
   color: #374151;
   text-align: center;
   padding: 12px 8px;
@@ -216,7 +216,7 @@ function onSelect() {
   border: 1px dashed rgba(168,85,247,0.25);
   border-radius: 6px;
   padding: 6px;
-  font-size: 10px;
+  font-size: 12px;
   color: #6b21a8;
   cursor: pointer;
   transition: border-color 0.15s, color 0.15s, background 0.15s;

@@ -374,7 +374,7 @@ function clearValue() {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 5px;
-  font-size: 9.5px;
+  font-size: 11.5px;
   font-weight: 600;
   color: #64748b;
   text-transform: uppercase;
@@ -387,7 +387,7 @@ function clearValue() {
 .mode-toggle { display: flex; gap: 2px; }
 .mode-btn {
   padding: 2px 7px; border-radius: 3px; border: 1px solid #1e293b;
-  font-size: 9px; font-weight: 700; cursor: pointer;
+  font-size: 11px; font-weight: 700; cursor: pointer;
   background: transparent; color: #334155; transition: all 0.15s;
 }
 .mode-btn:hover  { border-color: #334155; color: #64748b; }
@@ -395,14 +395,14 @@ function clearValue() {
 
 /* Type badge */
 .type-badge {
-  font-size: 8px; padding: 1px 5px; border-radius: 3px;
+  font-size: 10px; padding: 1px 5px; border-radius: 3px;
   border: 1px solid; font-weight: 700;
 }
 
 /* Schema hint */
 .schema-hint {
   display: flex; align-items: center; gap: 5px;
-  font-size: 9px; color: #475569; margin-bottom: 5px;
+  font-size: 11px; color: #475569; margin-bottom: 5px;
   padding: 4px 7px; background: rgba(99,102,241,0.06);
   border-radius: 4px; border: 1px solid rgba(99,102,241,0.15);
 }
@@ -410,7 +410,7 @@ function clearValue() {
 
 /* Plain text mode */
 .text-mode  { position: relative; }
-.mode-hint  { font-size: 9px; color: #334155; margin-top: 3px; }
+.mode-hint  { font-size: 11px; color: #334155; margin-top: 3px; }
 
 /* Dropdown trigger */
 .vi-wrap    { position: relative; }
@@ -426,17 +426,17 @@ function clearValue() {
   border-bottom-color: transparent;
   border-radius: 5px 5px 0 0;
 }
-.vi-icon        { font-size: 11px; flex-shrink: 0; }
-.vi-current     { font-size: 10.5px; font-family: monospace; color: #38bdf8; flex: 1; }
-.vi-placeholder { font-size: 10px; color: #334155; flex: 1; }
+.vi-icon        { font-size: 13px; flex-shrink: 0; }
+.vi-current     { font-size: 12.5px; font-family: monospace; color: #38bdf8; flex: 1; }
+.vi-placeholder { font-size: 12px; color: #334155; flex: 1; }
 .vi-clear {
   background: none; border: none; cursor: pointer;
-  color: #475569; font-size: 14px; line-height: 1; padding: 0;
+  color: #475569; font-size: 16px; line-height: 1; padding: 0;
   transition: color 0.1s; flex-shrink: 0;
 }
 .vi-clear:hover { color: #ef4444; }
 .vi-arrow {
-  color: #475569; font-size: 14px; flex-shrink: 0;
+  color: #475569; font-size: 16px; flex-shrink: 0;
   transition: transform 0.2s; display: inline-block;
 }
 .vi-arrow.rotated { transform: rotate(90deg); }
@@ -452,12 +452,12 @@ function clearValue() {
 .vi-search-wrap { padding: 6px; border-bottom: 1px solid #1e293b; flex-shrink: 0; }
 .vi-search {
   width: 100%; background: #1e293b; border: 1px solid #334155;
-  border-radius: 4px; padding: 4px 8px; font-size: 10.5px;
+  border-radius: 4px; padding: 4px 8px; font-size: 12.5px;
   color: #e2e8f0; outline: none;
 }
 .vi-search:focus { border-color: #6366f1; }
-.vi-schema-info { font-size: 8.5px; color: #334155; padding: 3px 2px 0; }
-.vi-schema-warn { font-size: 9px; color: #f59e0b; padding: 4px 2px 0; line-height: 1.4; }
+.vi-schema-info { font-size: 10.5px; color: #334155; padding: 3px 2px 0; }
+.vi-schema-warn { font-size: 11px; color: #f59e0b; padding: 4px 2px 0; line-height: 1.4; }
 .vi-schema-warn strong { color: #fbbf24; }
 
 /* Option list */
@@ -471,19 +471,19 @@ function clearValue() {
 .vi-option.compat-warn   { opacity: 0.6; }
 .vi-option.compat-warn:hover { opacity: 0.85; }
 
-.opt-icon  { font-size: 10px; flex-shrink: 0; }
+.opt-icon  { font-size: 12px; flex-shrink: 0; }
 .opt-body  { flex: 1; min-width: 0; }
 .opt-path  {
-  display: block; font-size: 10.5px; font-family: monospace;
+  display: block; font-size: 12.5px; font-family: monospace;
   color: #38bdf8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.opt-fields { display: block; font-size: 8.5px; color: #334155; font-family: monospace; }
-.opt-compat { font-size: 10px; flex-shrink: 0; font-weight: 700; }
+.opt-fields { display: block; font-size: 10.5px; color: #334155; font-family: monospace; }
+.opt-compat { font-size: 12px; flex-shrink: 0; font-weight: 700; }
 .opt-compat.ok   { color: #10b981; }
 .opt-compat.warn { color: #f59e0b; cursor: help; }
 .opt-type {
-  font-size: 8.5px; color: #334155;
+  font-size: 10.5px; color: #334155;
   background: rgba(255,255,255,0.04); border-radius: 3px; padding: 1px 5px; flex-shrink: 0;
 }
-.vi-empty { font-size: 10px; color: #334155; padding: 12px 10px; text-align: center; }
+.vi-empty { font-size: 12px; color: #334155; padding: 12px 10px; text-align: center; }
 </style>

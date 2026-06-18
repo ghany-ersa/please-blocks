@@ -64,5 +64,5 @@ const items = [
   border-left-color: #6366f1;
   background: rgba(99,102,241,0.1);
 }
-.ab-icon { font-size: 18px; }
+.ab-icon { font-size: 20px; }
 </style>

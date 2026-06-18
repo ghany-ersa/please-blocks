@@ -55,11 +55,11 @@ function onDragEnd() {
   transform: scale(0.97);
 }
 .icon {
-  font-size: 13px;
+  font-size: 15px;
   flex-shrink: 0;
 }
 .label {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--block-color);
   white-space: nowrap;

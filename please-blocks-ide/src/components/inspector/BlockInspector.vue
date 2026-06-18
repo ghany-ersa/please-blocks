@@ -213,10 +213,10 @@ function updateField(name, value) {
   padding: 16px;
   text-align: center;
 }
-.empty-icon { font-size: 28px; }
-.inspector-empty p { font-size: 11px; color: #374151; line-height: 1.5; }
-.inspector-error p { font-size: 11px; color: #fca5a5; }
-.inspector-error code { font-family: monospace; font-size: 10px; }
+.empty-icon { font-size: 30px; }
+.inspector-empty p { font-size: 13px; color: #374151; line-height: 1.5; }
+.inspector-error p { font-size: 13px; color: #fca5a5; }
+.inspector-error code { font-family: monospace; font-size: 12px; }
 
 /* Header */
 .insp-header {
@@ -228,10 +228,10 @@ function updateField(name, value) {
   border-bottom: 1px solid #1e293b;
   flex-shrink: 0;
 }
-.insp-icon { font-size: 18px; flex-shrink: 0; }
+.insp-icon { font-size: 20px; flex-shrink: 0; }
 .insp-meta { flex: 1; min-width: 0; }
 .insp-name {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--block-color, #e2e8f0);
   white-space: nowrap;
@@ -239,14 +239,14 @@ function updateField(name, value) {
   text-overflow: ellipsis;
 }
 .insp-type {
-  font-size: 9px;
+  font-size: 11px;
   color: #475569;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   margin-top: 1px;
 }
 .insp-schema-badge {
-  font-size: 9px;
+  font-size: 11px;
   background: rgba(245,158,11,0.15);
   color: #f59e0b;
   border-radius: 10px;
@@ -256,7 +256,7 @@ function updateField(name, value) {
   cursor: default;
 }
 .insp-err-badge {
-  font-size: 9px;
+  font-size: 11px;
   background: rgba(239,68,68,0.15);
   color: #ef4444;
   border-radius: 10px;
@@ -267,7 +267,7 @@ function updateField(name, value) {
 
 /* Description */
 .insp-desc {
-  font-size: 10px;
+  font-size: 12px;
   color: #475569;
   padding: 8px 12px 4px;
   line-height: 1.4;
@@ -290,20 +290,20 @@ function updateField(name, value) {
   border-top: 1px solid #1e293b;
   flex-shrink: 0;
 }
-.output-label { font-size: 9.5px; color: #475569; font-weight: 600; }
-.output-val   { font-size: 10px; color: #94a3b8; }
+.output-label { font-size: 11.5px; color: #475569; font-weight: 600; }
+.output-val   { font-size: 12px; color: #94a3b8; }
 .output-val code {
   font-family: monospace;
   background: rgba(255,255,255,0.06);
   padding: 1px 5px;
   border-radius: 3px;
   color: #c084fc;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 /* Sprint 3 note */
 .insp-note {
-  font-size: 9.5px;
+  font-size: 11.5px;
   color: #374151;
   padding: 8px 12px;
   border-top: 1px solid #1e293b;

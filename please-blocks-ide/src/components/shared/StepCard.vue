@@ -309,7 +309,7 @@ function onDrop(e) {
 }
 
 .sc-num {
-  font-size: 9px;
+  font-size: 11px;
   color: #475569;
   font-family: monospace;
   min-width: 14px;
@@ -331,7 +331,7 @@ function onDrop(e) {
 .sc-checkbox-wrap.visible { opacity: 1; }
 .step-card:hover .sc-checkbox-wrap { opacity: 1; }
 .sc-checkbox {
-  font-size: 12px;
+  font-size: 14px;
   color: #475569;
   line-height: 1;
   user-select: none;
@@ -340,22 +340,22 @@ function onDrop(e) {
 .sc-checkbox.checked { color: #a855f7; }
 .sc-checkbox-wrap:hover .sc-checkbox { color: #a855f7; }
 .sc-chevron {
-  font-size: 11px;
+  font-size: 13px;
   color: #475569;
   flex-shrink: 0;
   width: 10px;
   text-align: center;
   transition: color 0.1s;
 }
-.sc-icon  { font-size: 11px; flex-shrink: 0; }
+.sc-icon  { font-size: 13px; flex-shrink: 0; }
 .sc-label {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--sc-color);
   flex-shrink: 0;
 }
 .sc-preview {
-  font-size: 9px;
+  font-size: 11px;
   color: #475569;
   font-family: monospace;
   overflow: hidden;
@@ -365,7 +365,7 @@ function onDrop(e) {
   min-width: 0;
 }
 .sc-error-badge {
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 700;
   padding: 1px 5px;
   border-radius: 8px;
@@ -381,7 +381,7 @@ function onDrop(e) {
   border: none;
   color: #475569;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1;
   padding: 0 2px;
   border-radius: 3px;
@@ -409,7 +409,7 @@ function onDrop(e) {
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 9.5px;
+  font-size: 11.5px;
   font-weight: 600;
   color: #64748b;
   text-transform: uppercase;
@@ -417,7 +417,7 @@ function onDrop(e) {
   margin-bottom: 4px;
 }
 .sc-note-opt {
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 400;
   color: #334155;
   text-transform: none;
@@ -429,7 +429,7 @@ function onDrop(e) {
   border: 1px solid #1e293b;
   border-radius: 4px;
   padding: 5px 8px;
-  font-size: 10px;
+  font-size: 12px;
   color: #94a3b8;
   font-style: italic;
   line-height: 1.5;
@@ -451,7 +451,7 @@ function onDrop(e) {
   background: rgba(239,68,68,0.08);
   border-color: rgba(239,68,68,0.3);
   color: #fca5a5;
-  font-size: 10px;
+  font-size: 12px;
 }
 .sc-unknown-text { flex: 1; }
 </style>

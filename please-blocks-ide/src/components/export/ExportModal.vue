@@ -192,20 +192,20 @@ function triggerDownload(blob, filename) {
   padding: 0 16px; height: 46px;
   background: #0f1117; border-bottom: 1px solid #1e293b; flex-shrink: 0;
 }
-.modal-title  { font-size: 13px; font-weight: 700; color: #e2e8f0; }
-.file-count   { font-size: 10px; color: #475569; background: #1e293b; padding: 2px 8px; border-radius: 10px; }
+.modal-title  { font-size: 15px; font-weight: 700; color: #e2e8f0; }
+.file-count   { font-size: 12px; color: #475569; background: #1e293b; padding: 2px 8px; border-radius: 10px; }
 .modal-actions{ flex: 1; display: flex; justify-content: flex-end; gap: 8px; }
 .btn-dl {
   padding: 5px 14px; border-radius: 5px; border: none; cursor: pointer;
   background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3);
-  color: #818cf8; font-size: 11px; font-weight: 600;
+  color: #818cf8; font-size: 13px; font-weight: 600;
   transition: all 0.15s;
 }
 .btn-dl:hover:not(:disabled) { background: rgba(99,102,241,0.25); }
 .btn-dl:disabled { opacity: 0.5; cursor: default; }
 .modal-close {
   background: none; border: none; cursor: pointer;
-  color: #475569; font-size: 20px; line-height: 1; padding: 0;
+  color: #475569; font-size: 22px; line-height: 1; padding: 0;
 }
 .modal-close:hover { color: #e2e8f0; }
 
@@ -218,7 +218,7 @@ function triggerDownload(blob, filename) {
 .file-tab {
   display: flex; align-items: center; gap: 4px;
   padding: 4px 10px; border-radius: 5px; border: 1px solid transparent;
-  font-size: 10px; font-family: monospace; cursor: pointer;
+  font-size: 12px; font-family: monospace; cursor: pointer;
   color: #475569; background: transparent; white-space: nowrap;
   transition: all 0.12s;
 }
@@ -228,9 +228,9 @@ function triggerDownload(blob, filename) {
   border-color: color-mix(in srgb, var(--cat) 40%, transparent);
   color: var(--cat);
 }
-.tab-icon     { font-size: 11px; }
+.tab-icon     { font-size: 13px; }
 .tab-name     { font-weight: 600; }
-.tab-disabled { font-size: 9px; color: #4b5563; }
+.tab-disabled { font-size: 11px; color: #4b5563; }
 
 /* File body */
 .file-body { flex: 1; display: flex; flex-direction: column; min-height: 0; }
@@ -239,21 +239,21 @@ function triggerDownload(blob, filename) {
   padding: 6px 14px; background: #0f1117;
   border-bottom: 1px solid #1e293b; flex-shrink: 0;
 }
-.file-path  { font-size: 10px; font-family: monospace; color: #64748b; flex: 1; display: flex; align-items: center; gap: 6px; }
-.cat-badge  { font-size: 8.5px; padding: 1px 6px; border-radius: 3px; font-weight: 700; }
+.file-path  { font-size: 12px; font-family: monospace; color: #64748b; flex: 1; display: flex; align-items: center; gap: 6px; }
+.cat-badge  { font-size: 10.5px; padding: 1px 6px; border-radius: 3px; font-weight: 700; }
 .disabled-badge {
-  font-size: 9px; color: #4b5563; background: rgba(75,85,99,0.1);
+  font-size: 11px; color: #4b5563; background: rgba(75,85,99,0.1);
   border-radius: 4px; padding: 2px 7px;
 }
 .toolbar-right { display: flex; gap: 6px; }
 .btn-copy {
-  padding: 3px 10px; font-size: 10px;
+  padding: 3px 10px; font-size: 12px;
   background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.25);
   border-radius: 4px; color: #6366f1; cursor: pointer; transition: all 0.15s;
 }
 .btn-copy.done { background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.3); color: #10b981; }
 .btn-dl-single {
-  padding: 3px 8px; font-size: 11px;
+  padding: 3px 8px; font-size: 13px;
   background: rgba(255,255,255,0.04); border: 1px solid #1e293b;
   border-radius: 4px; color: #475569; cursor: pointer;
 }
@@ -262,7 +262,7 @@ function triggerDownload(blob, filename) {
 .code-wrap { flex: 1; overflow: auto; background: #0a0d14; }
 .code {
   margin: 0; padding: 14px 16px;
-  font-family: 'SF Mono','Fira Code',monospace; font-size: 10px;
+  font-family: 'SF Mono','Fira Code',monospace; font-size: 12px;
   line-height: 1.75; color: #94a3b8; white-space: pre;
 }
 .code :deep(.cm)       { color: #334155; font-style: italic; }
@@ -279,6 +279,6 @@ function triggerDownload(blob, filename) {
   display: flex; align-items: center; gap: 8px;
   padding: 6px 16px; background: #0a0d14;
   border-top: 1px solid #1e293b; flex-shrink: 0;
-  font-size: 10px; color: #334155;
+  font-size: 12px; color: #334155;
 }
 </style>

@@ -49,17 +49,17 @@ const open = ref(true)
   background: rgba(255,255,255,0.04);
   color: #94a3b8;
 }
-.cat-icon  { font-size: 12px; }
-.cat-label { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; flex: 1; }
+.cat-icon  { font-size: 14px; }
+.cat-label { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; flex: 1; }
 .cat-count {
-  font-size: 9px;
+  font-size: 11px;
   background: rgba(255,255,255,0.06);
   border-radius: 10px;
   padding: 1px 5px;
   color: #475569;
 }
 .cat-arrow {
-  font-size: 14px;
+  font-size: 16px;
   transition: transform 0.2s;
   display: inline-block;
 }

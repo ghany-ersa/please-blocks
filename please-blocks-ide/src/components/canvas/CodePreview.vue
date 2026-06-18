@@ -109,7 +109,7 @@ function slugLabel(label) {
 .cp-tabs { display: flex; flex: 1; }
 .cp-tab {
   padding: 6px 10px;
-  font-size: 9.5px;
+  font-size: 11.5px;
   font-family: monospace;
   background: none;
   border: none;
@@ -126,7 +126,7 @@ function slugLabel(label) {
 .cp-tab:hover:not(.active) { color: #64748b; }
 .cp-copy {
   padding: 3px 8px;
-  font-size: 9.5px;
+  font-size: 11.5px;
   background: rgba(99,102,241,0.1);
   border: 1px solid rgba(99,102,241,0.25);
   border-radius: 4px;
@@ -146,7 +146,7 @@ function slugLabel(label) {
 }
 .code {
   font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.75;
   color: #94a3b8;
   white-space: pre;

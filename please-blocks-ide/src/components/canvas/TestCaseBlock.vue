@@ -290,11 +290,11 @@ function onDrop(e) {
 
 .tc-collapse {
   background: none; border: none; cursor: pointer;
-  color: #7c3aed; font-size: 14px; line-height: 1;
+  color: #7c3aed; font-size: 16px; line-height: 1;
   padding: 0; flex-shrink: 0;
 }
 .tc-label {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   color: #c084fc;
   flex: 1;
@@ -308,12 +308,12 @@ function onDrop(e) {
   border: 1px solid #a855f7;
   border-radius: 4px;
   padding: 2px 6px;
-  font-size: 11px;
+  font-size: 13px;
   color: #e2e8f0;
   outline: none;
 }
 .tc-count {
-  font-size: 9px;
+  font-size: 11px;
   color: #6b21a8;
   background: rgba(168,85,247,0.1);
   border-radius: 10px;
@@ -321,7 +321,7 @@ function onDrop(e) {
   flex-shrink: 0;
 }
 .tc-error-badge {
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 700;
   padding: 1px 5px;
   border-radius: 8px;
@@ -333,7 +333,7 @@ function onDrop(e) {
 }
 .tc-remove {
   background: none; border: none; cursor: pointer;
-  color: #475569; font-size: 15px; line-height: 1;
+  color: #475569; font-size: 17px; line-height: 1;
   opacity: 0; padding: 0 2px;
   transition: opacity 0.1s, color 0.1s;
   flex-shrink: 0;
@@ -355,7 +355,7 @@ function onDrop(e) {
   padding: 6px 0 2px;
 }
 .drop-hint span {
-  font-size: 9.5px;
+  font-size: 11.5px;
   color: #4b5563;
 }
 .drop-hint-active {
@@ -375,7 +375,7 @@ function onDrop(e) {
   border-radius: 6px;
 }
 .extract-info {
-  font-size: 9.5px;
+  font-size: 11.5px;
   color: #c084fc;
   flex: 1;
 }
@@ -383,7 +383,7 @@ function onDrop(e) {
   background: #7c3aed;
   border: none;
   color: #fff;
-  font-size: 9.5px;
+  font-size: 11.5px;
   font-weight: 600;
   padding: 3px 8px;
   border-radius: 4px;
@@ -395,7 +395,7 @@ function onDrop(e) {
   background: none;
   border: none;
   color: #6b7280;
-  font-size: 12px;
+  font-size: 14px;
   cursor: pointer;
   padding: 0 3px;
   line-height: 1;
@@ -423,18 +423,18 @@ function onDrop(e) {
   gap: 12px;
 }
 .dialog-title {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
   color: #c084fc;
 }
 .dialog-hint {
-  font-size: 10px;
+  font-size: 12px;
   color: #94a3b8;
   line-height: 1.5;
   margin: 0;
 }
 .dialog-error {
-  font-size: 10px;
+  font-size: 12px;
   color: #f87171;
   margin: 0;
 }
@@ -443,7 +443,7 @@ function onDrop(e) {
   border: 1px solid rgba(168,85,247,0.35);
   border-radius: 6px;
   padding: 6px 10px;
-  font-size: 12px;
+  font-size: 14px;
   color: #e2e8f0;
   outline: none;
   width: 100%;
@@ -459,7 +459,7 @@ function onDrop(e) {
   background: #7c3aed;
   border: none;
   color: #fff;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   padding: 5px 14px;
   border-radius: 5px;
@@ -470,7 +470,7 @@ function onDrop(e) {
   background: rgba(255,255,255,0.05);
   border: 1px solid rgba(255,255,255,0.1);
   color: #94a3b8;
-  font-size: 11px;
+  font-size: 13px;
   padding: 5px 14px;
   border-radius: 5px;
   cursor: pointer;

@@ -185,7 +185,7 @@ const levelColor = {
   height: 100%;
   background: #080c12;
   font-family: 'SF Mono', 'Fira Code', monospace;
-  font-size: 11px;
+  font-size: 13px;
   color: #94a3b8;
   overflow: hidden;
 }
@@ -205,14 +205,14 @@ const levelColor = {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   color: #e2e8f0;
 }
-.runner-icon { color: #10b981; font-size: 10px; }
+.runner-icon { color: #10b981; font-size: 12px; }
 .runner-status {
   font-weight: 400;
-  font-size: 10px;
+  font-size: 12px;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -230,7 +230,7 @@ const levelColor = {
   flex: 1;
 }
 .stat {
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
   padding: 1px 7px;
   border-radius: 10px;
@@ -251,7 +251,7 @@ const levelColor = {
   border: none;
   cursor: pointer;
   border-radius: 4px;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   padding: 4px 10px;
   transition: all 0.12s;
@@ -286,7 +286,7 @@ const levelColor = {
   background: none;
   border: none;
   color: #475569;
-  font-size: 16px;
+  font-size: 18px;
   padding: 0 4px;
 }
 .btn-close:hover { color: #e2e8f0; }
@@ -314,19 +314,19 @@ const levelColor = {
   flex-direction: column;
   gap: 6px;
   color: #1e293b;
-  font-size: 10px;
+  font-size: 12px;
   padding-top: 8px;
 }
-.hint { color: #0f172a; font-size: 9px; }
+.hint { color: #0f172a; font-size: 11px; }
 
 .log-entry {
   display: flex;
   gap: 10px;
   line-height: 1.7;
   white-space: pre;
-  font-size: 10.5px;
+  font-size: 12.5px;
 }
-.log-time { color: #1e293b; flex-shrink: 0; font-size: 9px; }
+.log-time { color: #1e293b; flex-shrink: 0; font-size: 11px; }
 .log-text  { flex: 1; }
 
 .log-pass { color: #10b981; }
@@ -339,7 +339,7 @@ const levelColor = {
   color: #10b981;
   animation: blink 1s step-end infinite;
   line-height: 1.7;
-  font-size: 10px;
+  font-size: 12px;
 }
 @keyframes blink { 50% { opacity: 0 } }
 
@@ -360,7 +360,7 @@ const levelColor = {
   gap: 4px;
   padding: 2px 8px;
   border-radius: 4px;
-  font-size: 9px;
+  font-size: 11px;
   border: 1px solid transparent;
   max-width: 180px;
 }
@@ -384,7 +384,7 @@ const levelColor = {
   border-color: #1e293b;
   color: #475569;
 }
-.tc-icon { flex-shrink: 0; font-size: 10px; }
+.tc-icon { flex-shrink: 0; font-size: 12px; }
 .tc-name {
   overflow: hidden;
   text-overflow: ellipsis;

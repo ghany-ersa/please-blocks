@@ -61,9 +61,9 @@ const { filteredCategories } = usePaletteFilter(search)
   border-bottom: 1px solid #1e293b;
   flex-shrink: 0;
 }
-.brand-logo { font-size: 16px; }
+.brand-logo { font-size: 18px; }
 .brand-name {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
   color: #e2e8f0;
 }
@@ -77,7 +77,7 @@ const { filteredCategories } = usePaletteFilter(search)
   border: 1px solid #334155;
   border-radius: 5px;
   padding: 5px 9px;
-  font-size: 11px;
+  font-size: 13px;
   color: #e2e8f0;
   outline: none;
   transition: border-color 0.15s;
@@ -90,7 +90,7 @@ const { filteredCategories } = usePaletteFilter(search)
   padding: 8px 8px 0;
 }
 .empty-search {
-  font-size: 11px;
+  font-size: 13px;
   color: #475569;
   text-align: center;
   padding: 16px 8px;
@@ -101,7 +101,7 @@ const { filteredCategories } = usePaletteFilter(search)
   border-top: 1px solid #1e293b;
 }
 .palette-hint p {
-  font-size: 10px;
+  font-size: 12px;
   color: #334155;
   line-height: 1.5;
 }

@@ -75,7 +75,7 @@ function onClickOutside() {
   background: #1e293b;
   border: 1px solid #334155;
   border-radius: 5px;
-  font-size: 10px;
+  font-size: 12px;
   color: #94a3b8;
   cursor: pointer;
   transition: all 0.15s;
@@ -86,10 +86,10 @@ function onClickOutside() {
 .picker-btn.open   { border-color: #6366f1; color: #a5b4fc; background: rgba(99,102,241,0.1); }
 .picker-btn.disabled { opacity: 0.5; cursor: default; }
 
-.browser-icon { font-size: 11px; line-height: 1; }
+.browser-icon { font-size: 13px; line-height: 1; }
 .browser-label { font-weight: 600; }
 .picker-arrow {
-  font-size: 9px;
+  font-size: 11px;
   color: #475569;
   transition: transform 0.15s;
   display: inline-block;
@@ -111,7 +111,7 @@ function onClickOutside() {
 }
 
 .picker-header {
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -129,7 +129,7 @@ function onClickOutside() {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 11px;
+  font-size: 13px;
   color: #94a3b8;
   text-align: left;
   transition: background 0.1s;
@@ -138,11 +138,11 @@ function onClickOutside() {
 .picker-option.active  { color: #e2e8f0; }
 .picker-option.unavailable { opacity: 0.35; cursor: default; }
 
-.opt-icon  { font-size: 13px; flex-shrink: 0; }
+.opt-icon  { font-size: 15px; flex-shrink: 0; }
 .opt-label { flex: 1; font-weight: 500; }
-.opt-check { color: #10b981; font-size: 11px; font-weight: 700; }
+.opt-check { color: #10b981; font-size: 13px; font-weight: 700; }
 .opt-soon  {
-  font-size: 8px;
+  font-size: 10px;
   background: #1e293b;
   color: #475569;
   padding: 1px 5px;

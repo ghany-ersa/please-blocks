@@ -169,10 +169,10 @@ onMounted(() => browse())
   padding: 0 16px; height: 44px;
   background: #0f1117; border-bottom: 1px solid #1e293b; flex-shrink: 0;
 }
-.picker-title { font-size: 13px; font-weight: 700; color: #e2e8f0; }
+.picker-title { font-size: 15px; font-weight: 700; color: #e2e8f0; }
 .btn-x {
   background: none; border: none; color: #475569;
-  font-size: 20px; cursor: pointer; padding: 0; line-height: 1;
+  font-size: 22px; cursor: pointer; padding: 0; line-height: 1;
 }
 .btn-x:hover { color: #e2e8f0; }
 
@@ -186,12 +186,12 @@ onMounted(() => browse())
 .crumb-btn {
   display: flex; align-items: center; gap: 4px;
   background: none; border: none; cursor: pointer;
-  font-size: 10px; color: #475569; padding: 2px 4px;
+  font-size: 12px; color: #475569; padding: 2px 4px;
   border-radius: 3px; transition: color 0.1s; font-family: monospace;
 }
 .crumb-btn:hover { color: #94a3b8; background: #1e293b; }
 .crumb-btn:last-child { color: #94a3b8; }
-.crumb-sep { color: #1e293b; font-size: 12px; }
+.crumb-sep { color: #1e293b; font-size: 14px; }
 
 /* Current path */
 .current-path {
@@ -200,12 +200,12 @@ onMounted(() => browse())
   background: #080c12; border-bottom: 1px solid #0f172a;
   flex-shrink: 0;
 }
-.path-label { font-size: 9px; color: #334155; font-weight: 700; text-transform: uppercase; }
-.path-value { font-size: 10px; font-family: monospace; color: #475569; word-break: break-all; }
+.path-label { font-size: 11px; color: #334155; font-weight: 700; text-transform: uppercase; }
+.path-value { font-size: 12px; font-family: monospace; color: #475569; word-break: break-all; }
 
 /* Error */
 .picker-error {
-  padding: 8px 14px; font-size: 11px; color: #ef4444;
+  padding: 8px 14px; font-size: 13px; color: #ef4444;
   background: rgba(239,68,68,0.05); border-bottom: 1px solid rgba(239,68,68,0.1);
   flex-shrink: 0;
 }
@@ -219,7 +219,7 @@ onMounted(() => browse())
   display: flex; align-items: center; gap: 8px;
   width: 100%; padding: 7px 16px;
   background: none; border: none; cursor: pointer;
-  font-size: 11px; color: #64748b; text-align: left;
+  font-size: 13px; color: #64748b; text-align: left;
   transition: background 0.1s;
   position: relative;
 }
@@ -232,27 +232,27 @@ onMounted(() => browse())
 .dir-item.parent { color: #475569; font-style: italic; }
 .dir-item.parent:hover { background: #1e293b; color: #94a3b8; }
 
-.item-icon { font-size: 13px; flex-shrink: 0; width: 18px; text-align: center; }
+.item-icon { font-size: 15px; flex-shrink: 0; width: 18px; text-align: center; }
 .item-name { flex: 1; font-family: monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .project-badge {
-  font-size: 8px; font-weight: 700;
+  font-size: 10px; font-weight: 700;
   background: rgba(16,185,129,0.12); color: #10b981;
   padding: 1px 6px; border-radius: 8px; flex-shrink: 0;
 }
 .enter-hint {
-  font-size: 8px; color: #1e293b; margin-left: auto;
+  font-size: 10px; color: #1e293b; margin-left: auto;
   opacity: 0; transition: opacity 0.15s;
 }
 .dir-item:hover .enter-hint { opacity: 1; }
 
 .dir-empty {
   padding: 24px 16px; text-align: center;
-  color: #1e293b; font-size: 11px;
+  color: #1e293b; font-size: 13px;
 }
 .dir-loading {
   flex: 1; display: flex; align-items: center; justify-content: center;
-  color: #334155; font-size: 12px; gap: 8px;
+  color: #334155; font-size: 14px; gap: 8px;
 }
 .spin { animation: spin 1s linear infinite; display: inline-block; }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -264,8 +264,8 @@ onMounted(() => browse())
   background: #0a0f18; border-top: 1px solid #1e293b;
   flex-shrink: 0; min-height: 32px;
 }
-.sel-label { font-size: 9px; color: #334155; font-weight: 700; text-transform: uppercase; flex-shrink: 0; }
-.sel-path  { font-size: 10px; font-family: monospace; color: #475569; word-break: break-all; }
+.sel-label { font-size: 11px; color: #334155; font-weight: 700; text-transform: uppercase; flex-shrink: 0; }
+.sel-path  { font-size: 12px; font-family: monospace; color: #475569; word-break: break-all; }
 .selected-preview.active .sel-path { color: #6366f1; }
 
 /* Footer */
@@ -277,13 +277,13 @@ onMounted(() => browse())
 }
 .btn-cancel {
   padding: 6px 16px; background: #1e293b; border: 1px solid #334155;
-  border-radius: 5px; font-size: 11px; color: #64748b; cursor: pointer;
+  border-radius: 5px; font-size: 13px; color: #64748b; cursor: pointer;
 }
 .btn-cancel:hover { color: #94a3b8; }
 .btn-select {
   padding: 6px 18px;
   background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.35);
-  border-radius: 5px; font-size: 11px; color: #818cf8;
+  border-radius: 5px; font-size: 13px; color: #818cf8;
   cursor: pointer; font-weight: 600; transition: all 0.15s;
 }
 .btn-select:hover:not(:disabled) { background: rgba(99,102,241,0.28); color: #a5b4fc; }

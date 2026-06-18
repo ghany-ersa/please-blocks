@@ -43,5 +43,5 @@ function onInput(e) {
 
 .input-wrap  { display: flex; align-items: center; gap: 6px; }
 .field-input { flex: 1; width: auto; font-family: monospace; }
-.unit { font-size: 10px; color: #475569; flex-shrink: 0; }
+.unit { font-size: 12px; color: #475569; flex-shrink: 0; }
 </style>

@@ -176,7 +176,7 @@ function applyHint(hint) {
 .label-text { display: flex; align-items: center; gap: 3px; }
 
 .sel-badge {
-  font-size: 8px;
+  font-size: 10px;
   padding: 1px 6px;
   border-radius: 4px;
   border: 1px solid;
@@ -204,7 +204,7 @@ function applyHint(hint) {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 14px;
   color: #334155;
   padding: 2px 3px;
   border-radius: 3px;
@@ -219,12 +219,12 @@ function applyHint(hint) {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 9.5px;
+  font-size: 11.5px;
   color: #ef4444;
   margin-top: 3px;
   line-height: 1.4;
 }
-.error-icon { font-size: 10px; flex-shrink: 0; }
+.error-icon { font-size: 12px; flex-shrink: 0; }
 
 /* Hint chips */
 .sel-hints {
@@ -234,7 +234,7 @@ function applyHint(hint) {
   margin-top: 5px;
 }
 .hint-chip {
-  font-size: 9px;
+  font-size: 11px;
   font-family: 'SF Mono', 'Fira Code', monospace;
   font-weight: 600;
   padding: 2px 7px;
@@ -253,7 +253,7 @@ function applyHint(hint) {
 
 /* Guide teks */
 .sel-guide {
-  font-size: 9px;
+  font-size: 11px;
   margin-top: 4px;
   opacity: 0.7;
 }

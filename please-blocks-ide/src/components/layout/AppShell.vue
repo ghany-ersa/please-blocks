@@ -300,18 +300,18 @@ const runnerStatusColor = computed(() => {
 .topbar-right  { display: flex; align-items: center; gap: 5px; flex: 1; justify-content: flex-end; }
 
 .app-version {
-  font-size: 10px; color: #334155;
+  font-size: 12px; color: #334155;
   background: #1e293b;
   padding: 2px 7px; border-radius: 10px;
 }
-.project-name { font-size: 11px; color: #64748b; font-family: monospace; }
+.project-name { font-size: 13px; color: #64748b; font-family: monospace; }
 
 .topbar-btn {
   padding: 4px 10px;
   background: #1e293b;
   border: 1px solid #334155;
   border-radius: 5px;
-  font-size: 10px;
+  font-size: 12px;
   color: #64748b;
   cursor: pointer;
   transition: all 0.15s;
@@ -334,7 +334,7 @@ const runnerStatusColor = computed(() => {
 .topbar-btn.run:hover:not(:disabled) { background: rgba(16,185,129,0.2); border-color: #10b981; }
 .topbar-btn.run.running         { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.3); color: #f59e0b; cursor: default; }
 .topbar-btn.run:disabled        { opacity: 0.7; cursor: default; }
-.topbar-btn.runner-toggle       { padding: 4px 8px; font-size: 14px; }
+.topbar-btn.runner-toggle       { padding: 4px 8px; font-size: 16px; }
 .topbar-btn.report              { background: rgba(99,102,241,0.08); border-color: rgba(99,102,241,0.25); color: #818cf8; }
 .topbar-btn.report:hover        { background: rgba(99,102,241,0.18); }
 .topbar-btn.report.failed       { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.3); color: #ef4444; }
@@ -392,7 +392,7 @@ const runnerStatusColor = computed(() => {
 }
 
 .panel-label {
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -432,7 +432,7 @@ const runnerStatusColor = computed(() => {
   height: 24px;
   background: #0a0d14;
   border-top: 1px solid #1e293b;
-  font-size: 10px;
+  font-size: 12px;
   color: #334155;
   flex-shrink: 0;
 }
@@ -461,7 +461,7 @@ const runnerStatusColor = computed(() => {
 
 /* Server badge di statusbar */
 .server-badge {
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
   padding: 1px 7px;
   border-radius: 8px;
@@ -489,11 +489,11 @@ const runnerStatusColor = computed(() => {
   background: #111827; border: 1px solid #1e293b; border-radius: 12px;
   padding: 22px; box-shadow: 0 24px 60px rgba(0,0,0,0.5);
 }
-.confirm-title { font-size: 14px; font-weight: 700; color: #f59e0b; margin-bottom: 8px; }
-.confirm-body  { font-size: 12px; color: #94a3b8; line-height: 1.6; }
+.confirm-title { font-size: 16px; font-weight: 700; color: #f59e0b; margin-bottom: 8px; }
+.confirm-body  { font-size: 14px; color: #94a3b8; line-height: 1.6; }
 .confirm-body strong { color: #e2e8f0; }
 .confirm-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
-.c-btn { padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+.c-btn { padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
 .c-btn.keep { background: transparent; border: 1px solid #334155; color: #94a3b8; }
 .c-btn.keep:hover { border-color: #475569; color: #e2e8f0; }
 .c-btn.load { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.35); color: #f87171; }

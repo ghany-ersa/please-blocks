@@ -50,7 +50,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocClick))
   padding: 4px 8px 4px 0px;
   background: none;
   border: none;
-  font-size: 10px;
+  font-size: 12px;
   color: #64748b;
   cursor: pointer;
   white-space: nowrap;
@@ -58,8 +58,8 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocClick))
 }
 .menu-trigger:hover      { color: #94a3b8; }
 .menu-trigger.active     { color: #818cf8; }
-.menu-trigger .mi        { font-size: 11px; }
-.caret { font-size: 8px; opacity: 0.55; transition: transform 0.15s; }
+.menu-trigger .mi        { font-size: 13px; }
+.caret { font-size: 10px; opacity: 0.55; transition: transform 0.15s; }
 .caret.flip { transform: rotate(180deg); }
 
 .menu-pop {
@@ -93,7 +93,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocClick))
   border: none;
   border-radius: 5px;
   color: #94a3b8;
-  font-size: 11px;
+  font-size: 13px;
   text-align: left;
   cursor: pointer;
   transition: background 0.12s, color 0.12s;
@@ -101,8 +101,8 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocClick))
 }
 .menu-pop :deep(.menu-item:hover)    { background: rgba(255,255,255,0.05); color: #e2e8f0; }
 .menu-pop :deep(.menu-item.active)   { background: rgba(99,102,241,0.15); color: #818cf8; }
-.menu-pop :deep(.menu-item .mi)      { font-size: 13px; width: 16px; text-align: center; }
-.menu-pop :deep(.menu-item .sub)     { margin-left: auto; font-size: 9px; color: #475569; font-family: monospace; }
+.menu-pop :deep(.menu-item .mi)      { font-size: 15px; width: 16px; text-align: center; }
+.menu-pop :deep(.menu-item .sub)     { margin-left: auto; font-size: 11px; color: #475569; font-family: monospace; }
 .menu-pop :deep(.menu-sep)           { height: 1px; background: #1e293b; margin: 3px 4px; }
-.menu-pop :deep(.menu-head)          { font-size: 8.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #475569; padding: 4px 10px 2px; }
+.menu-pop :deep(.menu-head)          { font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #475569; padding: 4px 10px 2px; }
 </style>

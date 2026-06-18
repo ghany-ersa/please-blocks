@@ -272,26 +272,26 @@ function downloadEnv() {
   background: #0f1117; border-bottom: 1px solid #1e293b;
   flex-shrink: 0;
 }
-.modal-icon  { font-size: 14px; }
-.modal-title { font-size: 13px; font-weight: 700; color: #e2e8f0; }
-.modal-sub   { font-size: 10px; color: #334155; font-family: monospace; }
+.modal-icon  { font-size: 16px; }
+.modal-title { font-size: 15px; font-weight: 700; color: #e2e8f0; }
+.modal-sub   { font-size: 12px; color: #334155; font-family: monospace; }
 .header-actions { flex: 1; display: flex; justify-content: flex-end; gap: 6px; }
 .btn-copy {
-  padding: 4px 12px; font-size: 10px; border-radius: 4px; cursor: pointer;
+  padding: 4px 12px; font-size: 12px; border-radius: 4px; cursor: pointer;
   border: 1px solid rgba(99,102,241,0.3);
   background: rgba(99,102,241,0.1); color: #818cf8;
   transition: all 0.12s;
 }
 .btn-copy.done { background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.3); color: #10b981; }
 .btn-dl {
-  padding: 4px 12px; font-size: 10px; border-radius: 4px; cursor: pointer;
+  padding: 4px 12px; font-size: 12px; border-radius: 4px; cursor: pointer;
   border: 1px solid #1e293b; background: rgba(255,255,255,0.03); color: #475569;
   transition: all 0.12s;
 }
 .btn-dl:hover { color: #94a3b8; border-color: #334155; }
 .btn-x {
   background: none; border: none; cursor: pointer;
-  color: #475569; font-size: 20px; line-height: 1; padding: 0;
+  color: #475569; font-size: 22px; line-height: 1; padding: 0;
 }
 .btn-x:hover { color: #e2e8f0; }
 
@@ -310,7 +310,7 @@ function downloadEnv() {
 }
 .col-label {
   padding: 6px 14px;
-  font-size: 9px; font-weight: 700; text-transform: uppercase;
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
   color: #334155; letter-spacing: 0.08em;
   border-bottom: 1px solid #1e293b; flex-shrink: 0;
 }
@@ -330,31 +330,31 @@ function downloadEnv() {
 }
 .env-row:hover { background: rgba(255,255,255,0.015); }
 .header-row {
-  font-size: 9px; font-weight: 700; text-transform: uppercase;
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
   color: #334155; letter-spacing: 0.05em;
   padding-bottom: 6px;
 }
 
 .col-key {
-  font-family: monospace; font-size: 10px;
+  font-family: monospace; font-size: 12px;
   color: #64748b; display: flex; align-items: center; gap: 5px;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .col-key.secret { color: #f59e0b; }
-.key-icon { font-size: 9px; flex-shrink: 0; }
+.key-icon { font-size: 11px; flex-shrink: 0; }
 
 .col-val { display: flex; align-items: center; }
 .val-input-wrap { flex: 1; display: flex; align-items: center; gap: 4px; }
 .val-input {
   flex: 1; background: rgba(255,255,255,0.04);
   border: 1px solid #1e293b; border-radius: 4px;
-  padding: 4px 8px; font-size: 10px; font-family: monospace;
+  padding: 4px 8px; font-size: 12px; font-family: monospace;
   color: #e2e8f0; outline: none; transition: border-color 0.12s;
 }
 .val-input:focus { border-color: #334155; background: rgba(255,255,255,0.06); }
 .btn-show {
   background: none; border: none; cursor: pointer;
-  font-size: 11px; padding: 0 3px; flex-shrink: 0;
+  font-size: 13px; padding: 0 3px; flex-shrink: 0;
   opacity: 0.6; transition: opacity 0.1s;
 }
 .btn-show:hover { opacity: 1; }
@@ -362,7 +362,7 @@ function downloadEnv() {
 .col-act { display: flex; justify-content: center; }
 .btn-rm {
   background: none; border: none; cursor: pointer;
-  color: #374151; font-size: 14px; line-height: 1;
+  color: #374151; font-size: 16px; line-height: 1;
   transition: color 0.1s;
 }
 .btn-rm:hover { color: #ef4444; }
@@ -376,7 +376,7 @@ function downloadEnv() {
 .new-key-input, .new-val-input {
   background: rgba(255,255,255,0.04);
   border: 1px solid #1e293b; border-radius: 4px;
-  padding: 4px 8px; font-size: 10px; font-family: monospace;
+  padding: 4px 8px; font-size: 12px; font-family: monospace;
   color: #e2e8f0; outline: none; width: 100%;
   transition: border-color 0.12s;
 }
@@ -386,7 +386,7 @@ function downloadEnv() {
 }
 .btn-add {
   white-space: nowrap;
-  padding: 4px 10px; font-size: 9px; font-weight: 600;
+  padding: 4px 10px; font-size: 11px; font-weight: 600;
   background: rgba(99,102,241,0.12);
   border: 1px solid rgba(99,102,241,0.25);
   border-radius: 4px; color: #818cf8; cursor: pointer;
@@ -396,7 +396,7 @@ function downloadEnv() {
 
 .add-error {
   padding: 4px 12px;
-  font-size: 9px; color: #ef4444;
+  font-size: 11px; color: #ef4444;
 }
 
 /* Note */
@@ -404,13 +404,13 @@ function downloadEnv() {
   display: flex; gap: 6px; align-items: flex-start;
   padding: 8px 12px;
   border-top: 1px solid #0f172a;
-  font-size: 9px; color: #334155; flex-shrink: 0;
+  font-size: 11px; color: #334155; flex-shrink: 0;
   line-height: 1.5;
 }
 .env-note code {
   background: rgba(255,255,255,0.05);
   border-radius: 2px; padding: 0 3px;
-  font-size: 8.5px; color: #475569;
+  font-size: 10.5px; color: #475569;
 }
 
 /* Preview */
@@ -418,7 +418,7 @@ function downloadEnv() {
   flex: 1; overflow: auto;
   margin: 0; padding: 12px 14px;
   font-family: 'SF Mono', 'Fira Code', monospace;
-  font-size: 10px; line-height: 1.8;
+  font-size: 12px; line-height: 1.8;
   color: #475569; white-space: pre;
 }
 
@@ -429,16 +429,16 @@ function downloadEnv() {
   background: #0a0d14; border-top: 1px solid #1e293b;
   flex-shrink: 0;
 }
-.footer-info { flex: 1; font-size: 9px; color: #334155; }
+.footer-info { flex: 1; font-size: 11px; color: #334155; }
 .footer-actions { display: flex; gap: 8px; }
 .btn-cancel {
-  padding: 5px 14px; font-size: 11px; border-radius: 5px;
+  padding: 5px 14px; font-size: 13px; border-radius: 5px;
   background: transparent; border: 1px solid #1e293b;
   color: #475569; cursor: pointer; transition: all 0.12s;
 }
 .btn-cancel:hover { border-color: #334155; color: #94a3b8; }
 .btn-save {
-  padding: 5px 16px; font-size: 11px; font-weight: 700;
+  padding: 5px 16px; font-size: 13px; font-weight: 700;
   border-radius: 5px; border: none; cursor: pointer;
   background: rgba(99,102,241,0.2);
   border: 1px solid rgba(99,102,241,0.35);

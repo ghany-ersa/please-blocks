@@ -98,9 +98,9 @@ async function onFolderSelected(path) {
   text-align: center;
 }
 .gate-brand { display: flex; align-items: center; justify-content: center; gap: 10px; }
-.gate-brand .logo { font-size: 28px; }
-.gate-brand .name { font-size: 20px; font-weight: 800; color: #e2e8f0; letter-spacing: -0.01em; }
-.gate-sub { margin: 8px 0 26px; font-size: 12px; color: #64748b; }
+.gate-brand .logo { font-size: 30px; }
+.gate-brand .name { font-size: 22px; font-weight: 800; color: #e2e8f0; letter-spacing: -0.01em; }
+.gate-sub { margin: 8px 0 26px; font-size: 14px; color: #64748b; }
 
 .gate-actions { display: flex; gap: 12px; }
 .gate-btn {
@@ -111,21 +111,21 @@ async function onFolderSelected(path) {
 }
 .gate-btn:hover:not(:disabled) { border-color: #6366f1; background: rgba(99,102,241,0.06); }
 .gate-btn:disabled { opacity: 0.5; cursor: default; }
-.gate-btn .ic { font-size: 26px; }
-.gate-btn .t  { font-size: 13px; font-weight: 700; color: #e2e8f0; margin-top: 4px; }
-.gate-btn .d  { font-size: 10px; color: #64748b; line-height: 1.4; }
+.gate-btn .ic { font-size: 28px; }
+.gate-btn .t  { font-size: 15px; font-weight: 700; color: #e2e8f0; margin-top: 4px; }
+.gate-btn .d  { font-size: 12px; color: #64748b; line-height: 1.4; }
 .gate-btn.new:hover:not(:disabled)  { border-color: #10b981; background: rgba(16,185,129,0.06); }
 
-.gate-state { margin-top: 18px; font-size: 12px; color: #64748b; }
+.gate-state { margin-top: 18px; font-size: 14px; color: #64748b; }
 .gate-state.err { color: #f87171; }
 
 .gate-noserver { color: #94a3b8; }
-.gate-noserver .big { font-size: 14px; font-weight: 700; color: #f59e0b; margin-bottom: 8px; }
-.gate-noserver p { font-size: 12px; line-height: 1.6; }
+.gate-noserver .big { font-size: 16px; font-weight: 700; color: #f59e0b; margin-bottom: 8px; }
+.gate-noserver p { font-size: 14px; line-height: 1.6; }
 .gate-noserver code { background: #1e293b; padding: 1px 7px; border-radius: 4px; color: #7dd3fc; font-family: monospace; }
 .retry {
   margin-top: 16px; padding: 6px 16px; border-radius: 6px; cursor: pointer;
-  background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.3); color: #818cf8; font-size: 11px;
+  background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.3); color: #818cf8; font-size: 13px;
 }
 .retry:hover { background: rgba(99,102,241,0.22); }
 </style>

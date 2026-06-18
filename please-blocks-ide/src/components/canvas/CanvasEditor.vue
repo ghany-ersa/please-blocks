@@ -114,7 +114,7 @@ function onCanvasDragOver(e) {
   padding: 5px 12px;
   border-radius: 5px;
   border: none;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: opacity 0.15s;
@@ -128,7 +128,7 @@ function onCanvasDragOver(e) {
 .toolbar-stats {
   display: flex;
   gap: 6px;
-  font-size: 10px;
+  font-size: 12px;
   color: #475569;
 }
 
@@ -172,8 +172,8 @@ function onCanvasDragOver(e) {
   border-color: rgba(168,85,247,0.4);
   background: rgba(168,85,247,0.08);
 }
-.af-icon  { font-size: 20px; color: #4c1d95; }
-.af-label { font-size: 10px; color: #6b21a8; font-weight: 600; }
+.af-icon  { font-size: 22px; color: #4c1d95; }
+.af-label { font-size: 12px; color: #6b21a8; font-weight: 600; }
 
 /* Empty state */
 .canvas-empty {
@@ -187,9 +187,9 @@ function onCanvasDragOver(e) {
   pointer-events: none;
 }
 .canvas-empty > * { pointer-events: all; }
-.empty-icon { font-size: 40px; margin-bottom: 4px; }
-.canvas-empty h3 { font-size: 16px; color: #374151; font-weight: 700; }
-.canvas-empty p  { font-size: 12px; color: #374151; text-align: center; line-height: 1.6; }
+.empty-icon { font-size: 42px; margin-bottom: 4px; }
+.canvas-empty h3 { font-size: 18px; color: #374151; font-weight: 700; }
+.canvas-empty p  { font-size: 14px; color: #374151; text-align: center; line-height: 1.6; }
 .canvas-empty strong { color: #6b21a8; }
 .empty-btn {
   margin-top: 4px;
@@ -198,7 +198,7 @@ function onCanvasDragOver(e) {
   color: white;
   border: none;
   border-radius: 6px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: opacity 0.15s;
@@ -210,7 +210,7 @@ function onCanvasDragOver(e) {
   color: #475569;
   border: 1px solid #1e293b;
   border-radius: 6px;
-  font-size: 11px;
+  font-size: 13px;
   cursor: pointer;
   transition: border-color 0.15s, color 0.15s;
 }

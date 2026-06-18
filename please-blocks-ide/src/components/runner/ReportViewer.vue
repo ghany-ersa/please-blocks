@@ -227,17 +227,17 @@ function tcIcon(result) {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
   color: #e2e8f0;
   flex: 1;
 }
-.report-icon { font-size: 14px; }
+.report-icon { font-size: 16px; }
 .btn-close {
   background: none;
   border: none;
   color: #475569;
-  font-size: 20px;
+  font-size: 22px;
   cursor: pointer;
   padding: 0 4px;
   line-height: 1;
@@ -257,7 +257,7 @@ function tcIcon(result) {
 }
 
 .summary-status {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
   letter-spacing: -0.01em;
 }
@@ -293,12 +293,12 @@ function tcIcon(result) {
   justify-content: center;
 }
 .ring-pct {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 800;
   line-height: 1;
 }
 .ring-sub {
-  font-size: 9px;
+  font-size: 11px;
   color: #475569;
   margin-top: 2px;
 }
@@ -316,12 +316,12 @@ function tcIcon(result) {
   padding: 0 20px;
 }
 .stat-num {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 800;
   line-height: 1;
 }
 .stat-lbl {
-  font-size: 9px;
+  font-size: 11px;
   color: #475569;
   margin-top: 3px;
   text-transform: uppercase;
@@ -380,9 +380,9 @@ function tcIcon(result) {
   background: #0f1828;
   border-bottom: 1px solid #1e293b;
 }
-.feature-icon { font-size: 12px; }
+.feature-icon { font-size: 14px; }
 .feature-label {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   color: #cbd5e1;
   flex: 1;
@@ -392,7 +392,7 @@ function tcIcon(result) {
   gap: 4px;
 }
 .badge {
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
   padding: 1px 7px;
   border-radius: 10px;
@@ -411,16 +411,16 @@ function tcIcon(result) {
   align-items: center;
   gap: 8px;
   padding: 5px 14px;
-  font-size: 11px;
+  font-size: 13px;
 }
 .tc-icon {
   width: 14px;
-  font-size: 10px;
+  font-size: 12px;
   flex-shrink: 0;
   font-weight: 700;
 }
 .tc-label { flex: 1; color: #94a3b8; }
-.tc-result-label { font-size: 9px; font-weight: 600; }
+.tc-result-label { font-size: 11px; font-weight: 600; }
 
 .tc-row.pass .tc-icon       { color: #10b981; }
 .tc-row.pass .tc-result-label { color: #10b981; }
@@ -435,7 +435,7 @@ function tcIcon(result) {
   text-align: center;
   padding: 40px 0;
   color: #334155;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 /* Footer */
@@ -449,7 +449,7 @@ function tcIcon(result) {
   gap: 10px;
 }
 .footer-time {
-  font-size: 10px;
+  font-size: 12px;
   color: #334155;
   flex: 1;
   font-family: monospace;
@@ -459,7 +459,7 @@ function tcIcon(result) {
   background: #1e293b;
   border: 1px solid #334155;
   border-radius: 5px;
-  font-size: 11px;
+  font-size: 13px;
   color: #94a3b8;
   cursor: pointer;
   transition: all 0.15s;
