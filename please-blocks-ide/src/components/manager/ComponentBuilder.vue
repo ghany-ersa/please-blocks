@@ -274,6 +274,8 @@ const methodParamsWithSchema = computed(() => {
 
 // ── Step drag & drop dalam method ──────────────────────────────────
 function onStepDragOver(e) {
+  // Jika ini drag reorder antar-step, biarkan StepCard yang handle
+  if (e.dataTransfer.types.includes('step-reorder')) return
   e.preventDefault()
   e.dataTransfer.dropEffect = 'copy'
   isDropOver.value = true
@@ -294,62 +296,68 @@ function rejectDrop(msg) {
   dropErrorTimer = setTimeout(() => { dropError.value = '' }, 4000)
 }
 
-/** Prefix component dari blockId comp.<name>.<method> → 'comp.<name>' (atau null). */
-function compPrefixOf(blockId) {
+/** blockId method component → 'comp.<name>.<method>' (atau null jika bukan). */
+function methodIdOf(blockId) {
   const parts = String(blockId).split('.')
-  return parts[0] === 'comp' && parts.length >= 3 ? `comp.${parts[1]}` : null
+  return parts[0] === 'comp' && parts.length >= 3 ? blockId : null
 }
 
-/** Component def dari prefix 'comp.<name>' (cocokkan by name lowercase). */
-function compByPrefix(prefix) {
-  const name = prefix.slice('comp.'.length)
-  return compStore.components.find(c => c.name.toLowerCase() === name) || null
+/** Node graf = blockId 'comp.<name>.<method>' → daftar method yang dipanggilnya. */
+function methodCallees(methodNodeId) {
+  const parts = methodNodeId.split('.')       // comp.<name>.<method>
+  const comp = compStore.components.find(c => c.name.toLowerCase() === parts[1])
+  const method = comp?.methods.find(m => m.name === parts.slice(2).join('.'))
+  const out = []
+  for (const s of method?.steps || []) {
+    const id = methodIdOf(s.blockId)
+    if (id) out.push(id)
+  }
+  return out
 }
+
+// nodeId method yang sedang aktif (tujuan drop): 'comp.<name>.<method>'
+const activeMethodNodeId = computed(() =>
+  activeComp.value && activeMethod.value
+    ? `comp.${activeComp.value.name.toLowerCase()}.${activeMethod.value.name}`
+    : null
+)
 
 /**
- * Apakah memanggil component `targetPrefix` dari dalam component `ownerId`
- * akan membentuk siklus? (target == owner, atau target—lewat step-nya—
- * pada akhirnya memanggil owner lagi). DFS pada graf pemanggilan component.
+ * Apakah menambahkan pemanggilan ke `targetId` dari method `ownerId` membentuk
+ * rekursi/siklus? DFS pada graf pemanggilan ANTAR-METHOD (lintas component juga):
+ * - target == owner → rekursi langsung (method memanggil dirinya).
+ * - dari target, bisa kembali ke owner → siklus tak langsung.
+ * Pemanggilan ke method LAIN dalam class yang sama TETAP diizinkan.
  */
-function wouldCreateCycle(ownerId, targetPrefix) {
-  const ownerComp = compStore.components.find(c => c.id === ownerId)
-  if (!ownerComp) return false
-  const ownerPrefix = `comp.${ownerComp.name.toLowerCase()}`
-  if (targetPrefix === ownerPrefix) return true   // self-reference
-
-  // Telusuri: dari target, bisakah mencapai owner lewat rantai pemanggilan?
+function wouldRecurse(ownerId, targetId) {
+  if (targetId === ownerId) return true
   const seen = new Set()
-  const stack = [targetPrefix]
+  const stack = [targetId]
   while (stack.length) {
-    const prefix = stack.pop()
-    if (prefix === ownerPrefix) return true
-    if (seen.has(prefix)) continue
-    seen.add(prefix)
-    const comp = compByPrefix(prefix)
-    if (!comp) continue
-    for (const m of comp.methods) {
-      for (const s of m.steps || []) {
-        const p = compPrefixOf(s.blockId)
-        if (p) stack.push(p)
-      }
-    }
+    const node = stack.pop()
+    if (node === ownerId) return true
+    if (seen.has(node)) continue
+    seen.add(node)
+    for (const callee of methodCallees(node)) stack.push(callee)
   }
   return false
 }
 
 function onStepDrop(e) {
+  // Drop reorder sudah ditangani oleh StepCard (stopPropagation); lewati.
+  if (e.dataTransfer.types.includes('step-reorder')) return
   e.preventDefault()
   isDropOver.value = false
   const blockId = e.dataTransfer.getData('text/plain')
   if (!blockId || !activeMethod.value) return
 
-  // Nested component: cegah siklus (component memakai dirinya / rantai melingkar)
-  const targetPrefix = compPrefixOf(blockId)
-  if (targetPrefix && wouldCreateCycle(activeCompId.value, targetPrefix)) {
-    const self = `comp.${activeComp.value?.name.toLowerCase()}` === targetPrefix
-    rejectDrop(self
-      ? `Tidak bisa menyisipkan "${activeComp.value?.exportName}" ke dalam dirinya sendiri.`
-      : `Penyisipan ditolak: akan membentuk pemanggilan component yang melingkar (circular).`)
+  // Pemanggilan method component (sekelas via this, atau component lain):
+  // boleh, KECUALI menimbulkan rekursi/siklus.
+  const targetId = methodIdOf(blockId)
+  if (targetId && activeMethodNodeId.value && wouldRecurse(activeMethodNodeId.value, targetId)) {
+    rejectDrop(targetId === activeMethodNodeId.value
+      ? `Method "${activeMethod.value.name}" tidak boleh memanggil dirinya sendiri (rekursi).`
+      : `Penyisipan ditolak: akan membentuk pemanggilan method yang melingkar (rekursi).`)
     return
   }
 
@@ -371,6 +379,10 @@ function updateStepInput(stepIdx, fieldName, value) {
 
 function updateStepNote(stepIdx, note) {
   compStore.updateMethodStepNote(activeCompId.value, activeMethodId.value, stepIdx, note)
+}
+
+function moveStep(from, to) {
+  compStore.moveMethodStep(activeCompId.value, activeMethodId.value, from, to)
 }
 
 // Tab: 'builder' | 'preview'
@@ -603,15 +615,17 @@ const activeTab = ref('builder')
           >
             <StepCard
               v-for="(step, idx) in activeMethod.steps"
-              :key="idx"
+              :key="step.id || idx"
               :step="step"
               :index="idx"
               :editable="true"
-              :draggable="false"
+              :draggable="true"
+              :test-case-id="activeMethodId"
               :method-params="methodParamsWithSchema"
               @remove="removeStep(idx)"
               @update-input="(field, val) => updateStepInput(idx, field, val)"
               @update-note="(note) => updateStepNote(idx, note)"
+              @reorder="(from, to) => moveStep(from, to)"
             />
 
             <div

@@ -49,6 +49,7 @@ export function parseComponentFile(source, { blockRegistry = null, componentInde
     warnings,
     commentsByLine: indexLeadingComments(ast.comments),
     componentIndex: componentIndex || (blockRegistry ? buildComponentIndex(blockRegistry) : new Map()),
+    selfPrefix: `comp.${name.toLowerCase()}`,   // resolusi this.method() → component ini
     source
   }
 

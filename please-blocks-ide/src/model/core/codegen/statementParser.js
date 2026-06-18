@@ -161,14 +161,23 @@ function matchPleaseCall(expr) {
   return { method: m.property?.name, args: expr.arguments }
 }
 
-/** AUTH.login(...args) → { blockId, inputs } jika AUTH dikenal di componentIndex */
+/**
+ * AUTH.login(...args) → { blockId } jika AUTH dikenal di componentIndex.
+ * this.login(...args) → { blockId } memakai ctx.selfPrefix (panggilan sekelas,
+ * dipakai saat mem-parse body method component).
+ */
 function matchComponentCall(expr, ctx) {
   if (!isCall(expr) || expr.callee?.type !== 'MemberExpression') return null
-  const objName = expr.callee.object?.name
+  const obj = expr.callee.object
   const methodName = expr.callee.property?.name
-  if (!objName || !methodName) return null
+  if (!methodName) return null
 
-  const prefix = ctx.componentIndex?.get(objName)  // e.g. 'comp.auth'
+  let prefix = null
+  if (obj?.type === 'ThisExpression') {
+    prefix = ctx.selfPrefix || null            // this.method() → component sendiri
+  } else if (obj?.name) {
+    prefix = ctx.componentIndex?.get(obj.name) // EXPORTNAME.method() → component lain
+  }
   if (!prefix) return null
   const blockId = `${prefix}.${methodName}`
 

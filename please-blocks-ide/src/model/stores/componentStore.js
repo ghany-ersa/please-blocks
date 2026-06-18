@@ -41,8 +41,9 @@ const DEFAULT_COMPONENTS = [
   }
 ]
 
-const uid = () => `comp-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
+const uid  = () => `comp-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
 const uidM = () => `meth-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
+const uidS = () => `step-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
 
 export const useComponentStore = defineStore('componentStore', {
   state: () => {
@@ -51,6 +52,14 @@ export const useComponentStore = defineStore('componentStore', {
       const saved = localStorage.getItem(STORAGE_KEY)
       if (saved) components = JSON.parse(saved)
     } catch { /* ignore */ }
+    // Backfill id pada step lama yang belum punya id (migrasi)
+    for (const c of components) {
+      for (const m of c.methods || []) {
+        for (const s of m.steps || []) {
+          if (!s.id) s.id = uidS()
+        }
+      }
+    }
     return {
       components,
       // ID component yang harus dibuka di ComponentBuilder (null = tutup)
@@ -86,6 +95,7 @@ export const useComponentStore = defineStore('componentStore', {
       const method = this.addMethod(comp.id, methodName)
       // Salin step apa adanya (blockId + inputs) ke dalam method
       method.steps = steps.map(s => ({
+        id:      uidS(),
         blockId: s.blockId,
         inputs:  { ...(s.inputs || {}) }
       }))
@@ -156,7 +166,7 @@ export const useComponentStore = defineStore('componentStore', {
       const c = this.components.find(c => c.id === componentId)
       const m = c?.methods.find(m => m.id === methodId)
       if (!m) return
-      m.steps.push({ blockId, inputs: {} })
+      m.steps.push({ id: uidS(), blockId, inputs: {} })
       this.processAndRegister()
     },
 
@@ -165,6 +175,17 @@ export const useComponentStore = defineStore('componentStore', {
       const m = c?.methods.find(m => m.id === methodId)
       if (!m) return
       m.steps.splice(stepIdx, 1)
+      this.processAndRegister()
+    },
+
+    // Pindahkan urutan step dalam satu method (drag & drop reorder)
+    moveMethodStep(componentId, methodId, fromIdx, toIdx) {
+      const c = this.components.find(c => c.id === componentId)
+      const m = c?.methods.find(m => m.id === methodId)
+      if (!m || fromIdx === toIdx) return
+      if (fromIdx < 0 || fromIdx >= m.steps.length) return
+      const [step] = m.steps.splice(fromIdx, 1)
+      m.steps.splice(toIdx, 0, step)
       this.processAndRegister()
     },
 
@@ -247,7 +268,7 @@ export const useComponentStore = defineStore('componentStore', {
           id:     uidM(),
           name:   m.name,
           params: [...(m.params || [])],
-          steps:  (m.steps || []).map(s => ({ blockId: s.blockId, inputs: { ...(s.inputs || {}) }, ...(s.note ? { note: s.note } : {}) }))
+          steps:  (m.steps || []).map(s => ({ id: s.id || uidS(), blockId: s.blockId, inputs: { ...(s.inputs || {}) }, ...(s.note ? { note: s.note } : {}) }))
         }))
       }))
 

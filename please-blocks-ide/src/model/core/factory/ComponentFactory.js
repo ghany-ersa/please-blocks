@@ -178,7 +178,13 @@ export function generateComponentFile(compDef, blockRegistry = null, dataEntries
         const block = blockRegistry.getById?.(step.blockId)
         if (block) {
           try {
-            lines.push(`        ${block.codegen(step.inputs || {})}`)
+            let code = block.codegen(step.inputs || {})
+            // Pemanggilan method SEKELAS (comp.<ownName>.*) → pakai this.method()
+            // bukan EXPORTNAME.method() yang merujuk instance lain.
+            if (`comp.${String(step.blockId).split('.')[1]}` === ownPrefix) {
+              code = code.replace(/^await\s+[A-Z][A-Za-z0-9_]*\./, 'await this.')
+            }
+            lines.push(`        ${code}`)
           } catch {
             lines.push(`        // [!] error pada step: ${step.blockId}`)
           }
