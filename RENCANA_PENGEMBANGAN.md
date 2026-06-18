@@ -625,12 +625,12 @@ Prioritas: IDE bisa digunakan end-to-end untuk membuat dan menjalankan test.
 | ✅ | Workspace persistence + boot sync | `projectPath` & `browserTarget` persist ke localStorage. Saat reload: disk = sumber kebenaran — baca folder, bandingkan dengan canvas; jika beda tampilkan konfirmasi (Muat dari disk / Pertahankan perubahan = Save). Server mati saat reload → kembali ke gate |
 | ✅ | Topbar redesign + dual menu | Menu teks **File** & **Workspace** (TopbarMenu reusable) di kiri seperti app desktop; aksi (Simpan/Run/Laporan/toggle) di kanan. Brand pindah ke header sidebar untuk hindari duplikasi |
 | ✅ | **Refactor arsitektur MVVM** | **Model** dipindah ke `src/model/{core,services,stores}`. **ViewModel** = composables di `src/composables/` (`useProjectWorkspace`, `useSaveProject`, `useTestRunnerControl`, `usePanelResize`, `useProjectImport`, `useCodeHighlight`, `usePaletteFilter`). **View** `.vue` jadi tipis (AppShell 217→78, ProjectImportModal 83→29 baris). Duplikasi `highlight()` (×3) & filter palette (×2) dihapus. Lihat [Rencana Refactor MVVM](#rencana-refactor-mvvm) |
-| ⏳ | Dark/Light theme | Tema IDE yang bisa disesuaikan |
 
 ### v3 — AI dan Cloud
 
 | Status | Fitur | Deskripsi |
 |:---:|---|---|
+| ⏳ | Browser Recorder | Record aksi user di browser secara real-time → otomatis jadi sequence blok di canvas. Capture click, fill, navigate via CDP; selector di-detect otomatis dengan fallback hierarchy (ID → name → CSS → XPath); hasil tampil di staging area sebelum di-append ke Test Case aktif |
 | ⏳ | AI Selector Suggester | Screenshot halaman → AI return selector terbaik (CSS/XPath) |
 | ⏳ | Natural Language to Blocks | Ketik "login dengan username salah" → AI generate sequence blok |
 | ⏳ | Cloud Runner | Jalankan test di BrowserStack/Sauce Labs, parallel multi-browser |
