@@ -181,7 +181,7 @@ Project automation test yang di-generate oleh **Please Blocks IDE**.
 ## Prasyarat
 
 - Node.js >= 14.0.0
-- Google Chrome (ChromeDriver dikelola otomatis oleh `selenium-manager` bawaan Selenium 4)
+- Google Chrome (ChromeDriver dikelola otomatis oleh \`selenium-manager\` bawaan Selenium 4)
 
 ## Cara Menjalankan
 

@@ -45,9 +45,9 @@ describe('exportProject — app.js (tanpa component)', () => {
     expect(app.content).not.toContain('Builder')
   })
 
-  it('menggunakan new pleaseClass() tanpa argumen driver', () => {
-    expect(app.content).toContain('new pleaseClass()')
-    expect(app.content).not.toContain('new pleaseClass(driver)')
+  it('menggunakan new Please() tanpa argumen driver', () => {
+    expect(app.content).toContain('new Please()')
+    expect(app.content).not.toContain('new Please(driver)')
   })
 
   it('module.exports menyertakan please', () => {

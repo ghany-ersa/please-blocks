@@ -159,14 +159,13 @@ export function generateComponentFile(compDef, blockRegistry = null, dataEntries
   }
   // require class sibling
   for (const s of siblings) lines.push(`const ${s.className} = require('./${s.fileName}')`)
-  // Deklarasi modul: please + sibling export var
-  lines.push(siblings.length ? `let ${['please', ...siblings.map(s => s.exportName)].join(', ')}` : `let please`)
+
   lines.push(``)
   lines.push(`class ${compDef.name} {`)
-  lines.push(`    constructor(master) {`)
-  lines.push(`        please = master`)
-  // Instansiasi sibling sebagai variabel object
-  for (const s of siblings) lines.push(`        ${s.exportName} = new ${s.className}(master)`)
+  lines.push(`    constructor(please) {`)
+  lines.push(`        this.please = please`)
+  // Sibling component disimpan di this.<EXPORTNAME>
+  for (const s of siblings) lines.push(`        this.${s.exportName} = new ${s.className}(please)`)
   lines.push(`    }`)
 
   for (const method of compDef.methods) {
@@ -179,10 +178,19 @@ export function generateComponentFile(compDef, blockRegistry = null, dataEntries
         if (block) {
           try {
             let code = block.codegen(step.inputs || {})
-            // Pemanggilan method SEKELAS (comp.<ownName>.*) → pakai this.method()
-            // bukan EXPORTNAME.method() yang merujuk instance lain.
+            // please.* → this.please.*
+            code = code.replace(/\bplease\./g, 'this.please.')
+            // Method sekelas: EXPORTNAME.method() → this.method()
             if (`comp.${String(step.blockId).split('.')[1]}` === ownPrefix) {
               code = code.replace(/^await\s+[A-Z][A-Za-z0-9_]*\./, 'await this.')
+            } else {
+              // Sibling component: EXPORTNAME.method() → this.EXPORTNAME.method()
+              for (const s of siblings) {
+                code = code.replace(
+                  new RegExp(`\\bawait\\s+${s.exportName}\\.`),
+                  `await this.${s.exportName}.`
+                )
+              }
             }
             lines.push(`        ${code}`)
           } catch {

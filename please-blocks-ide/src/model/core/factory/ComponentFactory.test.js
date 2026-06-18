@@ -110,9 +110,9 @@ describe('generateComponentFile — struktur file', () => {
     expect(code).toContain('class Auth {')
   })
 
-  it('constructor menerima master dan assign ke please', () => {
-    expect(code).toContain('constructor(master)')
-    expect(code).toContain('please = master')
+  it('constructor menerima please dan assign ke this.please', () => {
+    expect(code).toContain('constructor(please)')
+    expect(code).toContain('this.please = please')
   })
 
   it('mengandung async method', () => {
@@ -153,11 +153,100 @@ describe('generateComponentFile — dengan steps', () => {
     }
   }
 
-  it('menghasilkan kode step di dalam method', () => {
+  it('menghasilkan kode step di dalam method dengan this.please', () => {
     const code = generateComponentFile(comp, blockReg)
-    expect(code).toContain("await please.fill('email', '#email', email)")
-    expect(code).toContain("await please.fill('password', '#password', password)")
-    expect(code).toContain("await please.click('submit', '#submit')")
+    expect(code).toContain("await this.please.fill('email', '#email', email)")
+    expect(code).toContain("await this.please.fill('password', '#password', password)")
+    expect(code).toContain("await this.please.click('submit', '#submit')")
+  })
+})
+
+describe('generateComponentFile — sibling component (nested)', () => {
+  const cartComp = {
+    id: 'comp-cart',
+    name: 'Cart',
+    exportName: 'CART',
+    methods: [
+      {
+        name: 'addAndCheckout',
+        params: ['item'],
+        steps: [
+          { blockId: 'action.click',        inputs: { label: 'add',  selector: '#add'  } },
+          { blockId: 'comp.checkout.order', inputs: { item: 'item' } }
+        ]
+      }
+    ]
+  }
+
+  const blockReg = {
+    getById: (id) => {
+      const defs = {
+        'action.click':        {
+          id: 'action.click', type: 'action',
+          codegen: (inp) => `await please.click('${inp.label}', '${inp.selector}')`
+        },
+        'comp.checkout.order': {
+          id: 'comp.checkout.order', type: 'component',
+          componentName: 'Checkout', componentExport: 'CHECKOUT',
+          codegen: (inp) => `await CHECKOUT.order(${inp.item})`
+        }
+      }
+      return defs[id] ?? null
+    }
+  }
+
+  const code = generateComponentFile(cartComp, blockReg)
+
+  it('require sibling class', () => {
+    expect(code).toContain("require('./checkout')")
+  })
+
+  it('instansiasi sibling di constructor sebagai this.EXPORTNAME', () => {
+    expect(code).toContain('this.CHECKOUT = new Checkout(please)')
+  })
+
+  it('tidak ada module-level let variable', () => {
+    expect(code).not.toContain('let please')
+    expect(code).not.toContain('let CHECKOUT')
+  })
+
+  it('pemanggilan sibling di method menggunakan this.EXPORTNAME', () => {
+    expect(code).toContain('await this.CHECKOUT.order(')
+  })
+
+  it('please.* di step non-sibling tetap jadi this.please.*', () => {
+    expect(code).toContain("await this.please.click('add', '#add')")
+  })
+})
+
+describe('generateComponentFile — self-call (method sekelas)', () => {
+  const authComp2 = {
+    id: 'comp-auth2',
+    name: 'Auth',
+    exportName: 'AUTH',
+    methods: [
+      {
+        name: 'loginAndVerify',
+        params: [],
+        steps: [
+          { blockId: 'comp.auth.login', inputs: {} }
+        ]
+      },
+      { name: 'login', params: [], steps: [] }
+    ]
+  }
+
+  const blockReg = {
+    getById: (id) => id === 'comp.auth.login'
+      ? { id, type: 'component', componentName: 'Auth', componentExport: 'AUTH',
+          codegen: () => 'await AUTH.login()' }
+      : null
+  }
+
+  it('pemanggilan method sekelas menggunakan this.method() bukan this.AUTH.login()', () => {
+    const code = generateComponentFile(authComp2, blockReg)
+    expect(code).toContain('await this.login()')
+    expect(code).not.toContain('await this.AUTH.login()')
   })
 })
 
