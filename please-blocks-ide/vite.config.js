@@ -16,5 +16,13 @@ export default defineConfig({
         changeOrigin: true
       }
     }
+  },
+  test: {
+    environment: 'node',
+    include: ['src/**/*.test.js'],
+    coverage: {
+      provider: 'v8',
+      include: ['src/model/core/**/*.js']
+    }
   }
 })

@@ -108,7 +108,6 @@ function slugify(str) {
 
 function generateAppFile(compNames, compExports) {
   const lines = [
-    `const { Builder } = require('selenium-webdriver')`,
     `const pleaseClass = require('please-test')`,
   ]
 
@@ -118,10 +117,8 @@ function generateAppFile(compNames, compExports) {
 
   lines.push(
     ``,
-    `const driver = new Builder().forBrowser('chrome').build()`,
-    `driver.manage().window().maximize()`,
-    ``,
-    `const please = new pleaseClass(driver)`,
+    `const please = new pleaseClass()         // headless (default)`,
+    `// const please = new pleaseClass({ headed: true })  // tampilkan browser`,
     ``
   )
 
@@ -130,8 +127,6 @@ function generateAppFile(compNames, compExports) {
     lines.push(`    please`)
     lines.push(`}`)
   } else {
-    // Nested component di-require & di-instansiasi sendiri di dalam tiap file
-    // component, jadi app.js cukup buat instance top-level.
     lines.push(`module.exports = {`)
     lines.push(`    please,`)
     for (let i = 0; i < compNames.length; i++) {
@@ -154,8 +149,8 @@ function generatePackageJson(name = 'my-automation-tests') {
       report: 'mocha --recursive --timeout 100000 index.js --reporter mochawesome --reporter-options code=false,charts=true,assetsDir=report/assets,reportDir=report,reportFilename=index,reportPageTitle=Test Report'
     },
     dependencies: {
-      'please-test':         '^1.0.1',
-      'selenium-webdriver':  '^4.0.0'
+      'please-test':        '^1.1.0',
+      'selenium-webdriver': '^4.0.0'
     },
     devDependencies: {
       'dotenv':       '^16.0.0',
