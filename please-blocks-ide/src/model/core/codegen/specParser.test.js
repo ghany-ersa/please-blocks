@@ -112,7 +112,7 @@ describe('parseSpec — step mapping', () => {
     expect(step.inputs.urlTarget).toEqual({ type: 'dataref', path: 'PAGE.login' })
   })
 
-  it('memetakan seeText: please.see(label, sel, expected)', () => {
+  it('memetakan await see dengan expected → assert.see tanpa varName', () => {
     const src = `test.describe('F', () => {
       test('t', async ({ page }) => {
         const { please } = createApp(page)
@@ -121,11 +121,12 @@ describe('parseSpec — step mapping', () => {
     })`
     const { features } = parse(src)
     const step = features[0].testCases[0].steps[0]
-    expect(step.blockId).toBe('assert.seeText')
+    expect(step.blockId).toBe('assert.see')
     expect(step.inputs.expected).toBe('Berhasil')
+    expect(step.inputs.varName).toBeUndefined()
   })
 
-  it('memetakan see tanpa expected → getText', () => {
+  it('memetakan const assignment see → assert.see dengan varName, scopeVars dipakai sebagai varref', () => {
     const src = `test.describe('F', () => {
       test('t', async ({ page }) => {
         const { please } = createApp(page)
@@ -135,8 +136,10 @@ describe('parseSpec — step mapping', () => {
     })`
     const { features } = parse(src)
     const steps = features[0].testCases[0].steps
-    expect(steps[0].blockId).toBe('assert.getText')
-    expect(steps[1].blockId).toBe('assert.seeText')
+    expect(steps[0].blockId).toBe('assert.see')
+    expect(steps[0].inputs.varName).toBe('pageTitle')
+    expect(steps[1].blockId).toBe('assert.see')
+    expect(steps[1].inputs.expected).toEqual({ type: 'varref', varName: 'pageTitle' })
   })
 })
 

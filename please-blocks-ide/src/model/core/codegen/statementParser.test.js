@@ -159,31 +159,42 @@ describe('parseStatementToStep — navigation', () => {
 })
 
 describe('parseStatementToStep — assertions', () => {
-  it('memetakan please.see(label, selector, expected) → assert.seeText', () => {
+  it('memetakan await please.see(label, selector, expected) → assert.see', () => {
     const src = "await please.see('teks', '#msg', 'Berhasil')"
     const step = parseStatementToStep(stmtOf(src), makeCtx({ source: src }))
-    expect(step.blockId).toBe('assert.seeText')
+    expect(step.blockId).toBe('assert.see')
     expect(step.inputs.label).toBe('teks')
     expect(step.inputs.selector).toBe('#msg')
     expect(step.inputs.expected).toBe('Berhasil')
+    expect(step.inputs.varName).toBeUndefined()
   })
 
-  it('please.see tanpa expected jatuh ke rawCode (bukan seeText)', () => {
+  it('memetakan await please.see(label, selector) tanpa expected → assert.see tanpa varName', () => {
     const src = "await please.see('teks', '#msg')"
     const step = parseStatementToStep(stmtOf(src), makeCtx({ source: src }))
-    // tanpa expected → null dari mapper → rawCode
-    expect(step.blockId).toBe('util.rawCode')
+    expect(step.blockId).toBe('assert.see')
+    expect(step.inputs.varName).toBeUndefined()
+    expect(step.inputs.expected).toBeUndefined()
   })
 })
 
-describe('parseStatementToStep — see sebagai VariableDeclaration (Read Text)', () => {
-  it('memetakan const x = await please.see(label, selector) → assert.getText', () => {
+describe('parseStatementToStep — see sebagai VariableDeclaration (Read mode)', () => {
+  it('memetakan const x = await please.see(label, selector) → assert.see dengan varName', () => {
     const src = "const pageTitle = await please.see('judul', 'h1')"
     const step = parseStatementToStep(stmtOf(src), makeCtx({ source: src }))
-    expect(step.blockId).toBe('assert.getText')
+    expect(step.blockId).toBe('assert.see')
     expect(step.inputs.varName).toBe('pageTitle')
     expect(step.inputs.label).toBe('judul')
     expect(step.inputs.selector).toBe('h1')
+    expect(step.inputs.expected).toBeUndefined()
+  })
+
+  it('memetakan const x = await please.see(label, selector, expected) → assert.see dengan varName + expected', () => {
+    const src = "const hasil = await please.see('pesan', '#msg', 'Berhasil')"
+    const step = parseStatementToStep(stmtOf(src), makeCtx({ source: src }))
+    expect(step.blockId).toBe('assert.see')
+    expect(step.inputs.varName).toBe('hasil')
+    expect(step.inputs.expected).toBe('Berhasil')
   })
 })
 
@@ -237,16 +248,17 @@ describe('parseBodyStatements', () => {
     expect(steps[2].blockId).toBe('action.click')
   })
 
-  it('scopeVars terakumulasi lintas statement', () => {
+  it('scopeVars terakumulasi lintas statement — varref dikenali di step berikutnya', () => {
     const src = `
       const headerText = await please.see('header', 'h1')
       await please.see('header', 'h1', headerText)
     `
     const ast = parseModule(src)
     const steps = parseBodyStatements(ast.program.body, makeCtx({ source: src }))
-    expect(steps[0].blockId).toBe('assert.getText')
+    expect(steps[0].blockId).toBe('assert.see')
     expect(steps[0].inputs.varName).toBe('headerText')
-    expect(steps[1].blockId).toBe('assert.seeText')
+    expect(steps[1].blockId).toBe('assert.see')
+    expect(steps[1].inputs.expected).toEqual({ type: 'varref', varName: 'headerText' })
   })
 
   it('baris createApp dilewati (tidak jadi step)', () => {

@@ -2,11 +2,12 @@
 import { ref } from 'vue'
 import BlockCard from './BlockCard.vue'
 
-defineProps({
+const props = defineProps({
   category: { type: Object, required: true }  // { id, meta, blocks[] }
 })
 
-const open = ref(true)
+const COLLAPSED_BY_DEFAULT = new Set(['assertion', 'utility'])
+const open = ref(!COLLAPSED_BY_DEFAULT.has(props.category.id))
 </script>
 
 <template>

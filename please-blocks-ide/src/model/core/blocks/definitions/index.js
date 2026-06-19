@@ -5,7 +5,7 @@ import assertions from './assertions.js'
 import utilities  from './utilities.js'
 
 // Urutan kategori menentukan urutan tampil di palette
-export const CATEGORY_ORDER = ['navigation', 'action', 'assertion', 'utility']
+export const CATEGORY_ORDER = ['navigation', 'action', 'component', 'assertion', 'utility']
 
 export const CATEGORY_META = {
   navigation: { label: 'Navigation',  icon: '🧭', color: '#6366f1' },

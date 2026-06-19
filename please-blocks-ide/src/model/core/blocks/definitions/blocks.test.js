@@ -195,29 +195,32 @@ describe('nav.checkWhere — codegen', () => {
 
 // ── Assertions ────────────────────────────────────────────────────
 
-describe('assert.seeText — codegen', () => {
-  const b = block(assertions, 'assert.seeText')
+describe('assert.see — codegen', () => {
+  const b = block(assertions, 'assert.see')
 
-  it('generates see dengan expected langsung', () => {
+  it('assert saja (expected, tanpa varName)', () => {
     expect(b.codegen({ label: 'pesan', selector: '#msg', expected: 'Berhasil!' }))
       .toBe("await please.see('pesan', '#msg', 'Berhasil!')")
   })
 
-  it('resolves dataref expected', () => {
-    expect(b.codegen({
-      label: 'pesan',
-      selector: '#msg',
-      expected: { type: 'dataref', path: 'DATA.expected.msg' }
-    })).toBe("await please.see('pesan', '#msg', DATA.expected.msg)")
-  })
-})
-
-describe('assert.getText — codegen', () => {
-  const b = block(assertions, 'assert.getText')
-
-  it('generates see assignment (read text)', () => {
+  it('baca saja (varName, tanpa expected)', () => {
     expect(b.codegen({ label: 'judul', selector: 'h1', varName: 'pageTitle' }))
       .toBe("const pageTitle = await please.see('judul', 'h1')")
+  })
+
+  it('baca sekaligus assert (varName + expected)', () => {
+    expect(b.codegen({ label: 'pesan', selector: '#msg', varName: 'hasil', expected: 'Berhasil!' }))
+      .toBe("const hasil = await please.see('pesan', '#msg', 'Berhasil!')")
+  })
+
+  it('resolves dataref expected', () => {
+    expect(b.codegen({ label: 'pesan', selector: '#msg', expected: { type: 'dataref', path: 'DATA.expected.msg' } }))
+      .toBe("await please.see('pesan', '#msg', DATA.expected.msg)")
+  })
+
+  it('bare see tanpa varName dan expected', () => {
+    expect(b.codegen({ label: 'pesan', selector: '#msg' }))
+      .toBe("await please.see('pesan', '#msg')")
   })
 })
 
@@ -244,19 +247,6 @@ describe('assert.notEqual — codegen', () => {
   })
 })
 
-describe('assert.fail — codegen', () => {
-  const b = block(assertions, 'assert.fail')
-
-  it('generates throw new Error with message', () => {
-    expect(b.codegen({ message: 'sengaja gagal' }))
-      .toBe("throw new Error('sengaja gagal')")
-  })
-
-  it('generates throw new Error without message', () => {
-    expect(b.codegen({}))
-      .toBe("throw new Error('Test digagalkan secara eksplisit')")
-  })
-})
 
 // ── Utilities ─────────────────────────────────────────────────────
 

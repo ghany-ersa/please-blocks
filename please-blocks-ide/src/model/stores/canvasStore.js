@@ -394,12 +394,12 @@ export const useCanvasStore = defineStore('canvas', {
       this.addStep(tc1.id, 'action.fill',   { label: 'input password', selector: '#password', value: { type: 'dataref', path: 'ACCOUNT.valid.password' } })
       this.addStep(tc1.id, 'action.click',  { label: 'button submit', selector: '#submit' })
       this.addStep(tc1.id, 'nav.checkWhere',{ urlExpected: { type: 'dataref', path: 'URL.dashboard' } })
-      this.addStep(tc1.id, 'assert.seeText',{ label: 'teks sukses', selector: '//h1', expected: 'Logged In Successfully' })
+      this.addStep(tc1.id, 'assert.see',{ label: 'teks sukses', selector: '//h1', expected: 'Logged In Successfully' })
 
       const tc2 = this.addTestCase(f.id, 'login gagal - username salah')
       this.addStep(tc2.id, 'nav.goTo',      { urlTarget: { type: 'dataref', path: 'URL.login' } })
       this.addStep(tc2.id, 'action.fill',   { label: 'input username', selector: '#username', value: 'invaliduser' })
-      this.addStep(tc2.id, 'assert.seeText',{ label: 'pesan error', selector: '//div[@id="error"]', expected: 'Your username is invalid!' })
+      this.addStep(tc2.id, 'assert.see',{ label: 'pesan error', selector: '//div[@id="error"]', expected: 'Your username is invalid!' })
         this.persist()
     }
   }

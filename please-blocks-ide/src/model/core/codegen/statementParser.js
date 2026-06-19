@@ -43,11 +43,10 @@ export function parseStatementToStep(stmt, ctx) {
     const pleaseMethod = matchPleaseCall(callee)
     if (varName && pleaseMethod) {
       if (pleaseMethod.method === 'see') {
-        const [label, selector] = pleaseMethod.args
-        return withNote(note, {
-          blockId: 'assert.getText',
-          inputs: { label: litStr(label), selector: litStr(selector), varName }
-        })
+        const [label, selector, expected] = pleaseMethod.args
+        const inputs = { label: litStr(label), selector: litStr(selector), varName }
+        if (expected !== undefined) inputs.expected = valueFrom(expected, ctx)
+        return withNote(note, { blockId: 'assert.see', inputs })
       }
       if (pleaseMethod.method === 'newTab') {
         return withNote(note, { blockId: 'util.newTab', inputs: { varName } })
@@ -122,15 +121,9 @@ function mapPleaseMethod({ method, args }, ctx) {
       }
 
     case 'see': {
-      // please.see(label, selector, expected?) → assert.seeText jika ada expected, else rawCode
-      if (args[2] !== undefined) {
-        return {
-          blockId: 'assert.seeText',
-          inputs: { label: litStr(args[0]), selector: litStr(args[1]), expected: valueFrom(args[2], ctx) }
-        }
-      }
-      // please.see() tanpa expected → getText (baca nilai, simpan ke var) — hanya dikenali via VariableDeclaration di atas
-      return null
+      const inputs = { label: litStr(args[0]), selector: litStr(args[1]) }
+      if (args[2] !== undefined) inputs.expected = valueFrom(args[2], ctx)
+      return { blockId: 'assert.see', inputs }
     }
 
     case 'wait':

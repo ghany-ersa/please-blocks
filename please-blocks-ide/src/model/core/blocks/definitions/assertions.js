@@ -10,39 +10,27 @@ const ASSERTION = { type: 'assertion', color: '#f59e0b', colorBg: 'rgba(245,158,
 export default [
   {
     ...ASSERTION,
-    id: 'assert.seeText',
-    label: 'See Text',
+    id: 'assert.see',
+    label: 'See',
     icon: '👁️',
-    description: 'Assert teks tertentu muncul pada element',
+    description: 'Baca atau assert teks element. Isi "Simpan ke variabel" dan/atau "Teks yang diharapkan" sesuai kebutuhan.',
+    output: null,
     inputs: [
-      t.label('pesan error'),
-      t.selector('#error'),
-      t.expected('Your username is invalid!', 'Teks yang diharapkan')
+      t.label('pesan'),
+      t.selector('#msg'),
+      { name: 'varName',  type: 'text',  label: 'Simpan ke variabel (opsional)',  placeholder: 'hasilText', required: false },
+      { name: 'expected', type: 'value', label: 'Teks yang diharapkan (opsional)', placeholder: 'Berhasil!', required: false }
     ],
     codegen(inputs) {
       const label    = resolveString(inputs.label)
       const selector = resolveString(inputs.selector)
-      const expected = resolveValue(inputs.expected)
-      return `await please.see(${label}, ${selector}, ${expected})`
+      const args     = inputs.expected ? `, ${resolveValue(inputs.expected)}` : ''
+      if (inputs.varName) {
+        return `const ${inputs.varName} = await please.see(${label}, ${selector}${args})`
+      }
+      return `await please.see(${label}, ${selector}${args})`
     },
-    validate: createValidator(v.selector(), v.expected('Teks yang diharapkan wajib diisi'))
-  },
-
-  {
-    ...ASSERTION,
-    id: 'assert.getText',
-    label: 'Read Text',
-    icon: '📖',
-    description: 'Baca teks dari element, simpan ke variabel',
-    output: 'text',
-    inputs: [t.label('header halaman'), t.selector('h1'), t.varName('headerText')],
-    codegen(inputs) {
-      const label    = resolveString(inputs.label)
-      const selector = resolveString(inputs.selector)
-      const varName  = inputs.varName || 'result'
-      return `const ${varName} = await please.see(${label}, ${selector})`
-    },
-    validate: createValidator(v.selector(), v.varName())
+    validate: createValidator(v.selector())
   },
 
   {
@@ -81,20 +69,4 @@ export default [
     validate: createValidator(v.actual(), v.expected('Nilai yang tidak diharapkan wajib diisi'))
   },
 
-  {
-    ...ASSERTION,
-    id: 'assert.fail',
-    label: 'Force Fail',
-    icon: '💥',
-    description: 'Gagalkan test secara eksplisit dengan custom message',
-    inputs: [
-      { name: 'message', type: 'text', label: 'Pesan kegagalan', placeholder: 'Test digagalkan karena...', required: false }
-    ],
-    codegen(inputs) {
-      return inputs.message
-        ? `throw new Error('${inputs.message}')`
-        : `throw new Error('Test digagalkan secara eksplisit')`
-    },
-    validate: (_inputs) => null
-  }
 ]
