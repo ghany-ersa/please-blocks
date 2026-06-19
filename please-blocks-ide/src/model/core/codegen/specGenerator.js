@@ -71,7 +71,7 @@ function generateTestCase(tc, blockRegistry, components) {
 
   // createApp destructure: { please, AUTH, ... }
   const appVars = ['please', ...components].join(', ')
-  const createAppLine = `        const { ${appVars} } = createApp(page)`
+  const createAppLine = `        const { ${appVars} } = createApp(page, test)`
 
   const body = stepLines.length
     ? [createAppLine, ...stepLines.map(indent)].join('\n')
