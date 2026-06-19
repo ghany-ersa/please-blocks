@@ -5,7 +5,7 @@ import { resolveValue } from './helpers.js'
 
 /**
  * URL Object schema yang diterima oleh blok navigasi.
- * Object harus memiliki kedua field ini agar please.goTo() / please.checkWhere() bisa berjalan.
+ * Object harus memiliki kedua field ini agar please.goto() / please.verifyPage() bisa berjalan.
  *
  * Contoh object yang valid:
  *   { url: 'https://...', title: 'Page Title...' }
@@ -24,9 +24,9 @@ const URL_SCHEMA = {
 
 export default [
   {
-    id:          'nav.goTo',
+    id:          'nav.goto',
     type:        'navigation',
-    label:       'Navigate To',
+    label:       'Go To',
     icon:        '🧭',
     color:       '#6366f1',
     colorBg:     'rgba(99,102,241,0.1)',
@@ -52,7 +52,7 @@ export default [
   },
 
   {
-    id:          'nav.checkWhere',
+    id:          'nav.verifyPage',
     type:        'navigation',
     label:       'Verify Page',
     icon:        '📍',

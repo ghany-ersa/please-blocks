@@ -108,7 +108,7 @@ describe('parseSpec — step mapping', () => {
     const src = `test.describe('F', () => { test('t', async ({ page }) => { const { please } = createApp(page); await please.goto(PAGE.login) }) })`
     const { features } = parse(src)
     const step = features[0].testCases[0].steps[0]
-    expect(step.blockId).toBe('nav.goTo')
+    expect(step.blockId).toBe('nav.goto')
     expect(step.inputs.urlTarget).toEqual({ type: 'dataref', path: 'PAGE.login' })
   })
 

@@ -117,8 +117,8 @@ describe('action.scrollTo — codegen', () => {
 
 // ── Navigation ────────────────────────────────────────────────────
 
-describe('nav.goTo — codegen', () => {
-  const b = block(navigation, 'nav.goTo')
+describe('nav.goto — codegen', () => {
+  const b = block(navigation, 'nav.goto')
 
   it('generates goto with dataref', () => {
     expect(b.codegen({ urlTarget: { type: 'dataref', path: 'PAGE.login' } }))
@@ -131,8 +131,8 @@ describe('nav.goTo — codegen', () => {
   })
 })
 
-describe('nav.goTo — validate', () => {
-  const b = block(navigation, 'nav.goTo')
+describe('nav.goto — validate', () => {
+  const b = block(navigation, 'nav.goto')
 
   it('returns error when urlTarget is missing', () => {
     expect(b.validate({ urlTarget: null })).toBeTruthy()
@@ -143,9 +143,9 @@ describe('nav.goTo — validate', () => {
   })
 })
 
-describe('nav.goTo — URL_SCHEMA errorMessage', () => {
-  // Akses schema dari input definition block nav.goTo
-  const b = block(navigation, 'nav.goTo')
+describe('nav.goto — URL_SCHEMA errorMessage', () => {
+  // Akses schema dari input definition block nav.goto
+  const b = block(navigation, 'nav.goto')
   const inputDef = b.inputs[0]  // urlTarget — satu-satunya input, punya schema
 
   const accountEntry = {
@@ -184,8 +184,8 @@ describe('nav.goTo — URL_SCHEMA errorMessage', () => {
   })
 })
 
-describe('nav.checkWhere — codegen', () => {
-  const b = block(navigation, 'nav.checkWhere')
+describe('nav.verifyPage — codegen', () => {
+  const b = block(navigation, 'nav.verifyPage')
 
   it('generates verifyPage with dataref', () => {
     expect(b.codegen({ urlExpected: { type: 'dataref', path: 'PAGE.dashboard' } }))

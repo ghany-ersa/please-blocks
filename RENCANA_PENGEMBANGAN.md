@@ -238,14 +238,14 @@ Setiap blok didefinisikan sebagai objek JavaScript dengan struktur berikut:
 #### Navigation
 | Blok | Method | Deskripsi |
 |---|---|---|
-| Navigate To | `please.goTo(urlObj)` | Buka URL + assert URL & title otomatis |
-| Verify Page | `please.checkWhere(urlObj)` | Assert URL dan title halaman saat ini |
+| Go To | `please.goto(urlObj)` | Buka URL + assert URL & title otomatis |
+| Verify Page | `please.verifyPage(urlObj)` | Assert URL dan title halaman saat ini |
 
 #### Actions
 | Blok | Method | Deskripsi |
 |---|---|---|
 | Click | `please.click(label, selector, wait?)` | Klik element |
-| Fill Input | `please.fill(label, selector, value)` | Isi field |
+| Fill | `please.fill(label, selector, value)` | Isi field |
 | Fill & Enter | `please.fillAndEnter(label, selector, value)` | Isi field + tekan Enter |
 | Clear Input | `please.clear(label, selector)` | Kosongkan field |
 | Date Picker | `please.datepicker(label, selector, value)` | Isi input date |

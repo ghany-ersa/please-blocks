@@ -105,10 +105,10 @@ describe('parseComponentFile — steps dalam method', () => {
     expect(component.methods[0].steps[0].blockId).toBe('action.fill')
   })
 
-  it('step terakhir adalah nav.checkWhere (verifyPage)', () => {
+  it('step terakhir adalah nav.verifyPage (verifyPage)', () => {
     const { component } = parseComponentFile(src)
     const steps = component.methods[0].steps
-    expect(steps[steps.length - 1].blockId).toBe('nav.checkWhere')
+    expect(steps[steps.length - 1].blockId).toBe('nav.verifyPage')
   })
 })
 

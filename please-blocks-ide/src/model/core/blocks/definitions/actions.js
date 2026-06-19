@@ -22,7 +22,7 @@ export default [
   {
     ...ACTION,
     id: 'action.fill',
-    label: 'Fill Input',
+    label: 'Fill',
     icon: '⌨️',
     description: 'Isi field dengan nilai tertentu',
     inputs: [t.label('input username'), t.selector('label=Username'), t.value('student')],

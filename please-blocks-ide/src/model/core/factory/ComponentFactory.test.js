@@ -260,7 +260,7 @@ describe('generateComponentFile — dengan require data', () => {
         name: 'goHome',
         params: [],
         steps: [
-          { blockId: 'nav.goTo', inputs: { urlTarget: { type: 'dataref', path: 'URL.home' } } }
+          { blockId: 'nav.goto', inputs: { urlTarget: { type: 'dataref', path: 'URL.home' } } }
         ]
       }
     ]
@@ -272,8 +272,8 @@ describe('generateComponentFile — dengan require data', () => {
 
   it('menghasilkan require data yang dipakai', () => {
     const blockReg = {
-      getById: (id) => id === 'nav.goTo'
-        ? { id, codegen: (inp) => `await please.goTo(${inp.urlTarget?.path ?? inp.urlTarget})` }
+      getById: (id) => id === 'nav.goto'
+        ? { id, codegen: (inp) => `await please.goto(${inp.urlTarget?.path ?? inp.urlTarget})` }
         : null
     }
     const code = generateComponentFile(comp, blockReg, dataEntries)

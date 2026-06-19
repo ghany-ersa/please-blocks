@@ -60,7 +60,9 @@ const DEFAULT_FILES = {
 const DEFAULT_ENV = {
   BASE_URL:         'https://practicetestautomation.com',
   ACCOUNT_USERNAME: 'student',
-  ACCOUNT_PASSWORD: 'Password123'
+  ACCOUNT_PASSWORD: 'Password123',
+  HEADLESS:         'true',
+  BROWSER:          'chromium'
 }
 
 const uid = () => `file-${Date.now()}-${Math.random().toString(36).slice(2,5)}`

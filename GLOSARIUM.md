@@ -82,7 +82,7 @@ Unit terkecil dalam Please Blocks. Merepresentasikan satu langkah/aksi dalam tes
 ### Block ID
 Identifier unik untuk setiap jenis blok. Menggunakan format `kategori.nama`.
 
-Contoh: `action.click`, `nav.goTo`, `assert.seeText`, `comp.auth.login`
+Contoh: `action.click`, `nav.goto`, `assert.seeText`, `comp.auth.login`
 
 ### Block Definition
 Objek JavaScript yang mendefinisikan sebuah blok secara lengkap:
@@ -124,8 +124,8 @@ Panel kanan IDE. Tampil ketika sebuah step dipilih di canvas. Digunakan QA untuk
 
 | Kategori | Warna | Blok yang Tersedia |
 |---|---|---|
-| Navigation | Biru | Navigate To, Verify Page |
-| Actions | Hijau | Click, Fill Input, Fill & Enter, Clear Input, Date Picker, Upload File, Scroll To |
+| Navigation | Biru | Go To, Verify Page |
+| Actions | Hijau | Click, Fill, Fill & Enter, Clear Input, Date Picker, Upload File, Scroll To |
 | Assertions | Merah | See Text, Assert Equal, Assert Not Equal, Get Text, Get Value, Force Fail |
 | Utilities | Abu-abu | Wait |
 | Components | Ungu | Dinamis, sesuai component yang dibuat |

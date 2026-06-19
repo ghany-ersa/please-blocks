@@ -89,7 +89,7 @@ function blockLabel(blockId) {
             v-model="source"
             class="source-input"
             spellcheck="false"
-            placeholder="describe('Login', () => {&#10;  it('login berhasil', async () => {&#10;    await please.goTo(URL.login)&#10;  })&#10;})"
+            placeholder="describe('Login', () => {&#10;  it('login berhasil', async () => {&#10;    await please.goto(URL.login)&#10;  })&#10;})"
           ></textarea>
         </div>
 

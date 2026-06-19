@@ -95,9 +95,9 @@ export function parseBodyStatements(body, ctx) {
 function mapPleaseMethod({ method, args }, ctx) {
   switch (method) {
     case 'goto':
-      return { blockId: 'nav.goTo', inputs: { urlTarget: valueFrom(args[0], ctx) } }
+      return { blockId: 'nav.goto', inputs: { urlTarget: valueFrom(args[0], ctx) } }
     case 'verifyPage':
-      return { blockId: 'nav.checkWhere', inputs: { urlExpected: valueFrom(args[0], ctx) } }
+      return { blockId: 'nav.verifyPage', inputs: { urlExpected: valueFrom(args[0], ctx) } }
 
     case 'click':
     case 'scrollTo':

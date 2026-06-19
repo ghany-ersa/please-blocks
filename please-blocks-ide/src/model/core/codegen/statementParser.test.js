@@ -146,14 +146,14 @@ describe('parseStatementToStep — navigation', () => {
   it('memetakan please.goto dengan dataref', () => {
     const src = 'await please.goto(PAGE.login)'
     const step = parseStatementToStep(stmtOf(src), makeCtx({ source: src }))
-    expect(step.blockId).toBe('nav.goTo')
+    expect(step.blockId).toBe('nav.goto')
     expect(step.inputs.urlTarget).toEqual({ type: 'dataref', path: 'PAGE.login' })
   })
 
   it('memetakan please.verifyPage', () => {
     const src = 'await please.verifyPage(PAGE.dashboard)'
     const step = parseStatementToStep(stmtOf(src), makeCtx({ source: src }))
-    expect(step.blockId).toBe('nav.checkWhere')
+    expect(step.blockId).toBe('nav.verifyPage')
     expect(step.inputs.urlExpected).toEqual({ type: 'dataref', path: 'PAGE.dashboard' })
   })
 })
@@ -243,7 +243,7 @@ describe('parseBodyStatements', () => {
     const body = ast.program.body
     const steps = parseBodyStatements(body, makeCtx({ source: src }))
     expect(steps).toHaveLength(3)
-    expect(steps[0].blockId).toBe('nav.goTo')
+    expect(steps[0].blockId).toBe('nav.goto')
     expect(steps[1].blockId).toBe('action.fill')
     expect(steps[2].blockId).toBe('action.click')
   })

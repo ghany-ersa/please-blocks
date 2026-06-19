@@ -14,7 +14,7 @@ const clickBlock = {
 }
 
 const navBlock = {
-  id: 'nav.goTo',
+  id: 'nav.goto',
   inputs: [
     {
       name: 'urlTarget', type: 'dataref', label: 'URL target', required: true,
@@ -28,7 +28,7 @@ const navBlock = {
 }
 
 const registry = {
-  getById: (id) => ({ 'action.click': clickBlock, 'nav.goTo': navBlock }[id] ?? null)
+  getById: (id) => ({ 'action.click': clickBlock, 'nav.goto': navBlock }[id] ?? null)
 }
 
 const urlEntry = { path: 'URL.login', type: 'object', fields: ['url', 'title'] }

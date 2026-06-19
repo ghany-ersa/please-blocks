@@ -74,10 +74,10 @@ function toggleExpand() {
 // Preview nilai utama untuk collapsed header
 const preview = computed(() => {
   const inp = props.step.inputs || {}
-  if (inp.selector)          return inp.selector
+  if (inp.label)             return inp.label
   if (inp.urlTarget?.path)   return inp.urlTarget.path
   if (inp.urlExpected?.path) return inp.urlExpected.path
-  if (inp.label)             return inp.label
+  if (inp.selector)          return inp.selector
   const first = Object.values(inp).find(v => v && typeof v !== 'object')
   return first ? String(first) : ''
 })

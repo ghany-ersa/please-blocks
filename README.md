@@ -20,9 +20,9 @@ QA engineers struggle to write automated test scripts because they need to:
 Arrange blocks → get working test code. No JavaScript knowledge required.
 
 ```
-[Navigate To: URL.login]
-[Fill Input: "Username" · #username · ACCOUNT.valid.username]
-[Fill Input: "Password" · #password · ACCOUNT.valid.password]
+[Go To: URL.login]
+[Fill: "Username" · #username · ACCOUNT.valid.username]
+[Fill: "Password" · #password · ACCOUNT.valid.password]
 [Click: "Login Button" · button[type=submit]]
 [See Text: "Welcome" · .dashboard-header]
 ```
@@ -35,7 +35,7 @@ const { URL, ACCOUNT } = require('../data/main')
 
 describe('Login', () => {
   it('login berhasil', async () => {
-    await please.goTo(URL.login)
+    await please.goto(URL.login)
     await please.fill('Username', '#username', ACCOUNT.valid.username)
     await please.fill('Password', '#password', ACCOUNT.valid.password)
     await please.click('Login Button', 'button[type=submit]')
@@ -92,8 +92,8 @@ Please Blocks IDE (Electron + Vue 3)
 
 | Category | Blocks |
 |---|---|
-| Navigation | Navigate To, Verify Page |
-| Actions | Click, Fill Input, Fill & Enter, Clear, Date Picker, Upload File, Scroll To |
+| Navigation | Go To, Verify Page |
+| Actions | Click, Fill, Fill & Enter, Clear, Date Picker, Upload File, Scroll To |
 | Assertions | See Text, Assert Equal, Assert Not Equal, Get Text, Get Value, Force Fail |
 | Flow | Feature (`describe`), Test Case (`it`) |
 | Utilities | Wait |

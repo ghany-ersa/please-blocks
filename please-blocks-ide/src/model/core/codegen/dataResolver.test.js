@@ -33,7 +33,7 @@ describe('collectImportsPerFile — tanpa dataref', () => {
 describe('collectImportsPerFile — satu file', () => {
   const feature = makeFeature([
     makeStep('action.fill', { value: { type: 'dataref', path: 'ACCOUNT.valid' } }),
-    makeStep('nav.goTo',    { urlTarget: { type: 'dataref', path: 'URL.login' } })
+    makeStep('nav.goto',    { urlTarget: { type: 'dataref', path: 'URL.login' } })
   ])
 
   const result = collectImportsPerFile(feature, dataEntries)
@@ -47,8 +47,8 @@ describe('collectImportsPerFile — satu file', () => {
 
   it('tidak duplikat group yang sama', () => {
     const feature2 = makeFeature([
-      makeStep('nav.goTo',       { urlTarget:  { type: 'dataref', path: 'URL.login'     } }),
-      makeStep('nav.checkWhere', { urlExpected: { type: 'dataref', path: 'URL.dashboard' } })
+      makeStep('nav.goto',       { urlTarget:  { type: 'dataref', path: 'URL.login'     } }),
+      makeStep('nav.verifyPage', { urlExpected: { type: 'dataref', path: 'URL.dashboard' } })
     ])
     const r = collectImportsPerFile(feature2, dataEntries)
     expect(r.main.groups.filter(g => g === 'URL')).toHaveLength(1)
@@ -77,7 +77,7 @@ describe('collectImportsPerFile — multi file', () => {
 describe('collectImportsPerFile — path tidak ada di entries', () => {
   it('mengabaikan dataref yang tidak ada di registry', () => {
     const feature = makeFeature([
-      makeStep('nav.goTo', { urlTarget: { type: 'dataref', path: 'URL.unknown' } })
+      makeStep('nav.goto', { urlTarget: { type: 'dataref', path: 'URL.unknown' } })
     ])
     const result = collectImportsPerFile(feature, dataEntries)
     expect(Object.keys(result)).toHaveLength(0)
