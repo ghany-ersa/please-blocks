@@ -12,7 +12,7 @@ export default [
     description: 'Tunggu elemen muncul di halaman (default 20 detik)',
     inputs: [
       { name: 'label',    type: 'text',     label: 'Label',      placeholder: 'loading spinner', required: true },
-      { name: 'selector', type: 'selector', label: 'Selector',   placeholder: '.spinner',         required: true },
+      { name: 'selector', type: 'selector', label: 'Selector',   placeholder: 'role=progressbar', required: true },
       { name: 'time',     type: 'number',   label: 'Timeout (ms)', placeholder: '20000',          required: false }
     ],
     codegen(inputs) {

@@ -17,7 +17,7 @@ export default [
     output: null,
     inputs: [
       t.label('pesan'),
-      t.selector('#msg'),
+      t.selector('h1'),
       { name: 'varName',  type: 'text',  label: 'Simpan ke variabel (opsional)',  placeholder: 'hasilText', required: false },
       { name: 'expected', type: 'value', label: 'Teks yang diharapkan (opsional)', placeholder: 'Berhasil!', required: false }
     ],

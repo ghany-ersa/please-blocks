@@ -14,7 +14,7 @@ export default [
     label: 'Click',
     icon: '🖱️',
     description: 'Klik element di halaman',
-    inputs: [t.label('button submit'), t.selector('#submit'), t.wait()],
+    inputs: [t.label('button submit'), t.selector('button=Submit'), t.wait()],
     codegen: codegenLabelSelector('click', 'wait'),
     validate: createValidator(v.selector())
   },
@@ -25,7 +25,7 @@ export default [
     label: 'Fill Input',
     icon: '⌨️',
     description: 'Isi field dengan nilai tertentu',
-    inputs: [t.label('input username'), t.selector('#username'), t.value('student')],
+    inputs: [t.label('input username'), t.selector('label=Username'), t.value('student')],
     codegen: codegenLabelSelectorValue('fill'),
     validate: createValidator(v.selector(), v.value())
   },
@@ -36,7 +36,7 @@ export default [
     label: 'Fill & Enter',
     icon: '⏎',
     description: 'Isi field lalu tekan Enter',
-    inputs: [t.label('input search'), t.selector('#search'), t.value('kata kunci')],
+    inputs: [t.label('input search'), t.selector('label=Search'), t.value('kata kunci')],
     codegen: codegenLabelSelectorValue('fillAndEnter'),
     validate: createValidator(v.selector(), v.value())
   },
@@ -47,7 +47,7 @@ export default [
     label: 'Clear Input',
     icon: '🗑️',
     description: 'Kosongkan nilai dari sebuah input field',
-    inputs: [t.label('input username'), t.selector('#username')],
+    inputs: [t.label('input username'), t.selector('label=Username')],
     codegen: codegenLabelSelector('clear'),
     validate: createValidator(v.selector())
   },
@@ -58,7 +58,7 @@ export default [
     label: 'Date Picker',
     icon: '📅',
     description: 'Isi input date picker dengan format tanggal',
-    inputs: [t.label('input tanggal lahir'), t.selector('#birthdate'), t.value('2000-01-01', 'Tanggal')],
+    inputs: [t.label('input tanggal lahir'), t.selector('label=Tanggal Lahir'), t.value('2000-01-01', 'Tanggal')],
     codegen: codegenLabelSelectorValue('datepicker'),
     validate: createValidator(v.selector(), (inputs) => inputs.value ? null : 'Tanggal wajib diisi')
   },
@@ -71,7 +71,7 @@ export default [
     description: 'Upload file ke input type=file',
     inputs: [
       t.label('input upload foto'),
-      t.selector('input[type=file]'),
+      t.selector('role=button[name=Upload]'),
       { name: 'path', type: 'value', label: 'Path file', placeholder: '/path/to/file.jpg', required: true }
     ],
     codegen: codegenLabelSelectorValue('uploadFile', 'path'),
@@ -84,7 +84,7 @@ export default [
     label: 'Scroll To',
     icon: '📜',
     description: 'Scroll halaman ke posisi element',
-    inputs: [t.label('tombol submit'), t.selector('#submit')],
+    inputs: [t.label('tombol submit'), t.selector('button=Submit')],
     codegen: codegenLabelSelector('scrollTo'),
     validate: createValidator(v.selector())
   }
