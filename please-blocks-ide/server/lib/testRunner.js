@@ -170,7 +170,7 @@ export async function startRun(runId, projectPath, browser = 'chrome') {
   })
 
   proc.on('error', (err) => {
-    send('log', { level: 'fail', text: `Gagal menjalankan mocha: ${err.message}` })
+    send('log', { level: 'fail', text: `Gagal menjalankan playwright: ${err.message}` })
     send('log', { level: 'warn', text: 'Pastikan node_modules sudah terinstall di folder project (npm install)' })
     send('done', { exitCode: 1, time: Date.now() })
   })

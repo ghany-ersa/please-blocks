@@ -234,7 +234,7 @@ export const useRunnerStore = defineStore('runner', {
      * @param {Array}  files       - hasil exportProject()
      * @param {string} projectPath - absolute path folder project
      */
-    async runReal(files, projectPath) {
+    async runReal(files, projectPath, features = []) {
       if (this.status === 'running') return
       this.clearLogs()
       this.status      = 'running'
@@ -245,9 +245,15 @@ export const useRunnerStore = defineStore('runner', {
 
       this._addLog('info', `📁 Project: ${projectPath}`)
 
-      // Parse statistik dari log mocha secara real-time
-      const tcPassed = new Set()
-      const tcFailed = new Set()
+      // Bangun index label → tcId agar bisa mengisi tcResults dari log Playwright
+      // Format Playwright list: "✓  [chromium] › Feature › TC label (123ms)"
+      //                         "✗  [chromium] › Feature › TC label (123ms)"
+      const labelToId = {}
+      for (const f of features) {
+        for (const tc of f.testCases) {
+          if (tc.label) labelToId[tc.label.trim()] = tc.id
+        }
+      }
 
       const handle = await startRealRun({
         projectPath,
@@ -257,29 +263,42 @@ export const useRunnerStore = defineStore('runner', {
         onLog: ({ level, text }) => {
           this._addLog(level, text)
 
-          // Parse "N passing" dari mocha spec reporter
-          const passMatch = text.match(/(\d+) passing/)
+          // Parse "N passed" / "N failed" dari Playwright summary line
+          // Format: "  3 passed (5s)" atau "  1 failed"
+          const passMatch = text.match(/(\d+)\s+passed/)
           if (passMatch) this.stats.passed = parseInt(passMatch[1])
 
-          const failMatch = text.match(/(\d+) failing/)
+          const failMatch = text.match(/(\d+)\s+failed/)
           if (failMatch) this.stats.failed = parseInt(failMatch[1])
 
-          const pendingMatch = text.match(/(\d+) pending/)
-          if (pendingMatch) this.stats.skipped = parseInt(pendingMatch[1])
+          const skipMatch = text.match(/(\d+)\s+skipped/)
+          if (skipMatch) this.stats.skipped = parseInt(skipMatch[1])
 
-          // Deteksi baris "✓ nama test"
-          const passLine = text.match(/^\s+✓\s+(.+?)(?:\s+\(\d+ms\))?$/)
-          if (passLine) tcPassed.add(passLine[1].trim())
+          // Playwright list reporter — baris pass: "  ✓  [browser] › Feature › TC label (Xms)"
+          const passLine = text.match(/[✓✔]\s+(?:\[\w+\]\s+›\s+.+?\s+›\s+)?(.+?)(?:\s+\(\d+(?:\.\d+)?(?:ms|s)\))?$/)
+          if (passLine) {
+            // Ambil bagian paling akhir setelah " › " (nama TC)
+            const parts = passLine[1].split('›')
+            const tcLabel = (parts[parts.length - 1] || passLine[1]).trim()
+            const tcId = labelToId[tcLabel]
+            if (tcId) this.tcResults[tcId] = 'pass'
+          }
 
-          // Deteksi baris "N) nama test"
-          const failLine = text.match(/^\s+\d+\)\s+(.+)$/)
-          if (failLine) tcFailed.add(failLine[1].trim())
+          // Playwright list reporter — baris fail: "  ✘  [browser] › Feature › TC label (Xms)"
+          const failLine = text.match(/[✘✗×]\s+(?:\[\w+\]\s+›\s+.+?\s+›\s+)?(.+?)(?:\s+\(\d+(?:\.\d+)?(?:ms|s)\))?$/)
+          if (failLine) {
+            const parts = failLine[1].split('›')
+            const tcLabel = (parts[parts.length - 1] || failLine[1]).trim()
+            const tcId = labelToId[tcLabel]
+            if (tcId) this.tcResults[tcId] = 'fail'
+          }
         },
 
         onDone: ({ exitCode }) => {
           this.stats.duration = Date.now() - startTime
           this.stats.total    = this.stats.passed + this.stats.failed + this.stats.skipped
 
+          // TC yang tidak ter-detect dari log → tetap pending, tidak dihitung ulang
           this._addLog('info', '')
           this._addLog(
             this.stats.failed > 0 ? 'fail' : 'pass',

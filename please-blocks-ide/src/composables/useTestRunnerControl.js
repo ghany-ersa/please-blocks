@@ -28,7 +28,7 @@ export function useTestRunnerControl() {
     runner.open()
     if (runner.canRunReal) {
       const files = exportProject(canvas, registry, dataReg, compStore, runner.projectName)
-      runner.runReal(files, runner.projectPath)
+      runner.runReal(files, runner.projectPath, canvas.features)
     } else {
       runner.runSimulation(canvas.features, registry, dataReg.entries)
     }
