@@ -6,7 +6,7 @@ const props = defineProps({
   category: { type: Object, required: true }  // { id, meta, blocks[] }
 })
 
-const COLLAPSED_BY_DEFAULT = new Set(['assertion', 'utility'])
+const COLLAPSED_BY_DEFAULT = new Set(['utility'])
 const open = ref(!COLLAPSED_BY_DEFAULT.has(props.category.id))
 </script>
 
