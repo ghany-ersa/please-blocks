@@ -76,7 +76,28 @@ function matchCallExpr(expr, ctx) {
   if (pleaseCall) return mapPleaseMethod(pleaseCall, ctx)
 
   // Component call: await AUTH.login(ACCOUNT.valid)
-  return matchComponentCall(expr, ctx)
+  const componentCall = matchComponentCall(expr, ctx)
+  if (componentCall) return componentCall
+
+  // Self-call bare (function-based): await login(email, password)
+  return matchBareSelfCall(expr, ctx)
+}
+
+/**
+ * login(...args) → { blockId } jika 'login' adalah method sekelas
+ * (dipakai saat mem-parse body method dalam factory function component,
+ * di mana pemanggilan sekelas tidak memakai this/EXPORTNAME).
+ */
+function matchBareSelfCall(expr, ctx) {
+  if (!isCall(expr) || expr.callee?.type !== 'Identifier') return null
+  const methodName = expr.callee.name
+  if (!ctx.selfMethodNames?.has(methodName)) return null
+  if (!ctx.selfPrefix) return null
+
+  const blockId = `${ctx.selfPrefix}.${methodName}`
+  const inputs = {}
+  expr.arguments.forEach((a, i) => { inputs[`arg${i}`] = valueFrom(a, ctx) })
+  return { blockId, inputs }
 }
 
 /**

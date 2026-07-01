@@ -131,7 +131,7 @@ function generateAppFile(compNames, compExports) {
     lines.push(`        please,`)
     for (let i = 0; i < compNames.length; i++) {
       const comma = i < compNames.length - 1 ? ',' : ''
-      lines.push(`        ${compExports[i]}: new ${compNames[i]}Component(please)${comma}`)
+      lines.push(`        ${compExports[i]}: ${compNames[i]}Component(please)${comma}`)
     }
     lines.push(`    }`)
   }

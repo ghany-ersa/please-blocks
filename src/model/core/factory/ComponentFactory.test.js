@@ -106,13 +106,12 @@ describe('buildComponentBlocks — validate', () => {
 describe('generateComponentFile — struktur file', () => {
   const code = generateComponentFile(authComp)
 
-  it('mengandung deklarasi class', () => {
-    expect(code).toContain('class Auth {')
+  it('mengandung deklarasi factory function', () => {
+    expect(code).toContain('function Auth(please) {')
   })
 
-  it('constructor menerima please dan assign ke this.please', () => {
-    expect(code).toContain('constructor(please)')
-    expect(code).toContain('this.please = please')
+  it('return object literal berisi method', () => {
+    expect(code).toContain('return {')
   })
 
   it('mengandung async method', () => {
@@ -153,11 +152,11 @@ describe('generateComponentFile — dengan steps', () => {
     }
   }
 
-  it('menghasilkan kode step di dalam method dengan this.please', () => {
+  it('menghasilkan kode step di dalam method dengan please langsung', () => {
     const code = generateComponentFile(comp, blockReg)
-    expect(code).toContain("await this.please.fill('email', '#email', email)")
-    expect(code).toContain("await this.please.fill('password', '#password', password)")
-    expect(code).toContain("await this.please.click('submit', '#submit')")
+    expect(code).toContain("await please.fill('email', '#email', email)")
+    expect(code).toContain("await please.fill('password', '#password', password)")
+    expect(code).toContain("await please.click('submit', '#submit')")
   })
 })
 
@@ -201,8 +200,8 @@ describe('generateComponentFile — sibling component (nested)', () => {
     expect(code).toContain("require('./checkout')")
   })
 
-  it('instansiasi sibling di constructor sebagai this.EXPORTNAME', () => {
-    expect(code).toContain('this.CHECKOUT = new Checkout(please)')
+  it('instansiasi sibling sebagai const lokal di closure', () => {
+    expect(code).toContain('const CHECKOUT = Checkout(please)')
   })
 
   it('tidak ada module-level let variable', () => {
@@ -210,12 +209,12 @@ describe('generateComponentFile — sibling component (nested)', () => {
     expect(code).not.toContain('let CHECKOUT')
   })
 
-  it('pemanggilan sibling di method menggunakan this.EXPORTNAME', () => {
-    expect(code).toContain('await this.CHECKOUT.order(')
+  it('pemanggilan sibling di method menggunakan EXPORTNAME langsung', () => {
+    expect(code).toContain('await CHECKOUT.order(')
   })
 
-  it('please.* di step non-sibling tetap jadi this.please.*', () => {
-    expect(code).toContain("await this.please.click('add', '#add')")
+  it('please.* di step non-sibling tetap bare please.*', () => {
+    expect(code).toContain("await please.click('add', '#add')")
   })
 })
 
@@ -243,10 +242,10 @@ describe('generateComponentFile — self-call (method sekelas)', () => {
       : null
   }
 
-  it('pemanggilan method sekelas menggunakan this.method() bukan this.AUTH.login()', () => {
+  it('pemanggilan method sekelas menggunakan login() langsung bukan AUTH.login()', () => {
     const code = generateComponentFile(authComp2, blockReg)
-    expect(code).toContain('await this.login()')
-    expect(code).not.toContain('await this.AUTH.login()')
+    expect(code).toContain('await login()')
+    expect(code).not.toContain('await AUTH.login()')
   })
 })
 

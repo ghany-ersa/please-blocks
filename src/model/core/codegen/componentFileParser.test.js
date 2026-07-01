@@ -151,3 +151,94 @@ describe('parseComponentFile — multiple class', () => {
     expect(warnings.some(w => w.includes('2 class'))).toBe(true)
   })
 })
+
+// ── Parse struktur function-based (factory) ─────────────────────────
+
+describe('parseComponentFile — struktur function-based', () => {
+  const fnSrc = `
+    function Auth(please) {
+      return {
+        async login(email, password) {
+          await please.fill('input email', '#email', email)
+          await please.click('button login', '//button[@type="submit"]')
+        },
+        async logout() {
+          await please.click('menu profil', '.user-menu')
+        }
+      }
+    }
+    module.exports = Auth
+  `
+
+  it('menghasilkan component object', () => {
+    const { component, warnings } = parseComponentFile(fnSrc)
+    expect(component).not.toBeNull()
+    expect(warnings).toHaveLength(0)
+  })
+
+  it('name dari nama function', () => {
+    const { component } = parseComponentFile(fnSrc)
+    expect(component.name).toBe('Auth')
+  })
+
+  it('exportName adalah uppercase dari name', () => {
+    const { component } = parseComponentFile(fnSrc)
+    expect(component.exportName).toBe('AUTH')
+  })
+
+  it('menghasilkan semua method dari object literal return', () => {
+    const { component } = parseComponentFile(fnSrc)
+    const names = component.methods.map(m => m.name)
+    expect(names).toContain('login')
+    expect(names).toContain('logout')
+  })
+
+  it('params method dipetakan dengan benar', () => {
+    const { component } = parseComponentFile(fnSrc)
+    const login = component.methods.find(m => m.name === 'login')
+    expect(login.params).toEqual(['email', 'password'])
+  })
+
+  it('steps dari body method di-parse (please.* bare)', () => {
+    const { component } = parseComponentFile(fnSrc)
+    const login = component.methods.find(m => m.name === 'login')
+    expect(login.steps[0].blockId).toBe('action.fill')
+    expect(login.steps[1].blockId).toBe('action.click')
+  })
+})
+
+describe('parseComponentFile — function-based self-call resolusi', () => {
+  const src = `
+    function Auth(please) {
+      return {
+        async loginAndVerify(email, password) {
+          await login(email, password)
+          await please.verifyPage(PAGE.dashboard)
+        },
+        async login(email, password) {
+          await please.fill('email', '#email', email)
+        }
+      }
+    }
+    module.exports = Auth
+  `
+
+  it('bare self-call login() dipetakan ke comp.auth.login', () => {
+    const { component } = parseComponentFile(src)
+    const step = component.methods.find(m => m.name === 'loginAndVerify').steps[0]
+    expect(step.blockId).toBe('comp.auth.login')
+  })
+})
+
+describe('parseComponentFile — multiple function', () => {
+  it('hanya mengimpor function pertama dan memberi warning', () => {
+    const src = `
+      function A(m) { return { async doA() {} } }
+      function B(m) { return { async doB() {} } }
+      module.exports = A
+    `
+    const { component, warnings } = parseComponentFile(src)
+    expect(component.name).toBe('A')
+    expect(warnings.some(w => w.includes('2 function'))).toBe(true)
+  })
+})

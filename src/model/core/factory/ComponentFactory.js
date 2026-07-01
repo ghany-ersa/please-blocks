@@ -157,20 +157,20 @@ export function generateComponentFile(compDef, blockRegistry = null, dataEntries
     const requirePath = `../${filePath.replace(/\.js$/, '')}`
     lines.push(`const { ${groups.join(', ')} } = require('${requirePath}')`)
   }
-  // require class sibling
+  // require function sibling
   for (const s of siblings) lines.push(`const ${s.className} = require('./${s.fileName}')`)
 
   lines.push(``)
-  lines.push(`class ${compDef.name} {`)
-  lines.push(`    constructor(please) {`)
-  lines.push(`        this.please = please`)
-  // Sibling component disimpan di this.<EXPORTNAME>
-  for (const s of siblings) lines.push(`        this.${s.exportName} = new ${s.className}(please)`)
-  lines.push(`    }`)
+  lines.push(`function ${compDef.name}(please) {`)
+  // Sibling component disimpan sebagai const lokal di closure
+  for (const s of siblings) lines.push(`    const ${s.exportName} = ${s.className}(please)`)
+  lines.push(`    return {`)
 
-  for (const method of compDef.methods) {
+  for (let i = 0; i < compDef.methods.length; i++) {
+    const method = compDef.methods[i]
     const params = method.params.join(', ')
-    lines.push(``, `    async ${method.name}(${params}) {`)
+    const comma = i < compDef.methods.length - 1 ? ',' : ''
+    lines.push(``, `        async ${method.name}(${params}) {`)
 
     if (method.steps?.length && blockRegistry) {
       for (const step of method.steps) {
@@ -178,38 +178,32 @@ export function generateComponentFile(compDef, blockRegistry = null, dataEntries
         if (block) {
           try {
             let code = block.codegen(step.inputs || {})
-            // please.* → this.please.*
-            code = code.replace(/\bplease\./g, 'this.please.')
-            // Method sekelas: EXPORTNAME.method() → this.method()
+            // this.please.* (fallback lama) → please.*
+            code = code.replace(/\bthis\.please\./g, 'please.')
+            // Method sekelas: EXPORTNAME.method() → method() langsung
             if (`comp.${String(step.blockId).split('.')[1]}` === ownPrefix) {
-              code = code.replace(/^await\s+[A-Z][A-Za-z0-9_]*\./, 'await this.')
-            } else {
-              // Sibling component: EXPORTNAME.method() → this.EXPORTNAME.method()
-              for (const s of siblings) {
-                code = code.replace(
-                  new RegExp(`\\bawait\\s+${s.exportName}\\.`),
-                  `await this.${s.exportName}.`
-                )
-              }
+              code = code.replace(/^await\s+[A-Z][A-Za-z0-9_]*\./, 'await ')
             }
-            lines.push(`        ${code}`)
+            // Sibling component: EXPORTNAME.method() sudah benar (closure const)
+            lines.push(`            ${code}`)
           } catch {
-            lines.push(`        // [!] error pada step: ${step.blockId}`)
+            lines.push(`            // [!] error pada step: ${step.blockId}`)
           }
         }
       }
     } else if (method.steps?.length) {
       // blockRegistry tidak tersedia — fallback placeholder per step
       for (const step of method.steps) {
-        lines.push(`        // step: ${step.blockId}`)
+        lines.push(`            // step: ${step.blockId}`)
       }
     } else {
-      lines.push(`        // TODO: implementasi`)
+      lines.push(`            // TODO: implementasi`)
     }
 
-    lines.push(`    }`)
+    lines.push(`        }${comma}`)
   }
 
+  lines.push(`    }`)
   lines.push(`}`, ``, `module.exports = ${compDef.name}`)
   return lines.join('\n')
 }

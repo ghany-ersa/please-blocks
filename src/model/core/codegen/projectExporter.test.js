@@ -74,8 +74,10 @@ describe('exportProject — app.js (dengan component)', () => {
   })
 
   it('instansiasi component dengan please', () => {
-    expect(app.content).toContain('new AuthComponent(please)')
-    expect(app.content).toContain('new CheckoutComponent(please)')
+    expect(app.content).toContain('AuthComponent(please)')
+    expect(app.content).toContain('CheckoutComponent(please)')
+    expect(app.content).not.toContain('new AuthComponent')
+    expect(app.content).not.toContain('new CheckoutComponent')
   })
 
   it('export AUTH dan CHECKOUT', () => {
