@@ -55,22 +55,28 @@ export function parseStatementToStep(stmt, ctx) {
     return rawStep(stmt, ctx, note)
   }
 
-  if (stmt.type !== 'ExpressionStatement') return rawStep(stmt, ctx, note)
-
-  const expr = unwrapAwait(stmt.expression)
-
-  const pleaseCall = matchPleaseCall(expr)
-  if (pleaseCall) {
-    const step = mapPleaseMethod(pleaseCall, ctx)
+  // return this.please.see(...) / return this.someHelper(...) — umum di body method component
+  if (stmt.type === 'ReturnStatement') {
+    const step = matchCallExpr(unwrapAwait(stmt.argument), ctx)
     if (step) return withNote(note, step)
     return rawStep(stmt, ctx, note)
   }
 
-  // Component call: await AUTH.login(ACCOUNT.valid)
-  const compStep = matchComponentCall(expr, ctx)
-  if (compStep) return withNote(note, compStep)
+  if (stmt.type !== 'ExpressionStatement') return rawStep(stmt, ctx, note)
+
+  const step = matchCallExpr(unwrapAwait(stmt.expression), ctx)
+  if (step) return withNote(note, step)
 
   return rawStep(stmt, ctx, note)
+}
+
+/** please.METHOD(...) atau component-call(...) → step, atau null jika tak dikenal. */
+function matchCallExpr(expr, ctx) {
+  const pleaseCall = matchPleaseCall(expr)
+  if (pleaseCall) return mapPleaseMethod(pleaseCall, ctx)
+
+  // Component call: await AUTH.login(ACCOUNT.valid)
+  return matchComponentCall(expr, ctx)
 }
 
 /**
@@ -157,12 +163,22 @@ function mapPleaseMethod({ method, args }, ctx) {
 
 // ── Pattern matchers ────────────────────────────────────────────────
 
-/** please.METHOD(...args) → { method, args } */
+/** please.METHOD(...args) atau this.please.METHOD(...args) → { method, args } */
 function matchPleaseCall(expr) {
   if (!isCall(expr)) return null
   const m = expr.callee
-  if (m?.type !== 'MemberExpression' || m.object?.name !== 'please') return null
-  return { method: m.property?.name, args: expr.arguments }
+  if (m?.type !== 'MemberExpression') return null
+
+  const obj = m.object
+  // please.METHOD(...)
+  if (obj?.name === 'please') return { method: m.property?.name, args: expr.arguments }
+  // this.please.METHOD(...)
+  if (obj?.type === 'MemberExpression'
+      && obj.object?.type === 'ThisExpression'
+      && obj.property?.name === 'please') {
+    return { method: m.property?.name, args: expr.arguments }
+  }
+  return null
 }
 
 /**

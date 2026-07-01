@@ -33,7 +33,8 @@ export function parseDataFile(source, filename) {
     return { file: null, warnings: [`data/${filename}: tidak ada 'module.exports = { ... }'`] }
   }
 
-  const groups = objectExpressionToPlain(objNode, warnings, id)
+  const localConsts = findLocalStringConsts(ast)
+  const groups = objectExpressionToPlain(objNode, warnings, id, localConsts)
 
   return {
     file: { id, filename: id, label: id, description: '', groups },
@@ -59,9 +60,27 @@ function findModuleExportsObject(ast) {
   return null
 }
 
+/**
+ * Kumpulkan `const NAME = 'literal'` di top-level module (mis. `const baseUrl = '...'`
+ * sebelum module.exports) supaya template literal `${NAME}` bisa di-inline jadi nilai
+ * literalnya sendiri, sama seperti process.env.X.
+ */
+function findLocalStringConsts(ast) {
+  const map = new Map()
+  for (const node of ast.program.body) {
+    if (node.type !== 'VariableDeclaration' || node.kind !== 'const') continue
+    for (const decl of node.declarations) {
+      if (decl.id?.type === 'Identifier' && decl.init?.type === 'StringLiteral') {
+        map.set(decl.id.name, decl.init.value)
+      }
+    }
+  }
+  return map
+}
+
 // ── ObjectExpression → plain object ─────────────────────────────────
 
-function objectExpressionToPlain(node, warnings, ctxPath) {
+function objectExpressionToPlain(node, warnings, ctxPath, localConsts) {
   const out = {}
   for (const prop of node.properties) {
     if (prop.type !== 'ObjectProperty' || prop.computed) {
@@ -75,12 +94,12 @@ function objectExpressionToPlain(node, warnings, ctxPath) {
       warnings.push(`${ctxPath}: key property tidak dikenali, dilewati`)
       continue
     }
-    out[key] = valueNodeToPlain(prop.value, warnings, `${ctxPath}.${key}`)
+    out[key] = valueNodeToPlain(prop.value, warnings, `${ctxPath}.${key}`, localConsts)
   }
   return out
 }
 
-function valueNodeToPlain(node, warnings, ctxPath) {
+function valueNodeToPlain(node, warnings, ctxPath, localConsts) {
   switch (node.type) {
     case 'ObjectExpression':
       return objectExpressionToPlain(node, warnings, ctxPath)
