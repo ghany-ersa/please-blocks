@@ -44,7 +44,13 @@ function onDragEnd() {
   cursor: grab;
   transition: border-color var(--transition-base), transform var(--transition-fast);
   user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: element;
   margin-bottom: var(--space-1);
+}
+.block-card .icon,
+.block-card .label {
+  -webkit-user-drag: none;
 }
 .block-card:hover {
   border-color: var(--block-color);

@@ -15,10 +15,11 @@ export const runnerRouter = Router()
 
 /**
  * POST /api/runner/start
- * Body: { projectPath, files, browser }
+ * Body: { projectPath, files, browser, specFile? }
+ * specFile - path relatif satu spec (mis. 'feature/login.spec.js') → jalankan fitur itu saja
  */
 runnerRouter.post('/start', (req, res) => {
-  const { projectPath, files, browser = 'chromium' } = req.body
+  const { projectPath, files, browser = 'chromium', specFile = '' } = req.body
 
   if (!projectPath) {
     return res.status(400).json({ error: 'projectPath diperlukan' })
@@ -42,7 +43,7 @@ runnerRouter.post('/start', (req, res) => {
 
   const runId = randomUUID()
   // startRun async — daftarkan ke map dulu, lanjut di background
-  startRun(runId, projectPath, browser)
+  startRun(runId, projectPath, browser, specFile)
 
   // Kembalikan runId segera — client bisa langsung connect ke /stream
   res.json({ ok: true, runId })

@@ -84,6 +84,7 @@ function parseLine(line) {
  * @param {string} runId       - ID unik run ini
  * @param {string} projectPath - absolute path ke folder project
  * @param {string} browser     - 'chrome' | 'firefox' | 'edge'
+ * @param {string} [specFile]  - path relatif ke satu spec file (mis. 'feature/login.spec.js') — kosong = jalankan semua
  * @returns {{ stop: Function }}
  */
 /**
@@ -117,7 +118,7 @@ function runNpmInstall(projectPath, send) {
   })
 }
 
-export async function startRun(runId, projectPath, browser = 'chrome') {
+export async function startRun(runId, projectPath, browser = 'chrome', specFile = '') {
   const clients  = new Set()
   // Antrian log sebelum SSE client connect
   const logQueue = []
@@ -178,7 +179,13 @@ export async function startRun(runId, projectPath, browser = 'chrome') {
     send('log', { level: 'info', text: '' })
   }
 
-  const proc = spawn(NPX, ['playwright', 'test', '--reporter=list'], {
+  // specFile harus berupa path relatif di dalam projectPath (feature/*.spec.js) — cegah argument injection
+  const args = ['playwright', 'test', '--reporter=list']
+  if (specFile && /^feature\/[\w-]+\.spec\.js$/.test(specFile)) {
+    args.push(specFile)
+  }
+
+  const proc = spawn(NPX, args, {
     cwd: projectPath,
     env,
     shell: false

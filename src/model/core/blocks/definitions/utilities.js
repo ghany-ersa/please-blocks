@@ -7,7 +7,7 @@ export default [
   {
     ...UTIL,
     id: 'util.untilShow',
-    label: 'Wait Until Show',
+    label: 'Until Show',
     icon: '👁️',
     description: 'Tunggu elemen muncul di halaman (default 20 detik)',
     inputs: [

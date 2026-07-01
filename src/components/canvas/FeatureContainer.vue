@@ -1,6 +1,8 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useCanvasStore } from '@/model/stores/canvasStore.js'
+import { useRunnerStore } from '@/model/stores/runnerStore.js'
+import { useTestRunnerControl } from '@/composables/useTestRunnerControl.js'
 import TestCaseBlock from './TestCaseBlock.vue'
 
 const props = defineProps({
@@ -8,6 +10,8 @@ const props = defineProps({
 })
 
 const canvas  = useCanvasStore()
+const runner  = useRunnerStore()
+const { runFeature } = useTestRunnerControl()
 const editing = ref(false)
 const draftLabel = ref('')
 
@@ -37,6 +41,10 @@ function onRemove() {
 
 function onSelect() {
   canvas.selectFeature(props.feature.id)
+}
+
+function onRunFeature() {
+  runFeature(props.feature.id)
 }
 </script>
 
@@ -84,6 +92,15 @@ function onSelect() {
         :title="feature.collapsed ? 'Buka' : 'Tutup'"
       >
         {{ feature.collapsed ? '›' : '⌄' }}
+      </button>
+
+      <button
+        class="feat-run"
+        :disabled="runner.isRunning || feature.enabled === false"
+        @click.stop="onRunFeature"
+        :title="feature.enabled === false ? 'Fitur ini di-skip' : 'Jalankan hanya fitur ini'"
+      >
+        ▷ Run
       </button>
 
       <button class="feat-remove" @click.stop="onRemove" title="Hapus feature">×</button>
@@ -193,6 +210,18 @@ function onSelect() {
 }
 .feat-header:hover .feat-remove { opacity: 1; }
 .feat-remove:hover { color: var(--color-danger); }
+
+.feat-run {
+  background: none; border: 1px solid rgba(16,185,129,0.3); border-radius: var(--radius-pill);
+  cursor: pointer;
+  color: var(--color-success); font-size: var(--text-xs); line-height: var(--leading-none);
+  opacity: 0; padding: var(--space-0-5) var(--space-2);
+  transition: opacity var(--transition-fast), background var(--transition-fast);
+  flex-shrink: 0; white-space: nowrap;
+}
+.feat-header:hover .feat-run { opacity: 1; }
+.feat-run:hover:not(:disabled) { background: rgba(16,185,129,0.12); }
+.feat-run:disabled { opacity: 0.25 !important; cursor: default; }
 
 .feat-body { padding: var(--space-2-5); }
 

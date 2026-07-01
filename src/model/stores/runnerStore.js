@@ -232,8 +232,10 @@ export const useRunnerStore = defineStore('runner', {
      * Jalankan test sungguhan via Express server.
      * @param {Array}  files       - hasil exportProject()
      * @param {string} projectPath - absolute path folder project
+     * @param {Array}  features    - daftar feature (untuk parsing hasil log)
+     * @param {string} [specFile]  - path relatif satu spec (mis. 'feature/login.spec.js') → jalankan fitur itu saja
      */
-    async runReal(files, projectPath, features = []) {
+    async runReal(files, projectPath, features = [], specFile = '') {
       if (this.status === 'running') return
       this.clearLogs()
       this.status      = 'running'
@@ -258,6 +260,7 @@ export const useRunnerStore = defineStore('runner', {
         projectPath,
         files,
         browser: this.browserTarget,
+        specFile,
 
         onLog: ({ level, text }) => {
           this._addLog(level, text)

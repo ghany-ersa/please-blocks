@@ -135,19 +135,20 @@ export async function writeProject(projectPath, files) {
  * @param {string}   opts.projectPath  - absolute path folder project
  * @param {Array}    opts.files        - [{ path, content }] dari exportProject()
  * @param {string}   opts.browser      - 'chromium' | 'firefox' | 'webkit'
+ * @param {string}   [opts.specFile]   - path relatif satu spec (mis. 'feature/login.spec.js') → jalankan fitur itu saja
  * @param {Function} opts.onLog        - callback({ level, text })
  * @param {Function} opts.onDone       - callback({ exitCode })
  * @param {Function} opts.onError      - callback(errorMessage)
  * @returns {Promise<{ stop: Function }>}
  */
-export async function startRun({ projectPath, files, browser, onLog, onDone, onError }) {
+export async function startRun({ projectPath, files, browser, specFile = '', onLog, onDone, onError }) {
   // 1. Kirim files + mulai proses mocha
   let runId
   try {
     const res = await fetch(`${BASE}/runner/start`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ projectPath, files, browser })
+      body:    JSON.stringify({ projectPath, files, browser, specFile })
     })
     const data = await res.json()
     if (!res.ok || !data.ok) {
