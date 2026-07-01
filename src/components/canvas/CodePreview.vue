@@ -8,13 +8,12 @@ import { computed, ref } from 'vue'
 import { useCanvasStore }   from '@/model/stores/canvasStore.js'
 import { useBlockRegistry } from '@/model/stores/blockRegistry.js'
 import { useDataRegistry }  from '@/model/stores/dataRegistry.js'
-import { generateSpec, generateIndex } from '@/model/core/codegen/specGenerator.js'
+import { generateSpec } from '@/model/core/codegen/specGenerator.js'
 import { useCodeHighlight } from '@/composables/useCodeHighlight.js'
 
 const canvas   = useCanvasStore()
 const registry = useBlockRegistry()
 const dataReg  = useDataRegistry()
-const mode     = ref('spec')  // 'spec' | 'index'
 const { highlight } = useCodeHighlight()
 
 // Feature yang sedang aktif
@@ -23,10 +22,7 @@ const activeFeature = computed(() =>
 )
 
 // Generate kode setiap kali state berubah (computed otomatis reaktif)
-const generatedCode = computed(() => {
-  if (mode.value === 'index') return generateIndex(canvas.features)
-  return generateSpec(activeFeature.value, registry, dataReg.entries)
-})
+const generatedCode = computed(() => generateSpec(activeFeature.value, registry, dataReg.entries))
 
 const highlightedCode = computed(() => highlight(generatedCode.value))
 
@@ -56,19 +52,8 @@ function slugLabel(label) {
     <!-- Header -->
     <div class="cp-header">
       <div class="cp-tabs">
-        <button
-          class="cp-tab"
-          :class="{ active: mode === 'spec' }"
-          @click="mode = 'spec'"
-        >
+        <button class="cp-tab active">
           {{ activeFeature ? slugLabel(activeFeature.label) + '.spec.js' : 'spec.js' }}
-        </button>
-        <button
-          class="cp-tab"
-          :class="{ active: mode === 'index' }"
-          @click="mode = 'index'"
-        >
-          index.js
         </button>
       </div>
       <button class="cp-copy" @click="copyCode" :class="{ done: copied }">

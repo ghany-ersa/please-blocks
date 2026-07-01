@@ -174,7 +174,17 @@ function onDrop(e) {
         {{ testCase.collapsed ? '›' : '⌄' }}
       </button>
 
-      <span v-if="!editing" class="tc-label" @dblclick.stop="startEdit">
+      <button
+        class="tc-toggle"
+        :class="{ enabled: testCase.enabled !== false }"
+        @click.stop="canvas.toggleTestCaseEnabled(testCase.id)"
+        :title="testCase.enabled !== false ? 'Klik untuk nonaktifkan (test.skip)' : 'Klik untuk aktifkan'"
+      >
+        {{ testCase.enabled !== false ? '▶' : '⏸' }}
+      </button>
+
+      <span v-if="!editing" class="tc-label" @dblclick.stop="startEdit"
+        :class="{ disabled: testCase.enabled === false }">
         🧪 {{ testCase.label }}
       </span>
       <input
@@ -291,6 +301,15 @@ function onDrop(e) {
   color: var(--color-purple-dark); font-size: var(--text-xl); line-height: var(--leading-none);
   padding: 0; flex-shrink: 0;
 }
+.tc-toggle {
+  background: none; border: none; cursor: pointer;
+  font-size: var(--text-sm); padding: 0 var(--space-1); flex-shrink: 0;
+  color: var(--color-text-faint); transition: color var(--transition-base);
+}
+.tc-toggle.enabled { color: var(--color-success); }
+.tc-toggle:not(.enabled) { color: var(--color-text-ghost); }
+.tc-toggle:hover { opacity: 0.8; }
+.tc-label.disabled { opacity: 0.4; text-decoration: line-through; }
 .tc-label {
   font-size: var(--text-base);
   font-weight: var(--font-semibold);

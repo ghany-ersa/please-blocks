@@ -140,7 +140,7 @@ export const useRunnerStore = defineStore('runner', {
       this.visible = true
 
       const allTcs = features.flatMap(f =>
-        f.testCases.map(tc => ({ ...tc, featureLabel: f.label, enabled: f.enabled !== false }))
+        f.testCases.map(tc => ({ ...tc, featureLabel: f.label, enabled: f.enabled !== false && tc.enabled !== false }))
       )
 
       this.stats.total = allTcs.filter(tc => tc.enabled).length

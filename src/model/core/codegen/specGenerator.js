@@ -45,7 +45,8 @@ export function generateSpec(feature, blockRegistry, dataEntries = []) {
     lines.push(`const { ${groups.join(', ')} } = require('${requirePath}')`)
   }
 
-  lines.push('', `test.describe('${feature.label}', () => {`)
+  const describeFn = feature.enabled !== false ? 'test.describe' : 'test.describe.skip'
+  lines.push('', `${describeFn}('${feature.label}', () => {`)
 
   // Test cases
   const testCaseBlocks = feature.testCases.map(tc =>
@@ -77,9 +78,11 @@ function generateTestCase(tc, blockRegistry, components) {
     ? [createAppLine, ...stepLines.map(indent)].join('\n')
     : `${createAppLine}\n        // Belum ada step`
 
+  const testFn = tc.enabled !== false ? 'test' : 'test.skip'
+
   return [
     '',
-    `    test('${tc.label}', async ({ page }) => {`,
+    `    ${testFn}('${tc.label}', async ({ page }) => {`,
     body,
     `    })`
   ].join('\n')
@@ -112,33 +115,3 @@ function withNote(note, code) {
   return `${comment}\n${code}`
 }
 
-/**
- * Generate index.js dari semua features.
- * Feature dengan enabled=false di-comment-out otomatis.
- */
-export function generateIndex(features) {
-  if (!features.length) return '// Belum ada feature'
-  const lines = [
-    '// Aktifkan atau nonaktifkan spec yang ingin dijalankan',
-  ]
-  for (const f of features) {
-    const requirePath = `'./feature/${slugify(f.label)}.spec'`
-    const enabled     = f.enabled !== false
-    lines.push(enabled
-      ? `require(${requirePath})`
-      : `// require(${requirePath})`
-    )
-  }
-  return lines.join('\n')
-}
-
-// ── Helper ────────────────────────────────────────────────────────
-
-function slugify(str) {
-  return str
-    .toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-]/g, '')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '') || 'feature'
-}

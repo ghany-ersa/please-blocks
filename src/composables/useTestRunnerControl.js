@@ -22,16 +22,15 @@ export function useTestRunnerControl() {
     runner.runSimulation(canvas.features, registry, dataReg.entries)
   }
 
-  // Run Real: jalankan mocha sungguhan via server bila tersedia, selain itu
+  // Run Real: jalankan Playwright sungguhan via server bila tersedia, selain itu
   // fallback ke simulasi. Dipakai panel Test Runner.
-  // Fitur yang di-skip (enabled === false) tidak diikutkan dalam run sungguhan.
+  // Fitur/test case yang di-skip di-generate sebagai test.describe.skip()/test.skip()
+  // di .spec.js, jadi Playwright sendiri yang melewatinya — tidak perlu filter di sini.
   function runReal() {
     runner.open()
-    const activeFeatures = canvas.features.filter(f => f.enabled !== false)
     if (runner.canRunReal) {
       const files = exportProject(canvas, registry, dataReg, compStore, runner.projectName)
-        .filter(f => f.category !== 'spec' || f.enabled !== false)
-      runner.runReal(files, runner.projectPath, activeFeatures)
+      runner.runReal(files, runner.projectPath, canvas.features)
     } else {
       runner.runSimulation(canvas.features, registry, dataReg.entries)
     }

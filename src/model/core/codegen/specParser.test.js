@@ -175,3 +175,43 @@ describe('parseSpec — rawCode fallback', () => {
     expect(warnings.length).toBeGreaterThan(0)
   })
 })
+
+// ── test.describe.skip / test.skip ──────────────────────────────────
+
+describe('parseSpec — skip', () => {
+  it('test.describe biasa → feature enabled', () => {
+    const src = `test.describe('F', () => {
+      test('t', async ({ page }) => { await please.click('x', '#x') })
+    })`
+    const { features } = parse(src)
+    expect(features[0].enabled).toBe(true)
+  })
+
+  it('test.describe.skip → feature enabled=false', () => {
+    const src = `test.describe.skip('F', () => {
+      test('t', async ({ page }) => { await please.click('x', '#x') })
+    })`
+    const { features } = parse(src)
+    expect(features[0].enabled).toBe(false)
+    expect(features[0].label).toBe('F')
+  })
+
+  it('test biasa → test case enabled', () => {
+    const src = `test.describe('F', () => {
+      test('t', async ({ page }) => { await please.click('x', '#x') })
+    })`
+    const { features } = parse(src)
+    expect(features[0].testCases[0].enabled).toBe(true)
+  })
+
+  it('test.skip → test case enabled=false, steps tetap ter-parse', () => {
+    const src = `test.describe('F', () => {
+      test.skip('t', async ({ page }) => { await please.click('x', '#x') })
+    })`
+    const { features } = parse(src)
+    const tc = features[0].testCases[0]
+    expect(tc.enabled).toBe(false)
+    expect(tc.label).toBe('t')
+    expect(tc.steps).toHaveLength(1)
+  })
+})

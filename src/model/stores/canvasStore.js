@@ -89,7 +89,7 @@ export const useCanvasStore = defineStore('canvas', {
         label,
         testCases: [],
         collapsed: false,
-        enabled:   true    // ← Sprint 4: toggle untuk index.js
+        enabled:   true    // ← toggle untuk test.describe.skip()
       }
       this.features.push(feature)
       this.activeFeatureId = feature.id
@@ -134,13 +134,21 @@ export const useCanvasStore = defineStore('canvas', {
         id:       uid('tc'),
         label,
         steps:    [],
-        collapsed: false
+        collapsed: false,
+        enabled:   true    // ← toggle untuk test.skip()
       }
       f.testCases.push(tc)
           this.persist()
       this.activeFeatureId  = featureId
       this.activeTestCaseId = tc.id
       return tc
+    },
+
+    toggleTestCaseEnabled(testCaseId) {
+      for (const f of this.features) {
+        const tc = f.testCases.find(t => t.id === testCaseId)
+        if (tc) { tc.enabled = !tc.enabled; this.persist(); return }
+      }
     },
 
     updateTestCaseLabel(testCaseId, label) {
@@ -362,9 +370,9 @@ export const useCanvasStore = defineStore('canvas', {
 
       for (const pf of features) {
         const feature = {
-          id: uid('feat'), label: pf.label || 'Feature', collapsed: false, enabled: true,
+          id: uid('feat'), label: pf.label || 'Feature', collapsed: false, enabled: pf.enabled !== false,
           testCases: (pf.testCases || []).map(ptc => ({
-            id: uid('tc'), label: ptc.label || 'Test Case', collapsed: false,
+            id: uid('tc'), label: ptc.label || 'Test Case', collapsed: false, enabled: ptc.enabled !== false,
             steps: (ptc.steps || []).map(ps => {
               const step = { id: uid('step'), blockId: ps.blockId, inputs: mapArgNInputs(ps, blockRegistry), hasError: false }
               if (ps.note) step.note = ps.note

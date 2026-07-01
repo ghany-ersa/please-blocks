@@ -122,25 +122,6 @@ describe('exportProject — package.json', () => {
   })
 })
 
-// ── index.js ──────────────────────────────────────────────────────
-
-describe('exportProject — index.js', () => {
-  it('menghasilkan file index.js', () => {
-    const files = exportProject(makeCanvas(), makeBlockRegistry(), makeDataRegistry(), makeComponentStore())
-    const idx = getFile(files, 'index.js')
-    expect(idx).toBeDefined()
-  })
-
-  it('include require untuk feature yang enabled', () => {
-    const canvas = makeCanvas({
-      features: [{ label: 'Login', enabled: true, testCases: [] }]
-    })
-    const files = exportProject(canvas, makeBlockRegistry(), makeDataRegistry(), makeComponentStore())
-    const idx = getFile(files, 'index.js')
-    expect(idx.content).toContain("require('./feature/login.spec')")
-  })
-})
-
 // ── .gitignore ────────────────────────────────────────────────────
 
 describe('exportProject — .gitignore', () => {

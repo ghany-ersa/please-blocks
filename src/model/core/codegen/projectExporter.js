@@ -5,7 +5,7 @@
  * Output: { 'feature/login.spec.js': '...', 'data/main.js': '...', ... }
  */
 
-import { generateSpec, generateIndex } from './specGenerator.js'
+import { generateSpec } from './specGenerator.js'
 import { generateAllDataFiles }        from '../factory/DataFactory.js'
 import { generateComponentFile }       from '../factory/ComponentFactory.js'
 
@@ -38,13 +38,6 @@ export function exportProject(canvas, blockRegistry, dataRegistry, componentStor
       enabled:  feature.enabled !== false
     })
   }
-
-  // ── index.js ──────────────────────────────────────────────────
-  files.push({
-    path:     'index.js',
-    content:  generateIndex(canvas.features),
-    category: 'index'
-  })
 
   // ── Data files ────────────────────────────────────────────────
   const dataFiles = generateAllDataFiles(dataRegistry.files, dataRegistry.env)

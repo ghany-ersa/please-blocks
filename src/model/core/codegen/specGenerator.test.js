@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { generateSpec, generateIndex } from './specGenerator.js'
+import { generateSpec } from './specGenerator.js'
 
 // ── Fixtures ──────────────────────────────────────────────────────
 
@@ -162,32 +162,37 @@ describe('generateSpec — dengan component', () => {
   })
 })
 
-// ── generateIndex ─────────────────────────────────────────────────
+// ── Skip (test.describe.skip / test.skip) ──────────────────────────
 
-describe('generateIndex', () => {
-  it('returns placeholder ketika tidak ada feature', () => {
-    expect(generateIndex([])).toBe('// Belum ada feature')
+describe('generateSpec — skip', () => {
+  it('feature aktif menghasilkan test.describe biasa', () => {
+    const feature = makeFeature({ enabled: true, testCases: [] })
+    expect(generateSpec(feature, makeRegistry())).toContain("test.describe('Login', () => {")
   })
 
-  it('menghasilkan require untuk feature aktif', () => {
-    const code = generateIndex([{ label: 'Login', enabled: true, testCases: [] }])
-    expect(code).toContain("require('./feature/login.spec')")
-  })
-
-  it('comment-out require untuk feature tidak aktif', () => {
-    const code = generateIndex([{ label: 'Login', enabled: false, testCases: [] }])
-    expect(code).toContain("// require('./feature/login.spec')")
-    expect(code).not.toMatch(/^require\(.*login/m)
-  })
-
-  it('slugify label dengan spasi dan karakter khusus', () => {
-    const code = generateIndex([{ label: 'User Registration!', enabled: true, testCases: [] }])
-    expect(code).toContain("require('./feature/user-registration.spec')")
+  it('feature enabled=false menghasilkan test.describe.skip', () => {
+    const feature = makeFeature({ enabled: false, testCases: [] })
+    expect(generateSpec(feature, makeRegistry())).toContain("test.describe.skip('Login', () => {")
   })
 
   it('feature tanpa field enabled dianggap aktif', () => {
-    const code = generateIndex([{ label: 'Checkout', testCases: [] }])
-    expect(code).toContain("require('./feature/checkout.spec')")
-    expect(code).not.toContain("// require('./feature/checkout.spec')")
+    const feature = makeFeature({ testCases: [] })
+    expect(generateSpec(feature, makeRegistry())).toContain("test.describe('Login', () => {")
+  })
+
+  it('test case enabled=false menghasilkan test.skip', () => {
+    const feature = makeFeature({
+      testCases: [{ label: 'tc gagal', enabled: false, steps: [] }]
+    })
+    expect(generateSpec(feature, makeRegistry())).toContain("test.skip('tc gagal', async ({ page }) => {")
+  })
+
+  it('test case aktif menghasilkan test biasa', () => {
+    const feature = makeFeature({
+      testCases: [{ label: 'tc jalan', enabled: true, steps: [] }]
+    })
+    const code = generateSpec(feature, makeRegistry())
+    expect(code).toContain("test('tc jalan', async ({ page }) => {")
+    expect(code).not.toContain("test.skip('tc jalan'")
   })
 })

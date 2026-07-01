@@ -11,7 +11,7 @@
  *
  * projectFiles (dari /api/files/read-project):
  *   { specs:[{name,content}], data:[{name,content}], components:[{name,content}],
- *     env: string|null, index: string|null }
+ *     env: string|null }
  */
 
 import { parseSpec }          from './specParser.js'
@@ -26,7 +26,7 @@ import { parseComponentFile } from './componentFileParser.js'
  */
 export function analyzeProject(projectFiles) {
   const warnings = []
-  const { specs = [], data = [], components = [], env = null, index = null } = projectFiles || {}
+  const { specs = [], data = [], components = [], env = null } = projectFiles || {}
 
   // 1. .env
   const envMap = parseEnvFile(env)
@@ -52,17 +52,12 @@ export function analyzeProject(projectFiles) {
   const componentIndex = buildIndexFromDefs(componentDefs)
 
   // 4. specs → features (pakai componentIndex sementara)
-  const enabledMap = parseIndexEnabled(index)
+  // enabled feature/testCase langsung dari test.describe.skip()/test.skip() di .spec.js
   const features = []
   for (const f of specs) {
     const { features: fs, warnings: w } = parseSpec(f.content, { componentIndex })
     warnings.push(...w)
-    for (const feat of fs) {
-      // rekonsiliasi enabled dari index.js (default true)
-      const slug = slugify(feat.label)
-      feat.enabled = enabledMap[slug] !== undefined ? enabledMap[slug] : true
-      features.push(feat)
-    }
+    features.push(...fs)
   }
 
   return {
@@ -123,25 +118,6 @@ export function parseEnvFile(text) {
   return env
 }
 
-/**
- * Parse index.js → { featureSlug: enabled }.
- * `require('./feature/login.spec')`     → login: true
- * `// require('./feature/login.spec')`  → login: false
- */
-export function parseIndexEnabled(text) {
-  const map = {}
-  if (!text) return map
-  for (const raw of text.split(/\r?\n/)) {
-    const line = raw.trim()
-    const m = line.match(/^(\/\/\s*)?require\(\s*['"]\.\/feature\/([^'"]+?)(\.spec)?['"]\s*\)/)
-    if (m) {
-      const slug = m[2]
-      map[slug] = !m[1]   // ada '//' → disabled
-    }
-  }
-  return map
-}
-
 /** Index sementara dari component defs (untuk preview tanpa registry). */
 function buildIndexFromDefs(defs) {
   const map = new Map()
@@ -169,14 +145,4 @@ function buildSummary(files, components, features) {
     dataFiles:  Object.keys(files).length,
     components: components.length
   }
-}
-
-/** Sama dengan slugify di specGenerator.js (untuk match index.js). */
-function slugify(str) {
-  return str
-    .toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-]/g, '')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '') || 'feature'
 }

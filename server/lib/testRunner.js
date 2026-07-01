@@ -179,8 +179,10 @@ export async function startRun(runId, projectPath, browser = 'chrome', specFile 
     send('log', { level: 'info', text: '' })
   }
 
-  // specFile harus berupa path relatif di dalam projectPath (feature/*.spec.js) — cegah argument injection
-  const args = ['playwright', 'test', '--reporter=list']
+  // --reporter CLI menimpa (bukan menambah) daftar reporter di playwright.config.js,
+  // jadi please-reporter.js (penghasil folder please-report/) harus ikut disebut di sini
+  // agar tidak hilang — list dipertahankan karena parseLine() di atas mem-parse formatnya.
+  const args = ['playwright', 'test', '--reporter=list,./reporter/please-reporter.js']
   if (specFile && /^feature\/[\w-]+\.spec\.js$/.test(specFile)) {
     args.push(specFile)
   }

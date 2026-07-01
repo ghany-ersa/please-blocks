@@ -45,10 +45,13 @@ export function parseSpec(source, { blockRegistry = null, componentIndex = null 
 
   const features = []
   for (const node of ast.program.body) {
-    // Playwright: test.describe(...) atau mocha: describe(...)
-    const describe = matchCallNamed(node, 'describe') || matchMemberCall(node, 'test', 'describe')
+    // Playwright: test.describe(...) / test.describe.skip(...) atau mocha: describe(...)
+    const describeSkip = matchMemberChain(node, ['test', 'describe', 'skip'])
+    const describe = describeSkip || matchCallNamed(node, 'describe') || matchMemberCall(node, 'test', 'describe')
     if (!describe) continue
-    features.push(parseDescribe(describe, ctx))
+    const feature = parseDescribe(describe, ctx)
+    feature.enabled = !describeSkip
+    features.push(feature)
   }
 
   if (!features.length && !warnings.length) {
@@ -69,13 +72,16 @@ function parseDescribe(call, ctx) {
 
   const testCases = []
   for (const stmt of body) {
-    // Playwright: test(...) atau mocha: it(...)
-    const it = matchCallNamed(stmt, 'it') || matchCallNamed(stmt, 'test')
+    // Playwright: test(...) / test.skip(...) atau mocha: it(...)
+    const testSkip = matchMemberCall(stmt, 'test', 'skip')
+    const it = testSkip || matchCallNamed(stmt, 'it') || matchCallNamed(stmt, 'test')
     if (!it) {
       ctx.warnings.push(`Statement di dalam describe('${label}') diabaikan (bukan it()/test()).`)
       continue
     }
-    testCases.push(parseIt(it, ctx))
+    const testCase = parseIt(it, ctx)
+    testCase.enabled = !testSkip
+    testCases.push(testCase)
   }
   return { label, testCases }
 }
@@ -108,6 +114,20 @@ function matchMemberCall(stmt, obj, method) {
   const callee = call.callee
   if (callee?.type === 'MemberExpression' && callee.object?.name === obj && callee.property?.name === method) return call
   return null
+}
+
+/** ExpressionStatement berupa chained member call: a.b.c(...) — mis. test.describe.skip(...). */
+function matchMemberChain(stmt, path) {
+  if (stmt?.type !== 'ExpressionStatement') return null
+  const call = stmt.expression
+  if (call?.type !== 'CallExpression') return null
+  let callee = call.callee
+  for (let i = path.length - 1; i >= 1; i--) {
+    if (callee?.type !== 'MemberExpression' || callee.property?.name !== path[i]) return null
+    callee = callee.object
+  }
+  if (callee?.name !== path[0]) return null
+  return call
 }
 
 function stringArg(node) {
