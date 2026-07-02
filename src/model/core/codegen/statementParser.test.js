@@ -143,18 +143,36 @@ describe('parseStatementToStep — action blocks', () => {
 })
 
 describe('parseStatementToStep — navigation', () => {
-  it('memetakan please.goto dengan dataref', () => {
-    const src = 'await please.goto(PAGE.login)'
+  it('memetakan please.goto(url) — title tidak diberikan', () => {
+    const src = 'await please.goto(PAGE.login.url)'
     const step = parseStatementToStep(stmtOf(src), makeCtx({ source: src }))
     expect(step.blockId).toBe('nav.goto')
-    expect(step.inputs.urlTarget).toEqual({ type: 'dataref', path: 'PAGE.login' })
+    expect(step.inputs.url).toEqual({ type: 'dataref', path: 'PAGE.login.url' })
+    expect(step.inputs.title).toBeUndefined()
   })
 
-  it('memetakan please.verifyPage', () => {
-    const src = 'await please.verifyPage(PAGE.dashboard)'
+  it('memetakan please.goto(url, title) — dua argumen terpisah', () => {
+    const src = 'await please.goto(PAGE.login.url, PAGE.login.title)'
+    const step = parseStatementToStep(stmtOf(src), makeCtx({ source: src }))
+    expect(step.blockId).toBe('nav.goto')
+    expect(step.inputs.url).toEqual({ type: 'dataref', path: 'PAGE.login.url' })
+    expect(step.inputs.title).toEqual({ type: 'dataref', path: 'PAGE.login.title' })
+  })
+
+  it('memetakan please.verifyPage(url, title)', () => {
+    const src = 'await please.verifyPage(PAGE.dashboard.url, PAGE.dashboard.title)'
     const step = parseStatementToStep(stmtOf(src), makeCtx({ source: src }))
     expect(step.blockId).toBe('nav.verifyPage')
-    expect(step.inputs.urlExpected).toEqual({ type: 'dataref', path: 'PAGE.dashboard' })
+    expect(step.inputs.url).toEqual({ type: 'dataref', path: 'PAGE.dashboard.url' })
+    expect(step.inputs.title).toEqual({ type: 'dataref', path: 'PAGE.dashboard.title' })
+  })
+
+  it('memetakan please.verifyPage(url) — title tidak diberikan', () => {
+    const src = "await please.verifyPage('/dashboard')"
+    const step = parseStatementToStep(stmtOf(src), makeCtx({ source: src }))
+    expect(step.blockId).toBe('nav.verifyPage')
+    expect(step.inputs.url).toBe('/dashboard')
+    expect(step.inputs.title).toBeUndefined()
   })
 })
 

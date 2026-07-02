@@ -105,11 +105,12 @@ describe('parseSpec — multiple describe()', () => {
 
 describe('parseSpec — step mapping', () => {
   it('memetakan navigation goto (Playwright)', () => {
-    const src = `test.describe('F', () => { test('t', async ({ page }) => { const { please } = createApp(page); await please.goto(PAGE.login) }) })`
+    const src = `test.describe('F', () => { test('t', async ({ page }) => { const { please } = createApp(page); await please.goto(PAGE.login.url, PAGE.login.title) }) })`
     const { features } = parse(src)
     const step = features[0].testCases[0].steps[0]
     expect(step.blockId).toBe('nav.goto')
-    expect(step.inputs.urlTarget).toEqual({ type: 'dataref', path: 'PAGE.login' })
+    expect(step.inputs.url).toEqual({ type: 'dataref', path: 'PAGE.login.url' })
+    expect(step.inputs.title).toEqual({ type: 'dataref', path: 'PAGE.login.title' })
   })
 
   it('memetakan await see dengan expected → assert.see tanpa varName', () => {

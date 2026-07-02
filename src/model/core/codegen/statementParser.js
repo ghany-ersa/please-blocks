@@ -121,10 +121,17 @@ export function parseBodyStatements(body, ctx) {
  */
 function mapPleaseMethod({ method, args }, ctx) {
   switch (method) {
-    case 'goto':
-      return { blockId: 'nav.goto', inputs: { urlTarget: valueFrom(args[0], ctx) } }
-    case 'verifyPage':
-      return { blockId: 'nav.verifyPage', inputs: { urlExpected: valueFrom(args[0], ctx) } }
+    case 'goto': {
+      const inputs = { url: valueFrom(args[0], ctx) }
+      if (args[1] !== undefined) inputs.title = valueFrom(args[1], ctx)
+      return { blockId: 'nav.goto', inputs }
+    }
+    case 'verifyPage': {
+      const inputs = {}
+      if (args[0] !== undefined) inputs.url = valueFrom(args[0], ctx)
+      if (args[1] !== undefined) inputs.title = valueFrom(args[1], ctx)
+      return { blockId: 'nav.verifyPage', inputs }
+    }
 
     case 'click':
     case 'scrollTo':
@@ -281,6 +288,7 @@ function memberPath(node) {
   }
   return null
 }
+
 
 // ── Raw-code fallback ───────────────────────────────────────────────
 

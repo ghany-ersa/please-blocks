@@ -3,7 +3,6 @@ import actions    from './actions.js'
 import navigation from './navigation.js'
 import assertions from './assertions.js'
 import utilities  from './utilities.js'
-import { validateSchema } from '../schemaValidator.js'
 
 // ── helpers ───────────────────────────────────────────────────────
 function block(defs, id) {
@@ -120,76 +119,61 @@ describe('action.scrollTo — codegen', () => {
 describe('nav.goto — codegen', () => {
   const b = block(navigation, 'nav.goto')
 
-  it('generates goto with dataref', () => {
-    expect(b.codegen({ urlTarget: { type: 'dataref', path: 'PAGE.login' } }))
-      .toBe('await please.goto(PAGE.login)')
+  it('generates goto with url + title dataref', () => {
+    expect(b.codegen({
+      url:   { type: 'dataref', path: 'PAGE.login.url' },
+      title: { type: 'dataref', path: 'PAGE.login.title' }
+    })).toBe('await please.goto(PAGE.login.url, PAGE.login.title)')
   })
 
-  it('generates goto with inline object string (fallback plain)', () => {
-    expect(b.codegen({ urlTarget: 'PAGE.dashboard' }))
-      .toBe("await please.goto('PAGE.dashboard')")
+  it('generates goto with url only (title opsional)', () => {
+    expect(b.codegen({ url: { type: 'dataref', path: 'PAGE.login.url' } }))
+      .toBe('await please.goto(PAGE.login.url)')
+  })
+
+  it('generates goto with plain string url', () => {
+    expect(b.codegen({ url: 'https://example.com' }))
+      .toBe("await please.goto('https://example.com')")
   })
 })
 
 describe('nav.goto — validate', () => {
   const b = block(navigation, 'nav.goto')
 
-  it('returns error when urlTarget is missing', () => {
-    expect(b.validate({ urlTarget: null })).toBeTruthy()
+  it('returns error when url is missing', () => {
+    expect(b.validate({ url: null })).toBeTruthy()
   })
 
-  it('returns null when urlTarget is provided', () => {
-    expect(b.validate({ urlTarget: { type: 'dataref', path: 'URL.login' } })).toBeNull()
-  })
-})
-
-describe('nav.goto — URL_SCHEMA errorMessage', () => {
-  // Akses schema dari input definition block nav.goto
-  const b = block(navigation, 'nav.goto')
-  const inputDef = b.inputs[0]  // urlTarget — satu-satunya input, punya schema
-
-  const accountEntry = {
-    path: 'ACCOUNT.valid',
-    type: 'object',
-    fields: ['username', 'password']  // tidak punya 'url' dan 'title'
-  }
-
-  const partialEntry = {
-    path: 'DATA.partial',
-    type: 'object',
-    fields: ['url']  // punya 'url' tapi tidak punya 'title'
-  }
-
-  it('errorMessage menyebutkan semua field yang hilang (url dan title)', () => {
-    const value = { type: 'dataref', path: 'ACCOUNT.valid' }
-    const result = validateSchema(value, inputDef, [accountEntry])
-    expect(result.valid).toBe(false)
-    expect(result.message).toContain('"url"')
-    expect(result.message).toContain('"title"')
-  })
-
-  it('errorMessage menyebutkan hanya field yang memang hilang', () => {
-    const value = { type: 'dataref', path: 'DATA.partial' }
-    const result = validateSchema(value, inputDef, [partialEntry])
-    expect(result.valid).toBe(false)
-    expect(result.message).toContain('"title"')
-    expect(result.message).not.toContain('"url"')
-  })
-
-  it('tidak ada error ketika entry punya url dan title', () => {
-    const urlEntry = { path: 'URL.login', type: 'object', fields: ['url', 'title'] }
-    const value = { type: 'dataref', path: 'URL.login' }
-    const result = validateSchema(value, inputDef, [urlEntry])
-    expect(result.valid).toBe(true)
+  it('returns null when url is provided', () => {
+    expect(b.validate({ url: { type: 'dataref', path: 'PAGE.login.url' } })).toBeNull()
   })
 })
 
 describe('nav.verifyPage — codegen', () => {
   const b = block(navigation, 'nav.verifyPage')
 
-  it('generates verifyPage with dataref', () => {
-    expect(b.codegen({ urlExpected: { type: 'dataref', path: 'PAGE.dashboard' } }))
-      .toBe('await please.verifyPage(PAGE.dashboard)')
+  it('generates verifyPage with url + title dataref', () => {
+    expect(b.codegen({
+      url:   { type: 'dataref', path: 'PAGE.dashboard.url' },
+      title: { type: 'dataref', path: 'PAGE.dashboard.title' }
+    })).toBe('await please.verifyPage(PAGE.dashboard.url, PAGE.dashboard.title)')
+  })
+
+  it('generates verifyPage with title only', () => {
+    expect(b.codegen({ title: { type: 'dataref', path: 'PAGE.dashboard.title' } }))
+      .toBe("await please.verifyPage('', PAGE.dashboard.title)")
+  })
+})
+
+describe('nav.verifyPage — validate', () => {
+  const b = block(navigation, 'nav.verifyPage')
+
+  it('returns error when both url and title are missing', () => {
+    expect(b.validate({})).toBeTruthy()
+  })
+
+  it('returns null when only url is provided', () => {
+    expect(b.validate({ url: { type: 'dataref', path: 'PAGE.dashboard.url' } })).toBeNull()
   })
 })
 
