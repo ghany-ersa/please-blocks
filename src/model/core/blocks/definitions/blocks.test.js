@@ -149,31 +149,44 @@ describe('nav.goto — validate', () => {
   })
 })
 
-describe('nav.verifyPage — codegen', () => {
-  const b = block(navigation, 'nav.verifyPage')
+describe('nav.newTab — codegen', () => {
+  const b = block(navigation, 'nav.newTab')
 
-  it('generates verifyPage with url + title dataref', () => {
-    expect(b.codegen({
-      url:   { type: 'dataref', path: 'PAGE.dashboard.url' },
-      title: { type: 'dataref', path: 'PAGE.dashboard.title' }
-    })).toBe('await please.verifyPage(PAGE.dashboard.url, PAGE.dashboard.title)')
-  })
-
-  it('generates verifyPage with title only', () => {
-    expect(b.codegen({ title: { type: 'dataref', path: 'PAGE.dashboard.title' } }))
-      .toBe("await please.verifyPage('', PAGE.dashboard.title)")
+  it('generates newTab assigned to variable', () => {
+    expect(b.codegen({ varName: 'tab2' })).toBe('const tab2 = await please.newTab()')
   })
 })
 
-describe('nav.verifyPage — validate', () => {
-  const b = block(navigation, 'nav.verifyPage')
+describe('nav.newTab — validate', () => {
+  const b = block(navigation, 'nav.newTab')
 
-  it('returns error when both url and title are missing', () => {
-    expect(b.validate({})).toBeTruthy()
+  it('returns error when varName is missing', () => {
+    expect(b.validate({ varName: null })).toBeTruthy()
   })
 
-  it('returns null when only url is provided', () => {
-    expect(b.validate({ url: { type: 'dataref', path: 'PAGE.dashboard.url' } })).toBeNull()
+  it('returns null when varName is provided', () => {
+    expect(b.validate({ varName: 'tab2' })).toBeNull()
+  })
+})
+
+describe('nav.closeTab — codegen', () => {
+  const b = block(navigation, 'nav.closeTab')
+
+  it('generates closeTab with varref', () => {
+    expect(b.codegen({ tab: { type: 'varref', varName: 'tab2' } }))
+      .toBe('await please.closeTab(tab2)')
+  })
+})
+
+describe('nav.closeTab — validate', () => {
+  const b = block(navigation, 'nav.closeTab')
+
+  it('returns error when tab is missing', () => {
+    expect(b.validate({ tab: null })).toBeTruthy()
+  })
+
+  it('returns null when tab is provided', () => {
+    expect(b.validate({ tab: { type: 'varref', varName: 'tab2' } })).toBeNull()
   })
 })
 
@@ -205,6 +218,34 @@ describe('assert.see — codegen', () => {
   it('bare see tanpa varName dan expected', () => {
     expect(b.codegen({ label: 'pesan', selector: '#msg' }))
       .toBe("await please.see('pesan', '#msg')")
+  })
+})
+
+describe('assert.verifyPage — codegen', () => {
+  const b = block(assertions, 'assert.verifyPage')
+
+  it('generates verifyPage with url + title dataref', () => {
+    expect(b.codegen({
+      url:   { type: 'dataref', path: 'PAGE.dashboard.url' },
+      title: { type: 'dataref', path: 'PAGE.dashboard.title' }
+    })).toBe('await please.verifyPage(PAGE.dashboard.url, PAGE.dashboard.title)')
+  })
+
+  it('generates verifyPage with title only', () => {
+    expect(b.codegen({ title: { type: 'dataref', path: 'PAGE.dashboard.title' } }))
+      .toBe("await please.verifyPage('', PAGE.dashboard.title)")
+  })
+})
+
+describe('assert.verifyPage — validate', () => {
+  const b = block(assertions, 'assert.verifyPage')
+
+  it('returns error when both url and title are missing', () => {
+    expect(b.validate({})).toBeTruthy()
+  })
+
+  it('returns null when only url is provided', () => {
+    expect(b.validate({ url: { type: 'dataref', path: 'PAGE.dashboard.url' } })).toBeNull()
   })
 })
 

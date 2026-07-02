@@ -425,7 +425,7 @@ export const useCanvasStore = defineStore('canvas', {
       this.addStep(tc5.id, 'action.fill',     { label: 'input username', selector: '#username', value: 'student' })
       this.addStep(tc5.id, 'action.fill',     { label: 'input password', selector: '#password', value: 'Password123' })
       this.addStep(tc5.id, 'action.click',    { label: 'button submit',  selector: '#submit' })
-      this.addStep(tc5.id, 'nav.verifyPage',  { url: { type: 'dataref', path: 'PAGE.dashboard.url' }, title: { type: 'dataref', path: 'PAGE.dashboard.title' } })
+      this.addStep(tc5.id, 'assert.verifyPage', { url: { type: 'dataref', path: 'PAGE.dashboard.url' }, title: { type: 'dataref', path: 'PAGE.dashboard.title' } })
       this.addStep(tc5.id, 'assert.see',  { label: 'teks sukses', selector: 'h1', expected: 'Logged In Successfully' })
       this.addStep(tc5.id, 'action.click',    { label: 'button logout', selector: 'text=Log out' })
 

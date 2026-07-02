@@ -1,5 +1,5 @@
 // Definisi blok kategori Utilities
-// Mapping ke: please.wait(), untilShow(), screenshot(), newTab(), switchTab(), closeTab(), acceptDialog(), dismissDialog()
+// Mapping ke: please.wait(), untilShow(), screenshot(), switchTab(), acceptDialog(), dismissDialog()
 
 const UTIL = { type: 'utility', color: '#6b7280', colorBg: 'rgba(107,114,128,0.1)', output: null }
 
@@ -98,26 +98,6 @@ export default [
   /*
     {
       ...UTIL,
-      id: 'util.newTab',
-      label: 'New Tab',
-      icon: '🪟',
-      description: 'Buka tab baru, simpan referensinya ke variabel',
-      output: 'tab',
-      inputs: [
-        { name: 'varName', type: 'text', label: 'Simpan ke variabel', placeholder: 'tab2', required: true }
-      ],
-      codegen(inputs) {
-        const v = inputs.varName || 'tab'
-        return `const ${v} = await please.newTab()`
-      },
-      validate(inputs) {
-        if (!inputs.varName) return 'Nama variabel wajib diisi'
-        return null
-      }
-    },
-  
-    {
-      ...UTIL,
       id: 'util.switchTab',
       label: 'Switch Tab',
       icon: '🔀',
@@ -136,28 +116,7 @@ export default [
         return null
       }
     },
-  
-    {
-      ...UTIL,
-      id: 'util.closeTab',
-      label: 'Close Tab',
-      icon: '✖️',
-      description: 'Tutup tab tertentu',
-      inputs: [
-        { name: 'tab', type: 'varref', label: 'Variabel tab', placeholder: '$tab2', required: true }
-      ],
-      codegen(inputs) {
-        const ref = inputs.tab && typeof inputs.tab === 'object' && inputs.tab.type === 'varref'
-          ? inputs.tab.varName
-          : inputs.tab || 'tab'
-        return `await please.closeTab(${ref})`
-      },
-      validate(inputs) {
-        if (!inputs.tab) return 'Variabel tab wajib diisi'
-        return null
-      }
-    },
-  
+
     {
       ...UTIL,
       id: 'util.acceptDialog',

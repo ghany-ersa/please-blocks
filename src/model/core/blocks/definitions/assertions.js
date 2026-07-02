@@ -1,5 +1,5 @@
 // Definisi blok kategori Assertions
-// Mapping ke: please.see(), expect() Playwright
+// Mapping ke: please.see(), please.verifyPage(), expect() Playwright
 
 import { t }                  from './inputTemplates.js'
 import { v, createValidator } from './validationHelpers.js'
@@ -10,8 +10,41 @@ const ASSERTION = { type: 'assertion', color: '#f59e0b', colorBg: 'rgba(245,158,
 export default [
   {
     ...ASSERTION,
+    id: 'assert.verifyPage',
+    label: 'Verify Page',
+    icon: '📍',
+    description: 'Assert URL dan/atau title halaman saat ini setelah redirect/navigasi',
+    inputs: [
+      {
+        name:        'url',
+        type:        'value',
+        label:       'URL (opsional)',
+        placeholder: 'PAGE.dashboard.url',
+        required:    false
+      },
+      {
+        name:        'title',
+        type:        'value',
+        label:       'Title (opsional)',
+        placeholder: 'PAGE.dashboard.title',
+        required:    false
+      }
+    ],
+    codegen(inputs) {
+      const args = [inputs.url ? resolveValue(inputs.url) : "''"]
+      if (inputs.title) args.push(resolveValue(inputs.title))
+      return `await please.verifyPage(${args.join(', ')})`
+    },
+    validate(inputs) {
+      if (!inputs.url && !inputs.title) return 'URL atau title wajib diisi salah satu'
+      return null
+    }
+  },
+
+  {
+    ...ASSERTION,
     id: 'assert.see',
-    label: 'See',
+    label: 'See / Assert',
     icon: '👁️',
     description: 'Baca atau assert teks element. Isi "Simpan ke variabel" dan/atau "Teks yang diharapkan" sesuai kebutuhan.',
     output: null,
@@ -33,6 +66,7 @@ export default [
     validate: createValidator(v.selector())
   },
 
+/*
   {
     ...ASSERTION,
     id: 'assert.equal',
@@ -50,7 +84,7 @@ export default [
     },
     validate: createValidator(v.actual(), v.expected())
   },
-
+*/
   {
     ...ASSERTION,
     id: 'assert.notEqual',

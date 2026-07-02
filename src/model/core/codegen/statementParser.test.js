@@ -162,7 +162,7 @@ describe('parseStatementToStep — navigation', () => {
   it('memetakan please.verifyPage(url, title)', () => {
     const src = 'await please.verifyPage(PAGE.dashboard.url, PAGE.dashboard.title)'
     const step = parseStatementToStep(stmtOf(src), makeCtx({ source: src }))
-    expect(step.blockId).toBe('nav.verifyPage')
+    expect(step.blockId).toBe('assert.verifyPage')
     expect(step.inputs.url).toEqual({ type: 'dataref', path: 'PAGE.dashboard.url' })
     expect(step.inputs.title).toEqual({ type: 'dataref', path: 'PAGE.dashboard.title' })
   })
@@ -170,7 +170,7 @@ describe('parseStatementToStep — navigation', () => {
   it('memetakan please.verifyPage(url) — title tidak diberikan', () => {
     const src = "await please.verifyPage('/dashboard')"
     const step = parseStatementToStep(stmtOf(src), makeCtx({ source: src }))
-    expect(step.blockId).toBe('nav.verifyPage')
+    expect(step.blockId).toBe('assert.verifyPage')
     expect(step.inputs.url).toBe('/dashboard')
     expect(step.inputs.title).toBeUndefined()
   })

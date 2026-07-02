@@ -49,7 +49,7 @@ export function parseStatementToStep(stmt, ctx) {
         return withNote(note, { blockId: 'assert.see', inputs })
       }
       if (pleaseMethod.method === 'newTab') {
-        return withNote(note, { blockId: 'util.newTab', inputs: { varName } })
+        return withNote(note, { blockId: 'nav.newTab', inputs: { varName } })
       }
     }
     return rawStep(stmt, ctx, note)
@@ -130,7 +130,7 @@ function mapPleaseMethod({ method, args }, ctx) {
       const inputs = {}
       if (args[0] !== undefined) inputs.url = valueFrom(args[0], ctx)
       if (args[1] !== undefined) inputs.title = valueFrom(args[1], ctx)
-      return { blockId: 'nav.verifyPage', inputs }
+      return { blockId: 'assert.verifyPage', inputs }
     }
 
     case 'click':
@@ -182,7 +182,7 @@ function mapPleaseMethod({ method, args }, ctx) {
       return { blockId: 'util.switchTab', inputs: { tab: valueFrom(args[0], ctx) } }
 
     case 'closeTab':
-      return { blockId: 'util.closeTab', inputs: { tab: valueFrom(args[0], ctx) } }
+      return { blockId: 'nav.closeTab', inputs: { tab: valueFrom(args[0], ctx) } }
 
     default:
       return null  // tak dikenal → caller pakai rawStep
