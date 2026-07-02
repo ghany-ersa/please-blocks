@@ -15,6 +15,7 @@
     "package.json"
   ],
   "scripts": {
+    "prepack": "chmod +x bin/please-blocks.js",
     "dev": "concurrently \"node --watch --watch-path=server server/index.js\" \"vite\" --names \"server,vite\" --prefix-colors \"cyan,green\"",
     "server": "node --watch --watch-path=server server/index.js",
     "vite": "vite",
