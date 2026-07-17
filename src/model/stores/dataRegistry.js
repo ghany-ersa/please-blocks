@@ -262,8 +262,10 @@ export const useDataRegistry = defineStore('dataRegistry', {
         this.files = { ...this.files, ...(files || {}) }
         this.env   = { ...this.env, ...(env || {}) }
       } else {
-        this.files = { ...(files || {}) }
-        this.env   = { ...(env || {}) }
+        // Project tanpa file data (folder data/ kosong) → seed dengan template default
+        // agar Data Manager tidak muncul kosong tanpa file 'main' sama sekali.
+        this.files = Object.keys(files || {}).length ? { ...files } : structuredClone(DEFAULT_FILES)
+        this.env   = Object.keys(env || {}).length ? { ...env } : structuredClone(DEFAULT_ENV)
       }
       this.processAndRegister()
     },
