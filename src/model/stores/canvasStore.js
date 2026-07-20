@@ -87,10 +87,23 @@ export const useCanvasStore = defineStore('canvas', {
   actions: {
     // ── Features ──────────────────────────────────────────────────
 
+    // Nama unik (case-insensitive) berdasarkan label dasar, tambahkan " (2)", " (3)", dst. jika bentrok
+    uniqueFeatureLabel(baseLabel, excludeFeatureId = null) {
+      const taken = new Set(
+        this.features
+          .filter(f => f.id !== excludeFeatureId)
+          .map(f => f.label.trim().toLowerCase())
+      )
+      if (!taken.has(baseLabel.trim().toLowerCase())) return baseLabel
+      let n = 2
+      while (taken.has(`${baseLabel.trim()} (${n})`.toLowerCase())) n++
+      return `${baseLabel.trim()} (${n})`
+    },
+
     addFeature(label = 'Feature Baru') {
       const feature = {
         id:        uid('feat'),
-        label,
+        label:     this.uniqueFeatureLabel(label),
         testCases: [],
         collapsed: false,
         enabled:   true    // ← toggle untuk test.describe.skip()
@@ -106,9 +119,22 @@ export const useCanvasStore = defineStore('canvas', {
       if (f) { f.enabled = !f.enabled; this.persist() }
     },
 
+    // @returns {{ ok: boolean, error?: string }} — ditolak jika nama sudah dipakai feature lain
     updateFeatureLabel(featureId, label) {
       const f = this.features.find(f => f.id === featureId)
-      if (f) { f.label = label; this.persist() }
+      if (!f) return { ok: false, error: 'Feature tidak ditemukan.' }
+
+      const trimmed = label.trim()
+      if (!trimmed) return { ok: false, error: 'Nama feature tidak boleh kosong.' }
+
+      const isDuplicate = this.features.some(
+        other => other.id !== featureId && other.label.trim().toLowerCase() === trimmed.toLowerCase()
+      )
+      if (isDuplicate) return { ok: false, error: `Feature "${trimmed}" sudah ada. Pilih nama lain.` }
+
+      f.label = trimmed
+      this.persist()
+      return { ok: true }
     },
 
     removeFeature(featureId) {
@@ -267,6 +293,26 @@ export const useCanvasStore = defineStore('canvas', {
           return
         }
       }
+    },
+
+    // Pindahkan test case ke feature lain dan/atau posisi lain (reorder + cross-feature move)
+    moveTestCase(testCaseId, fromFeatureId, toFeatureId, toIndex) {
+      const fromFeature = this.features.find(f => f.id === fromFeatureId)
+      const toFeature   = this.features.find(f => f.id === toFeatureId)
+      if (!fromFeature || !toFeature) return
+
+      const fromIndex = fromFeature.testCases.findIndex(t => t.id === testCaseId)
+      if (fromIndex === -1) return
+
+      const [tc] = fromFeature.testCases.splice(fromIndex, 1)
+
+      // Jika splice di atas menggeser index tujuan (reorder dalam feature yang sama)
+      let insertAt = toIndex
+      if (fromFeature === toFeature && fromIndex < toIndex) insertAt -= 1
+      insertAt = Math.max(0, Math.min(insertAt, toFeature.testCases.length))
+
+      toFeature.testCases.splice(insertAt, 0, tc)
+      this.persist()
     },
 
     // Ambil salinan step pada indices tertentu (untuk diekstrak jadi component)

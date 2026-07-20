@@ -22,6 +22,7 @@ function loadDemo() {
 
 // Drop pada area canvas kosong (bukan di dalam feature/testcase)
 function onCanvasDrop(e) {
+  if (e.dataTransfer.types.includes('tc-reorder')) return
   e.preventDefault()
   const blockId = e.dataTransfer.getData('text/plain')
   if (!blockId) return
@@ -34,6 +35,7 @@ function onCanvasDrop(e) {
 }
 
 function onCanvasDragOver(e) {
+  if (e.dataTransfer.types.includes('tc-reorder')) return
   e.preventDefault()
   e.dataTransfer.dropEffect = 'copy'
 }

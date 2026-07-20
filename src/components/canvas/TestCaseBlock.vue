@@ -103,6 +103,7 @@ const tcValidation = computed(() =>
 const tcErrorCount = computed(() => tcValidation.value.totalErrors)
 const draftLabel = ref('')
 const isDropOver = ref(false)
+const tcDropPosition = ref(null)   // 'before' | 'after' — reorder test case
 
 const isActive = computed(() => canvas.activeTestCaseId === props.testCase.id)
 
@@ -128,6 +129,8 @@ function onSelect() {
 
 // Drag-and-drop dari palette ke test case
 function onDragOver(e) {
+  // Biarkan drag test case (tc-reorder) lolos/bubble ke parent .test-case
+  if (e.dataTransfer.types.includes('tc-reorder')) return
   e.preventDefault()
   e.stopPropagation()
   e.dataTransfer.dropEffect = 'copy'
@@ -141,6 +144,8 @@ function onDragLeave(e) {
 }
 
 function onDrop(e) {
+  // Biarkan drop test case (tc-reorder) lolos/bubble ke parent .test-case
+  if (e.dataTransfer.types.includes('tc-reorder')) return
   e.preventDefault()
   e.stopPropagation()
   isDropOver.value = false
@@ -163,16 +168,69 @@ function onDrop(e) {
     }
   }
 }
+
+// Drag-and-drop test case (reorder dalam feature / pindah antar feature)
+function onTcDragStart(e) {
+  e.stopPropagation()
+  e.dataTransfer.effectAllowed = 'move'
+  e.dataTransfer.setData('tc-reorder', JSON.stringify({
+    testCaseId:      props.testCase.id,
+    fromFeatureId:   props.featureId
+  }))
+}
+
+function onTcDragOver(e) {
+  if (!e.dataTransfer.types.includes('tc-reorder')) return
+  e.preventDefault()
+  e.stopPropagation()
+  e.dataTransfer.dropEffect = 'move'
+  const rect = e.currentTarget.getBoundingClientRect()
+  tcDropPosition.value = (e.clientY - rect.top) < rect.height / 2 ? 'before' : 'after'
+}
+
+function onTcDragLeave(e) {
+  if (!e.currentTarget.contains(e.relatedTarget)) tcDropPosition.value = null
+}
+
+function onTcDrop(e) {
+  const raw = e.dataTransfer.getData('tc-reorder')
+  if (!raw) return
+  e.preventDefault()
+  e.stopPropagation()
+  const { testCaseId, fromFeatureId } = JSON.parse(raw)
+  const position = tcDropPosition.value
+  tcDropPosition.value = null
+  if (testCaseId === props.testCase.id) return
+
+  const feature = canvas.featureById(props.featureId)
+  if (!feature) return
+  const targetIndex = feature.testCases.findIndex(t => t.id === props.testCase.id)
+  const toIndex = position === 'before' ? targetIndex : targetIndex + 1
+  canvas.moveTestCase(testCaseId, fromFeatureId, props.featureId, toIndex)
+}
 </script>
 
 <template>
   <div
     class="test-case"
-    :class="{ active: isActive, 'drop-over': isDropOver }"
+    :class="{
+      active: isActive,
+      'drop-over': isDropOver,
+      'tc-drop-before': tcDropPosition === 'before',
+      'tc-drop-after':  tcDropPosition === 'after'
+    }"
     @click.self="onSelect"
+    @dragover="onTcDragOver"
+    @dragleave="onTcDragLeave"
+    @drop="onTcDrop"
   >
     <!-- Header -->
-    <div class="tc-header" @click="onSelect">
+    <div
+      class="tc-header"
+      draggable="true"
+      @click="onSelect"
+      @dragstart="onTcDragStart"
+    >
       <button
         class="tc-collapse"
         @click.stop="canvas.toggleTestCaseCollapse(testCase.id)"
@@ -291,6 +349,8 @@ function onDrop(e) {
   border-color: var(--color-purple);
   background: var(--color-purple-bg-mid);
 }
+.test-case.tc-drop-before { box-shadow: 0 -2px 0 var(--color-purple); }
+.test-case.tc-drop-after  { box-shadow: 0  2px 0 var(--color-purple); }
 
 .tc-header {
   display: flex;
@@ -302,6 +362,8 @@ function onDrop(e) {
   transition: background var(--transition-fast);
 }
 .tc-header:hover { background: rgba(168,85,247,0.06); }
+.tc-header { cursor: grab; }
+.tc-header:active { cursor: grabbing; }
 
 .tc-collapse {
   background: none; border: none; cursor: pointer;

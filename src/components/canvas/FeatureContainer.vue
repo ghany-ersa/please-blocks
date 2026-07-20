@@ -14,17 +14,22 @@ const runner  = useRunnerStore()
 const { runFeature } = useTestRunnerControl()
 const editing = ref(false)
 const draftLabel = ref('')
+const labelError = ref('')
+const isTcDropOver = ref(false)
 
 const isActive = computed(() => canvas.activeFeatureId === props.feature.id)
 
 function startEdit() {
   draftLabel.value = props.feature.label
+  labelError.value = ''
   editing.value    = true
 }
 
 function saveLabel() {
-  if (draftLabel.value.trim()) {
-    canvas.updateFeatureLabel(props.feature.id, draftLabel.value.trim())
+  const res = canvas.updateFeatureLabel(props.feature.id, draftLabel.value)
+  if (!res.ok) {
+    labelError.value = res.error
+    return
   }
   editing.value = false
 }
@@ -46,34 +51,72 @@ function onSelect() {
 function onRunFeature() {
   runFeature(props.feature.id)
 }
+
+// Drop test case di area feature (bawah list / feature kosong) → pindah ke akhir
+function onTcDragOver(e) {
+  if (!e.dataTransfer.types.includes('tc-reorder')) return
+  e.preventDefault()
+  e.stopPropagation()
+  e.dataTransfer.dropEffect = 'move'
+  isTcDropOver.value = true
+}
+
+function onTcDragLeave(e) {
+  if (!e.currentTarget.contains(e.relatedTarget)) isTcDropOver.value = false
+}
+
+function onTcDrop(e) {
+  const raw = e.dataTransfer.getData('tc-reorder')
+  if (!raw) return
+  e.preventDefault()
+  e.stopPropagation()
+  isTcDropOver.value = false
+  const { testCaseId, fromFeatureId } = JSON.parse(raw)
+  canvas.moveTestCase(testCaseId, fromFeatureId, props.feature.id, props.feature.testCases.length)
+}
 </script>
 
 <template>
   <div
     class="feature"
-    :class="{ active: isActive }"
+    :class="{ active: isActive, 'tc-drop-over': isTcDropOver }"
     @click.self="onSelect"
+    @dragover="onTcDragOver"
+    @dragleave="onTcDragLeave"
+    @drop="onTcDrop"
   >
     <!-- Feature Header -->
     <div class="feat-header" @click="onSelect">
       <!-- Toggle enabled/disabled -->
+
+      <button
+        class="feat-run"
+        :disabled="runner.isRunning || feature.enabled === false"
+        @click.stop="onRunFeature"
+        :title="feature.enabled === false ? 'Fitur ini di-skip' : 'Jalankan hanya fitur ini'"
+      >
+        ▷
+      </button>
       <button
         class="feat-toggle"
         :class="{ enabled: feature.enabled !== false }"
         @click.stop="canvas.toggleFeatureEnabled(feature.id)"
-        :title="feature.enabled !== false ? 'Klik untuk nonaktifkan (comment di index.js)' : 'Klik untuk aktifkan'"
+        :title="feature.enabled !== false ? 'Klik untuk nonaktifkan' : 'Klik untuk aktifkan'"
       >
         {{ feature.enabled !== false ? '👁' : '🙈' }}
       </button>
 
       <span v-if="!editing" class="feat-label" @dblclick.stop="startEdit"
-        :class="{ disabled: feature.enabled === false }">
+        :class="{ disabled: feature.enabled === false }" :title="feature.label">
         {{ feature.label }}
       </span>
       <input
         v-else
         v-model="draftLabel"
         class="feat-label-input"
+        :class="{ 'has-error': labelError }"
+        :title="labelError || ''"
+        @input="labelError = ''"
         @blur="saveLabel"
         @keyup.enter="saveLabel"
         @keyup.escape="editing = false"
@@ -94,20 +137,14 @@ function onRunFeature() {
         {{ feature.collapsed ? '›' : '⌄' }}
       </button>
 
-      <button
-        class="feat-run"
-        :disabled="runner.isRunning || feature.enabled === false"
-        @click.stop="onRunFeature"
-        :title="feature.enabled === false ? 'Fitur ini di-skip' : 'Jalankan hanya fitur ini'"
-      >
-        ▷ Run
-      </button>
-
       <button class="feat-remove" @click.stop="onRemove" title="Hapus feature">×</button>
     </div>
 
     <!-- Test Cases -->
-    <div v-show="!feature.collapsed" class="feat-body">
+    <div
+      v-show="!feature.collapsed"
+      class="feat-body"
+    >
       <TestCaseBlock
         v-for="tc in feature.testCases"
         :key="tc.id"
@@ -116,8 +153,8 @@ function onRunFeature() {
       />
 
       <!-- Empty state -->
-      <div v-if="feature.testCases.length === 0" class="feat-empty">
-        Belum ada test case. Klik tombol di bawah untuk menambahkan.
+      <div v-if="feature.testCases.length === 0" class="feat-empty" :class="{ 'drop-active': isTcDropOver }">
+        {{ isTcDropOver ? '＋ Lepas untuk pindahkan test case ke sini' : 'Belum ada test case. Klik tombol di bawah untuk menambahkan.' }}
       </div>
 
       <!-- Add Test Case button -->
@@ -130,8 +167,8 @@ function onRunFeature() {
 
 <style scoped>
 .feature {
-  width: 320px;
-  min-width: 320px;
+  width: 420px;
+  min-width: 420px;
   background: rgba(168,85,247,0.03);
   border: 1px solid rgba(168,85,247,0.2);
   border-radius: var(--radius-xl);
@@ -188,6 +225,7 @@ function onRunFeature() {
   color: var(--color-text-primary);
   outline: none;
 }
+.feat-label-input.has-error { border-color: var(--color-danger); }
 .feat-stats {
   font-size: var(--text-xs);
   color: var(--color-purple-comp);
@@ -224,7 +262,8 @@ function onRunFeature() {
 .feat-run:hover:not(:disabled) { background: rgba(16,185,129,0.12); }
 .feat-run:disabled { opacity: 0.25 !important; cursor: default; }
 
-.feat-body { padding: var(--space-2-5); }
+.feat-body { padding: var(--space-2-5); transition: background var(--transition-fast); }
+.feature.tc-drop-over .feat-body { background: rgba(168,85,247,0.06); }
 
 .feat-empty {
   font-size: var(--text-sm);
@@ -234,7 +273,9 @@ function onRunFeature() {
   border: 1px dashed #1f2937;
   border-radius: var(--radius-lg);
   margin-bottom: var(--space-2);
+  transition: border-color var(--transition-base), color var(--transition-base);
 }
+.feat-empty.drop-active { border-color: var(--color-purple); color: var(--color-purple-light); }
 
 .feat-add-tc {
   width: 100%;
