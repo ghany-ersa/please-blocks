@@ -69,7 +69,7 @@ describe('generateSpec — dengan test case dan steps', () => {
   it('menghasilkan test() block dengan page fixture', () => {
     const code = generateSpec(feature, registry)
     expect(code).toContain("test('login berhasil', async ({ page }) => {")
-    expect(code).toContain('createApp(page)')
+    expect(code).toContain('createApp(page, test)')
   })
 
   it('menghasilkan kode step di dalam it()', () => {
