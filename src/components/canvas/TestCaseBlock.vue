@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useCanvasStore } from '@/model/stores/canvasStore.js'
 import { useBlockRegistry } from '@/model/stores/blockRegistry.js'
 import { useDataRegistry } from '@/model/stores/dataRegistry.js'
@@ -20,6 +20,13 @@ const compStore = useComponentStore()
 const editing   = ref(false)
 
 const sel = useStepSelection()
+
+// Sinkronkan multi-select (index-based, lokal) ke store (ID-based, global)
+// agar bisa dibaca lintas komponen — mis. shortcut Ctrl+C untuk copy banyak step.
+watch(sel.selectedIndices, (indices) => {
+  const stepIds = indices.map(i => props.testCase.steps[i]?.id).filter(Boolean)
+  canvas.setSelectedStepIds(props.testCase.id, stepIds)
+})
 
 // Dialog "Jadikan Component"
 const showDialog    = ref(false)

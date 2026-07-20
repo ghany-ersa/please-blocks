@@ -22,6 +22,7 @@ import { useSaveProject }      from '@/composables/useSaveProject.js'
 import { useProjectWorkspace } from '@/composables/useProjectWorkspace.js'
 import { useTestRunnerControl }from '@/composables/useTestRunnerControl.js'
 import { usePanelResize }      from '@/composables/usePanelResize.js'
+import { useCanvasClipboard }  from '@/composables/useCanvasClipboard.js'
 
 const runner    = useRunnerStore()
 const canvas    = useCanvasStore()   // dipakai template untuk guard tombol (ada feature?)
@@ -33,6 +34,7 @@ const { showReloadConfirm, openProject, syncOnBoot, loadFromDisk, keepLocal } =
   useProjectWorkspace({ onKeepLocal: triggerSave })
 const { validate } = useTestRunnerControl()
 const { inspectorHeightPct, isResizing, panelRef, startResize } = usePanelResize(55)
+useCanvasClipboard()
 
 // Setelah boot-sync (canvas == disk) → tandai tersimpan agar tidak tampak dirty.
 onMounted(async () => { await syncOnBoot(); markSaved() })

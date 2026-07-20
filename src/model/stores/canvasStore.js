@@ -18,6 +18,7 @@ export const useCanvasStore = defineStore('canvas', {
             activeFeatureId:  parsed.features[0]?.id || null,
             activeTestCaseId: null,
             activeStepId:     null,
+            selectedStepIds:  [],
             draggingBlockId:  null,
             dropTargetId:     null
           }
@@ -32,6 +33,9 @@ export const useCanvasStore = defineStore('canvas', {
     activeFeatureId:  null,
     activeTestCaseId: null,
     activeStepId:     null,
+
+    // Multi-select step IDs (Ctrl+click / checkbox), selalu dalam lingkup activeTestCaseId
+    selectedStepIds: [],
 
     // Block ID yang sedang di-drag dari palette (null jika tidak ada)
     draggingBlockId: null,
@@ -167,6 +171,7 @@ export const useCanvasStore = defineStore('canvas', {
           if (this.activeTestCaseId === testCaseId) {
             this.activeTestCaseId = f.testCases[0]?.id || null
             this.activeStepId     = null
+            this.selectedStepIds  = []
           }
           return
         }
@@ -318,22 +323,88 @@ export const useCanvasStore = defineStore('canvas', {
       this.dropTargetId    = null
     },
 
+    // ── Copy / Paste ─────────────────────────────────────────────
+    // Clipboard menyimpan snapshot plain object (testCase/step) di ViewModel
+    // (lihat useCanvasClipboard.js). Store hanya bertanggung jawab menyisipkan
+    // salinan tsb dengan ID baru ke lokasi yang sedang aktif.
+
+    // Sisipkan salinan testCase (dgn id baru, termasuk semua steps) ke feature
+    // yang sedang aktif, tepat setelah testCase aktif (atau di akhir jika tidak ada).
+    pasteTestCase(sourceTestCase) {
+      const targetFeature = this.features.find(f => f.id === this.activeFeatureId) || this.features[0]
+      if (!targetFeature || !sourceTestCase) return null
+
+      const clone = {
+        id:        uid('tc'),
+        label:     `${sourceTestCase.label} (copy)`,
+        collapsed: false,
+        enabled:   sourceTestCase.enabled !== false,
+        steps:     sourceTestCase.steps.map(s => {
+          const step = { id: uid('step'), blockId: s.blockId, inputs: { ...s.inputs }, hasError: false }
+          if (s.note) step.note = s.note
+          return step
+        })
+      }
+
+      const insertAfter = targetFeature.testCases.findIndex(t => t.id === this.activeTestCaseId)
+      const insertAt = insertAfter !== -1 ? insertAfter + 1 : targetFeature.testCases.length
+      targetFeature.testCases.splice(insertAt, 0, clone)
+
+      this.activeFeatureId  = targetFeature.id
+      this.activeTestCaseId = clone.id
+      this.activeStepId     = null
+      this.persist()
+      return clone
+    },
+
+    // Sisipkan salinan banyak step sekaligus (urutan tetap) ke testCase yang
+    // sedang aktif, tepat setelah step aktif (atau di akhir jika tidak ada).
+    pasteSteps(sourceSteps) {
+      const found = this.testCaseById(this.activeTestCaseId)
+      if (!found || !sourceSteps?.length) return []
+      const { testCase: tc } = found
+
+      const clones = sourceSteps.map(s => {
+        const clone = { id: uid('step'), blockId: s.blockId, inputs: { ...s.inputs }, hasError: false }
+        if (s.note) clone.note = s.note
+        return clone
+      })
+
+      const insertAfter = tc.steps.findIndex(s => s.id === this.activeStepId)
+      const insertAt = insertAfter !== -1 ? insertAfter + 1 : tc.steps.length
+      tc.steps.splice(insertAt, 0, ...clones)
+
+      this.activeStepId    = clones[clones.length - 1].id
+      this.selectedStepIds = []
+      this.persist()
+      return clones
+    },
+
     // ── Selection ─────────────────────────────────────────────────
 
     selectFeature(featureId) {
       this.activeFeatureId  = featureId
       this.activeTestCaseId = null
       this.activeStepId     = null
+      this.selectedStepIds  = []
     },
 
     selectTestCase(testCaseId, featureId) {
       this.activeFeatureId  = featureId
       this.activeTestCaseId = testCaseId
       this.activeStepId     = null
+      this.selectedStepIds  = []
     },
 
     selectStep(stepId) {
       this.activeStepId = stepId
+    },
+
+    // Sinkronkan multi-select step (ID, bukan index) dari useStepSelection lokal
+    // per test case, agar bisa diakses lintas komponen (mis. clipboard shortcut).
+    setSelectedStepIds(testCaseId, stepIds) {
+      this.activeTestCaseId = testCaseId
+      this.selectedStepIds  = [...stepIds]
     },
 
     // ── Persistence ────────────────────────────────────────────────

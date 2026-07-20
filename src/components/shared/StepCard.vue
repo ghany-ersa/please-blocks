@@ -83,12 +83,18 @@ const preview = computed(() => {
 
 // ── Click handling ────────────────────────────────────────────────
 function onHeaderClick(e) {
+  // Ctrl/Cmd + klik header = toggle multi-select (sama seperti checkbox),
+  // tanpa expand/collapse dan tanpa mengubah single "active" step.
+  if (props.selectable && (e.ctrlKey || e.metaKey)) {
+    emit('step-click', e)
+    return
+  }
+  // Klik header biasa selalu menjadikan step ini aktif (target copy/paste),
+  // baik saat expand/collapse maupun saat tidak ada input untuk di-expand.
+  canvas.selectStep(props.step.id)
+  emit('select', props.step)
   if (props.editable && block.value?.inputs?.length) {
     toggleExpand()
-  } else {
-    // Tidak ada expand — header click = select step biasa
-    canvas.selectStep(props.step.id)
-    emit('select', props.step)
   }
 }
 

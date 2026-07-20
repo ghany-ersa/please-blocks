@@ -10,10 +10,12 @@ export function useStepSelection() {
 
   function onStepClick(index, event) {
     // Checkbox click: event.target adalah .sc-checkbox-wrap atau anaknya
-    // Tidak pakai modifier — selalu toggle
+    // Tidak pakai modifier — selalu toggle.
+    // Ctrl/Cmd + click di mana pun pada card juga toggle (multi-select tanpa checkbox).
     const isCheckbox = event.target?.closest?.('.sc-checkbox-wrap')
+    const isMetaClick = event.ctrlKey || event.metaKey
 
-    if (isCheckbox) {
+    if (isCheckbox || isMetaClick) {
       // Shift + checkbox = range select dari lastClicked
       if (event.shiftKey && lastClicked.value !== null) {
         const from = Math.min(lastClicked.value, index)
