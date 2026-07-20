@@ -48,6 +48,13 @@ function isSecret(key) {
   return /password|secret|token|key|pass/i.test(key)
 }
 
+// Browser yang didukung Playwright (sesuai browserMap di playwright.config.js template)
+const BROWSER_OPTIONS = [
+  { value: 'chromium', label: '🟡 Chromium' },
+  { value: 'firefox',  label: '🟠 Firefox' },
+  { value: 'webkit',   label: '🔵 WebKit' }
+]
+
 const envLines = computed(() => Object.entries(localEnv.value))
 
 // Mode panel: auto-save langsung ke store tiap perubahan (tanpa tombol Simpan).
@@ -167,7 +174,25 @@ function downloadEnv() {
                 {{ key }}
               </span>
               <div class="col-val val-input-wrap">
+                <select
+                  v-if="key === 'BROWSER'"
+                  class="val-input val-select"
+                  :value="val"
+                  @change="updateValue(key, $event.target.value)"
+                >
+                  <option v-for="opt in BROWSER_OPTIONS" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                </select>
+                <select
+                  v-else-if="key === 'HEADLESS'"
+                  class="val-input val-select"
+                  :value="val"
+                  @change="updateValue(key, $event.target.value)"
+                >
+                  <option value="true">true (tanpa tampilan browser)</option>
+                  <option value="false">false (tampilkan browser)</option>
+                </select>
                 <input
+                  v-else
                   class="val-input"
                   :type="isSecret(key) && !showValue[key] ? 'password' : 'text'"
                   :value="val"
@@ -352,6 +377,7 @@ function downloadEnv() {
   color: var(--color-text-primary); outline: none; transition: border-color 0.12s;
 }
 .val-input:focus { border-color: var(--color-border-default); background: var(--color-white-6); }
+.val-select { cursor: pointer; appearance: auto; }
 .btn-show {
   background: none; border: none; cursor: pointer;
   font-size: var(--text-base); padding: 0 3px; flex-shrink: 0;

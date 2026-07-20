@@ -12,16 +12,17 @@ import { checkServerHealth, startRun as startRealRun } from '@/model/services/ru
  */
 const SETTINGS_KEY = 'please-blocks:runner-settings'
 
-// Restore pengaturan persist (folder project + browser) dari localStorage
+// Restore pengaturan persist (folder project) dari localStorage.
+// Browser TIDAK lagi disimpan di sini — sumber kebenarannya adalah
+// dataRegistry.env.BROWSER (menu ENV), diteruskan sebagai parameter run.
 function loadSettings() {
   try {
     const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')
     return {
-      projectPath:   typeof saved.projectPath === 'string' ? saved.projectPath : '',
-      browserTarget: saved.browserTarget || 'chromium'
+      projectPath: typeof saved.projectPath === 'string' ? saved.projectPath : ''
     }
   } catch {
-    return { projectPath: '', browserTarget: 'chromium' }
+    return { projectPath: '' }
   }
 }
 
@@ -55,9 +56,6 @@ export const useRunnerStore = defineStore('runner', {
     // Apakah modal Report Viewer sedang tampil
     showReport: false,
 
-    // Browser target: 'chromium' | 'firefox' | 'webkit' (persist)
-    browserTarget: loadSettings().browserTarget,
-
     // true = server Express tersedia, false = fallback ke simulasi
     serverAvailable: false,
 
@@ -90,12 +88,11 @@ export const useRunnerStore = defineStore('runner', {
     close() { this.visible = false },
     toggle(){ this.visible = !this.visible },
 
-    // ── Pengaturan persist (folder + browser) ─────────────────────
+    // ── Pengaturan persist (folder project) ────────────────────────
     persistSettings() {
       try {
         localStorage.setItem(SETTINGS_KEY, JSON.stringify({
-          projectPath:   this.projectPath,
-          browserTarget: this.browserTarget
+          projectPath: this.projectPath
         }))
       } catch { /* ignore */ }
     },
@@ -103,11 +100,6 @@ export const useRunnerStore = defineStore('runner', {
     // Set folder project + simpan agar bertahan saat refresh
     setProjectPath(path) {
       this.projectPath = path || ''
-      this.persistSettings()
-    },
-
-    setBrowserTarget(browser) {
-      this.browserTarget = browser
       this.persistSettings()
     },
 
@@ -132,8 +124,9 @@ export const useRunnerStore = defineStore('runner', {
      * @param {Array}  features      - canvas.features
      * @param {Object} blockRegistry - Pinia blockRegistry store
      * @param {Array}  dataEntries   - dataRegistry.entries
+     * @param {string} [browser]     - dari dataRegistry.env.BROWSER (menu ENV)
      */
-    async runSimulation(features, blockRegistry, dataEntries = []) {
+    async runSimulation(features, blockRegistry, dataEntries = [], browser = 'chromium') {
       if (this.status === 'running') return
       this.clearLogs()
       this.status  = 'running'
@@ -145,7 +138,7 @@ export const useRunnerStore = defineStore('runner', {
 
       this.stats.total = allTcs.filter(tc => tc.enabled).length
 
-      const browserLabel = { chromium: 'Chromium', firefox: 'Mozilla Firefox', webkit: 'WebKit' }[this.browserTarget] || this.browserTarget
+      const browserLabel = { chromium: 'Chromium', firefox: 'Mozilla Firefox', webkit: 'WebKit' }[browser] || browser
       this._addLog('cmd', `$ npx playwright test --reporter=list`)
       await this._delay(150)
       this._addLog('info', `Browser: ${browserLabel}`)
@@ -234,8 +227,9 @@ export const useRunnerStore = defineStore('runner', {
      * @param {string} projectPath - absolute path folder project
      * @param {Array}  features    - daftar feature (untuk parsing hasil log)
      * @param {string} [specFile]  - path relatif satu spec (mis. 'feature/login.spec.js') → jalankan fitur itu saja
+     * @param {string} [browser]   - dari dataRegistry.env.BROWSER (menu ENV)
      */
-    async runReal(files, projectPath, features = [], specFile = '') {
+    async runReal(files, projectPath, features = [], specFile = '', browser = 'chromium') {
       if (this.status === 'running') return
       this.clearLogs()
       this.status      = 'running'
@@ -259,7 +253,7 @@ export const useRunnerStore = defineStore('runner', {
       const handle = await startRealRun({
         projectPath,
         files,
-        browser: this.browserTarget,
+        browser,
         specFile,
 
         onLog: ({ level, text }) => {

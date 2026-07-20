@@ -16,10 +16,16 @@ export function useTestRunnerControl() {
   const dataReg   = useDataRegistry()
   const compStore = useComponentStore()
 
+  // Browser aktif = satu-satunya sumber kebenaran, diatur lewat menu ENV
+  // (dataRegistry.env.BROWSER). Fallback 'chromium' bila belum diset.
+  function activeBrowser() {
+    return dataReg.env.BROWSER || 'chromium'
+  }
+
   // Validate: cek alur test via simulasi (cepat, tanpa server). Dipakai topbar.
   function validate() {
     runner.open()
-    runner.runSimulation(canvas.features, registry, dataReg.entries)
+    runner.runSimulation(canvas.features, registry, dataReg.entries, activeBrowser())
   }
 
   // Run Real: jalankan Playwright sungguhan via server bila tersedia, selain itu
@@ -30,9 +36,9 @@ export function useTestRunnerControl() {
     runner.open()
     if (runner.canRunReal) {
       const files = exportProject(canvas, registry, dataReg, compStore, runner.projectName)
-      runner.runReal(files, runner.projectPath, canvas.features)
+      runner.runReal(files, runner.projectPath, canvas.features, '', activeBrowser())
     } else {
-      runner.runSimulation(canvas.features, registry, dataReg.entries)
+      runner.runSimulation(canvas.features, registry, dataReg.entries, activeBrowser())
     }
   }
 
@@ -45,9 +51,9 @@ export function useTestRunnerControl() {
     if (runner.canRunReal) {
       const files    = exportProject(canvas, registry, dataReg, compStore, runner.projectName)
       const specFile = `feature/${slugify(feature.label)}.spec.js`
-      runner.runReal(files, runner.projectPath, [feature], specFile)
+      runner.runReal(files, runner.projectPath, [feature], specFile, activeBrowser())
     } else {
-      runner.runSimulation([feature], registry, dataReg.entries)
+      runner.runSimulation([feature], registry, dataReg.entries, activeBrowser())
     }
   }
 
