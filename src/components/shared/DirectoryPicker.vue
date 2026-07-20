@@ -153,7 +153,7 @@ onMounted(() => browse())
           @dblclick="enter(item)"
         >
           <span class="item-icon">
-            {{ item.isProject ? '🧪' : item.isDir ? '📁' : '📄' }}
+            {{ item.isProject ? '' : item.isDir ? '📁' : '📄' }}
           </span>
           <span class="item-name">{{ item.name }}</span>
           <span v-if="item.isProject" class="project-badge">project</span>

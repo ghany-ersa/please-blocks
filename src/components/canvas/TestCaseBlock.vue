@@ -243,14 +243,14 @@ function onTcDrop(e) {
         class="tc-toggle"
         :class="{ enabled: testCase.enabled !== false }"
         @click.stop="canvas.toggleTestCaseEnabled(testCase.id)"
-        :title="testCase.enabled !== false ? 'Klik untuk nonaktifkan (test.skip)' : 'Klik untuk aktifkan'"
+        :title="testCase.enabled !== false ? 'Klik untuk nonaktifkan' : 'Klik untuk aktifkan'"
       >
         {{ testCase.enabled !== false ? '👁' : '🙈' }}
       </button>
 
       <span v-if="!editing" class="tc-label" @dblclick.stop="startEdit"
         :class="{ disabled: testCase.enabled === false }">
-        🧪 {{ testCase.label }}
+         {{ testCase.label }}
       </span>
       <input
         v-else

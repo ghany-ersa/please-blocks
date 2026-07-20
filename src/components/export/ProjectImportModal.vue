@@ -80,7 +80,7 @@ function confirmImport() {
                 <div v-for="(f, fi) in analysis.features" :key="fi" class="feat">
                   <div class="feat-label">🧩 {{ f.label }} <span v-if="f.enabled === false" class="off">⏸</span></div>
                   <div v-for="(tc, ti) in f.testCases" :key="ti" class="tc">
-                    <div class="tc-label">🧪 {{ tc.label }}</div>
+                    <div class="tc-label"> {{ tc.label }}</div>
                     <div
                       v-for="(s, si) in tc.steps" :key="si"
                       class="step" :class="{ raw: s.blockId === 'util.rawCode' }"

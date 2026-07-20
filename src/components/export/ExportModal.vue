@@ -43,7 +43,7 @@ const catColor = {
   readme:    '#10b981'
 }
 const catIcon = {
-  spec:      '🧪',
+  spec:      '',
   index:     '📋',
   data:      '📊',
   component: '📦',
