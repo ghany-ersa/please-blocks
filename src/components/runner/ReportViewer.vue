@@ -1,12 +1,37 @@
 <script setup>
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useRunnerStore } from '@/model/stores/runnerStore.js'
 import { useCanvasStore  } from '@/model/stores/canvasStore.js'
+import { artifactUrl } from '@/model/services/runnerService.js'
 
 const runner = useRunnerStore()
 const canvas = useCanvasStore()
 
 const emit = defineEmits(['close'])
+
+// Index title TC → { error, screenshot, video } dari please-report/results.json
+// (hanya terisi untuk real run — simulasi tidak punya attachment).
+const attachmentsByTitle = computed(() => {
+  const map = {}
+  for (const suite of runner.reportDetails) {
+    for (const t of suite.tests || []) {
+      const screenshot = (t.attachments || []).find(a => a.name === 'screenshot')
+      const video = (t.attachments || []).find(a => a.name === 'video')
+      map[t.title.trim()] = {
+        error: t.error || '',
+        screenshotUrl: screenshot ? artifactUrl(runner.projectPath, screenshot.path) : '',
+        videoUrl: video ? artifactUrl(runner.projectPath, video.path) : ''
+      }
+    }
+  }
+  return map
+})
+
+const expandedTc = ref(null)
+function toggleDetail(tc) {
+  if (tc.result !== 'fail' || !attachmentsByTitle.value[tc.label]) return
+  expandedTc.value = expandedTc.value === tc.id ? null : tc.id
+}
 
 const passRate = computed(() => {
   const total = runner.stats.total
@@ -154,21 +179,48 @@ function tcIcon(result) {
           </div>
 
           <div class="tc-list">
-            <div
-              v-for="tc in feature.tcs"
-              :key="tc.id"
-              class="tc-row"
-              :class="tc.result"
-            >
-              <span class="tc-icon">{{ tcIcon(tc.result) }}</span>
-              <span class="tc-label">{{ tc.label }}</span>
-              <span class="tc-result-label">
-                {{ tc.result === 'pass' ? 'lulus'
-                 : tc.result === 'fail' ? 'gagal'
-                 : tc.result === 'pending' && !tc.enabled ? 'dilewati'
-                 : '' }}
-              </span>
-            </div>
+            <template v-for="tc in feature.tcs" :key="tc.id">
+              <div
+                class="tc-row"
+                :class="[tc.result, { clickable: tc.result === 'fail' && attachmentsByTitle[tc.label] }]"
+                @click="toggleDetail(tc)"
+              >
+                <span class="tc-icon">{{ tcIcon(tc.result) }}</span>
+                <span class="tc-label">{{ tc.label }}</span>
+                <span class="tc-result-label">
+                  {{ tc.result === 'pass' ? 'lulus'
+                   : tc.result === 'fail' ? 'gagal'
+                   : tc.result === 'pending' && !tc.enabled ? 'dilewati'
+                   : '' }}
+                </span>
+                <span
+                  v-if="tc.result === 'fail' && attachmentsByTitle[tc.label]"
+                  class="tc-chevron"
+                  :class="{ open: expandedTc === tc.id }"
+                >▶</span>
+              </div>
+
+              <div v-if="expandedTc === tc.id && attachmentsByTitle[tc.label]" class="tc-detail">
+                <div v-if="attachmentsByTitle[tc.label].error" class="tc-error">
+                  {{ attachmentsByTitle[tc.label].error }}
+                </div>
+                <div class="tc-media">
+                  <a
+                    v-if="attachmentsByTitle[tc.label].screenshotUrl"
+                    :href="attachmentsByTitle[tc.label].screenshotUrl"
+                    target="_blank"
+                  >
+                    <img class="tc-screenshot" :src="attachmentsByTitle[tc.label].screenshotUrl" alt="screenshot kegagalan" />
+                  </a>
+                  <video
+                    v-if="attachmentsByTitle[tc.label].videoUrl"
+                    class="tc-video"
+                    :src="attachmentsByTitle[tc.label].videoUrl"
+                    controls
+                  ></video>
+                </div>
+              </div>
+            </template>
           </div>
         </div>
 
@@ -429,6 +481,52 @@ function tcIcon(result) {
 .tc-row.fail .tc-result-label { color: var(--color-danger); }
 .tc-row.pending .tc-icon    { color: var(--color-border-default); }
 .tc-row.pending .tc-label   { color: var(--color-text-faint); }
+
+.tc-row.clickable { cursor: pointer; }
+.tc-row.clickable:hover { background: rgba(255,255,255,.03); }
+.tc-chevron {
+  font-size: 9px;
+  color: var(--color-text-faint);
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+.tc-chevron.open { transform: rotate(90deg); }
+
+.tc-detail {
+  padding: 8px 14px 12px 34px;
+  background: var(--color-bg-deepest);
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+.tc-error {
+  font-family: monospace;
+  font-size: var(--text-sm);
+  color: var(--color-danger-light);
+  background: rgba(239,68,68,0.08);
+  border: 1px solid var(--color-danger-border);
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin-bottom: 8px;
+}
+.tc-media {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.tc-screenshot {
+  max-width: 220px;
+  max-height: 140px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-subtle);
+  cursor: zoom-in;
+}
+.tc-video {
+  max-width: 260px;
+  max-height: 160px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-subtle);
+}
 
 /* Empty */
 .empty-state {

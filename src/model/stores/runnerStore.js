@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { validateTestCase } from '@/model/core/blocks/stepValidator.js'
-import { checkServerHealth, startRun as startRealRun } from '@/model/services/runnerService.js'
+import { checkServerHealth, startRun as startRealRun, fetchReport } from '@/model/services/runnerService.js'
 
 /**
  * runnerStore.js
@@ -55,6 +55,10 @@ export const useRunnerStore = defineStore('runner', {
 
     // Apakah modal Report Viewer sedang tampil
     showReport: false,
+
+    // Detail hasil run terakhir dari please-report/results.json (real run saja):
+    // array suite { title, file, tests: [{ title, status, error, attachments }] }
+    reportDetails: [],
 
     // true = server Express tersedia, false = fallback ke simulasi
     serverAvailable: false,
@@ -112,9 +116,10 @@ export const useRunnerStore = defineStore('runner', {
     },
 
     clearLogs() {
-      this.logs      = []
-      this.tcResults = {}
-      this.stats     = { total: 0, passed: 0, failed: 0, skipped: 0, duration: 0 }
+      this.logs          = []
+      this.tcResults     = {}
+      this.stats         = { total: 0, passed: 0, failed: 0, skipped: 0, duration: 0 }
+      this.reportDetails = []
     },
 
     /**
@@ -290,7 +295,7 @@ export const useRunnerStore = defineStore('runner', {
           }
         },
 
-        onDone: ({ exitCode }) => {
+        onDone: async ({ exitCode }) => {
           this.stats.duration = Date.now() - startTime
           this.stats.total    = this.stats.passed + this.stats.failed + this.stats.skipped
 
@@ -304,6 +309,10 @@ export const useRunnerStore = defineStore('runner', {
           this.status         = exitCode === 0 ? 'passed' : 'failed'
           this.showReport     = true
           this._realRunHandle = null
+
+          // Ambil detail hasil (termasuk screenshot/video kegagalan) untuk ReportViewer
+          const report = await fetchReport(projectPath)
+          this.reportDetails = report.ok ? report.suites : []
         },
 
         onError: (msg) => {

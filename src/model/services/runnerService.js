@@ -204,3 +204,32 @@ export async function startRun({ projectPath, files, browser, specFile = '', onL
     }
   }
 }
+
+/**
+ * Ambil laporan hasil run terakhir (please-report/results.json), termasuk
+ * attachment screenshot/video per test case.
+ *
+ * @param {string} projectPath - absolute path folder project
+ * @returns {Promise<{ ok: boolean, suites?: Array, error?: string }>}
+ */
+export async function fetchReport(projectPath) {
+  try {
+    const res = await fetch(`${BASE}/runner/report?projectPath=${encodeURIComponent(projectPath)}`)
+    const data = await res.json()
+    if (!res.ok || !data.ok) return { ok: false, error: data.error || 'Gagal membaca laporan' }
+    return { ok: true, suites: data.suites || [] }
+  } catch (e) {
+    return { ok: false, error: `Tidak dapat terhubung ke server: ${e.message}` }
+  }
+}
+
+/**
+ * Bangun URL untuk menampilkan/mengunduh satu attachment (screenshot/video).
+ *
+ * @param {string} projectPath  - absolute path folder project
+ * @param {string} relativeFile - path relatif attachment (dari results.json)
+ * @returns {string}
+ */
+export function artifactUrl(projectPath, relativeFile) {
+  return `${BASE}/runner/artifact?projectPath=${encodeURIComponent(projectPath)}&file=${encodeURIComponent(relativeFile)}`
+}

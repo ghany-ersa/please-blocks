@@ -7,8 +7,8 @@
  */
 import { Router }   from 'express'
 import { randomUUID } from 'crypto'
-import { writeFileSync, mkdirSync, existsSync } from 'fs'
-import { join, dirname } from 'path'
+import { writeFileSync, mkdirSync, existsSync, readFileSync } from 'fs'
+import { join, dirname, resolve, sep } from 'path'
 import { startRun, getActiveRun } from '../lib/testRunner.js'
 
 export const runnerRouter = Router()
@@ -89,4 +89,52 @@ runnerRouter.post('/stop/:runId', (req, res) => {
 
   run.stop()
   res.json({ ok: true })
+})
+
+/**
+ * GET /api/runner/report?projectPath=/abs/project
+ * Baca please-report/results.json (ditulis PleaseReporter) hasil run terakhir —
+ * berisi status/error/attachment (screenshot, video) per test case.
+ */
+runnerRouter.get('/report', (req, res) => {
+  const projectPath = req.query.projectPath ? String(req.query.projectPath) : ''
+  if (!projectPath) return res.status(400).json({ error: 'projectPath diperlukan' })
+
+  const absProject = resolve(projectPath)
+  const reportPath = join(absProject, 'please-report', 'results.json')
+
+  if (!existsSync(reportPath)) {
+    return res.status(404).json({ error: 'Laporan belum tersedia — jalankan test terlebih dahulu' })
+  }
+
+  try {
+    const data = JSON.parse(readFileSync(reportPath, 'utf-8'))
+    res.json({ ok: true, ...data })
+  } catch (err) {
+    res.status(500).json({ error: `Gagal membaca laporan: ${err.message}` })
+  }
+})
+
+/**
+ * GET /api/runner/artifact?projectPath=/abs/project&file=test-results/xxx/screenshot.png
+ * Serve satu file attachment (screenshot/video) hasil Playwright.
+ * `file` harus berupa path relatif yang tetap berada di dalam projectPath (anti path traversal).
+ */
+runnerRouter.get('/artifact', (req, res) => {
+  const projectPath = req.query.projectPath ? String(req.query.projectPath) : ''
+  const file = req.query.file ? String(req.query.file) : ''
+  if (!projectPath || !file) return res.status(400).json({ error: 'projectPath dan file diperlukan' })
+
+  const absProject = resolve(projectPath)
+  const absFile = resolve(absProject, file)
+
+  // Cegah path traversal: absFile wajib berada di dalam absProject.
+  if (absFile !== absProject && !absFile.startsWith(absProject + sep)) {
+    return res.status(403).json({ error: 'Path file tidak valid' })
+  }
+  if (!existsSync(absFile)) {
+    return res.status(404).json({ error: 'File tidak ditemukan' })
+  }
+
+  res.sendFile(absFile)
 })
