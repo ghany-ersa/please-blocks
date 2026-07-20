@@ -180,7 +180,7 @@ function onDrop(e) {
         @click.stop="canvas.toggleTestCaseEnabled(testCase.id)"
         :title="testCase.enabled !== false ? 'Klik untuk nonaktifkan (test.skip)' : 'Klik untuk aktifkan'"
       >
-        {{ testCase.enabled !== false ? '▶' : '⏸' }}
+        {{ testCase.enabled !== false ? '👁' : '🙈' }}
       </button>
 
       <span v-if="!editing" class="tc-label" @dblclick.stop="startEdit"
@@ -304,10 +304,11 @@ function onDrop(e) {
 .tc-toggle {
   background: none; border: none; cursor: pointer;
   font-size: var(--text-sm); padding: 0 var(--space-1); flex-shrink: 0;
-  color: var(--color-text-faint); transition: color var(--transition-base);
+  color: var(--color-text-faint); transition: color var(--transition-base), opacity var(--transition-base);
 }
-.tc-toggle.enabled { color: var(--color-success); }
+.tc-toggle.enabled { color: var(--color-success); opacity: 0; }
 .tc-toggle:not(.enabled) { color: var(--color-text-ghost); }
+.tc-header:hover .tc-toggle.enabled { opacity: 1; }
 .tc-toggle:hover { opacity: 0.8; }
 .tc-label.disabled { opacity: 0.4; text-decoration: line-through; }
 .tc-label {

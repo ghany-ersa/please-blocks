@@ -63,7 +63,7 @@ function onRunFeature() {
         @click.stop="canvas.toggleFeatureEnabled(feature.id)"
         :title="feature.enabled !== false ? 'Klik untuk nonaktifkan (comment di index.js)' : 'Klik untuk aktifkan'"
       >
-        {{ feature.enabled !== false ? '▶' : '⏸' }}
+        {{ feature.enabled !== false ? '👁' : '🙈' }}
       </button>
 
       <span v-if="!editing" class="feat-label" @dblclick.stop="startEdit"
@@ -146,10 +146,11 @@ function onRunFeature() {
 .feat-toggle {
   background: none; border: none; cursor: pointer;
   font-size: var(--text-base); padding: 0 var(--space-1); flex-shrink: 0;
-  color: var(--color-text-faint); transition: color var(--transition-base);
+  color: var(--color-text-faint); transition: color var(--transition-base), opacity var(--transition-base);
 }
-.feat-toggle.enabled { color: var(--color-success); }
+.feat-toggle.enabled { color: var(--color-success); opacity: 0; }
 .feat-toggle:not(.enabled) { color: var(--color-text-ghost); }
+.feat-header:hover .feat-toggle.enabled { opacity: 1; }
 .feat-toggle:hover { opacity: 0.8; }
 
 .feat-label.disabled,
