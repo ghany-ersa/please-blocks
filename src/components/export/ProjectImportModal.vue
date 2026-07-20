@@ -207,7 +207,7 @@ function confirmImport() {
 
 .feat { margin-bottom: var(--space-2); }
 .feat-label { font-size: var(--text-base); font-weight: var(--font-bold); color: var(--color-primary-light); }
-.off { color: #4b5563; font-size: var(--text-xs); }
+.off { color: var(--color-text-muted); font-size: var(--text-xs); }
 .tc { margin: 3px 0 5px var(--space-2); }
 .tc-label { font-size: var(--text-sm); font-weight: var(--font-semibold); color: var(--color-warning); }
 .step { font-size: var(--text-sm); color: var(--color-text-secondary); padding: 1px var(--space-2); margin-left: var(--space-2-5); border-left: 2px solid var(--color-border-subtle); font-family: monospace; }

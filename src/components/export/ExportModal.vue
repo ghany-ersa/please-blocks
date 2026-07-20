@@ -35,12 +35,12 @@ const current = computed(() => files.value[activeIdx.value] || null)
 
 // Category color
 const catColor = {
-  spec:      '#818cf8',
-  index:     '#a855f7',
-  data:      '#0ea5e9',
-  component: '#ec4899',
-  config:    '#64748b',
-  readme:    '#10b981'
+  spec:      'var(--color-primary-light)',
+  index:     'var(--color-purple)',
+  data:      'var(--color-info)',
+  component: 'var(--color-comp)',
+  config:    'var(--color-text-muted)',
+  readme:    'var(--color-success)'
 }
 const catIcon = {
   spec:      '',
@@ -230,7 +230,7 @@ function triggerDownload(blob, filename) {
 }
 .tab-icon     { font-size: var(--text-base); }
 .tab-name     { font-weight: var(--font-semibold); }
-.tab-disabled { font-size: var(--text-xs); color: #4b5563; }
+.tab-disabled { font-size: var(--text-xs); color: var(--color-text-muted); }
 
 /* File body */
 .file-body { flex: 1; display: flex; flex-direction: column; min-height: 0; }
@@ -242,7 +242,7 @@ function triggerDownload(blob, filename) {
 .file-path  { font-size: var(--text-sm); font-family: monospace; color: var(--color-text-muted); flex: 1; display: flex; align-items: center; gap: 6px; }
 .cat-badge  { font-size: 10.5px; padding: 1px 6px; border-radius: var(--radius-sm); font-weight: var(--font-bold); }
 .disabled-badge {
-  font-size: var(--text-xs); color: #4b5563; background: rgba(75,85,99,0.1);
+  font-size: var(--text-xs); color: var(--color-text-muted); background: var(--color-border-subtle);
   border-radius: 4px; padding: 2px 7px;
 }
 .toolbar-right { display: flex; gap: 6px; }

@@ -469,7 +469,7 @@ function onTcDrop(e) {
 .extract-btn:hover { background: var(--color-purple-dark); }
 .extract-cancel {
   background: none; border: none;
-  color: #6b7280;
+  color: var(--color-status-stopped);
   font-size: var(--text-md);
   cursor: pointer;
   padding: 0 var(--space-px);
@@ -485,7 +485,7 @@ function onTcDrop(e) {
   z-index: 1000;
 }
 .extract-dialog {
-  background: #1e1b2e;
+  background: var(--color-surface-panel-alt);
   border: 1px solid rgba(168,85,247,0.4);
   border-radius: var(--radius-xl);
   padding: var(--space-5);

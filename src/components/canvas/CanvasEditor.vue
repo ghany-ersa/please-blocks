@@ -139,7 +139,7 @@ function onCanvasDragOver(e) {
   flex: 1;
   overflow: auto;
   padding: var(--space-5);
-  background: #0d1117;
+  background: var(--color-surface-code);
   background-image: radial-gradient(circle, var(--color-border-subtle) 1px, transparent 1px);
   background-size: 24px 24px;
   position: relative;
@@ -174,7 +174,7 @@ function onCanvasDragOver(e) {
   border-color: rgba(168,85,247,0.4);
   background: var(--color-purple-bg-mid);
 }
-.af-icon  { font-size: var(--text-icon); color: #4c1d95; }
+.af-icon  { font-size: var(--text-icon); color: var(--color-purple-comp); }
 .af-label { font-size: var(--text-sm); color: var(--color-purple-comp); font-weight: var(--font-semibold); }
 
 /* Empty state */

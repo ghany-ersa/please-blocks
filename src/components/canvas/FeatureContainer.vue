@@ -270,7 +270,7 @@ function onTcDrop(e) {
   color: var(--color-text-ghost);
   text-align: center;
   padding: var(--pad-col-y) var(--space-2);
-  border: 1px dashed #1f2937;
+  border: 1px dashed var(--color-border-default);
   border-radius: var(--radius-lg);
   margin-bottom: var(--space-2);
   transition: border-color var(--transition-base), color var(--transition-base);

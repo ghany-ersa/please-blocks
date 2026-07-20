@@ -23,6 +23,7 @@ import { useProjectWorkspace } from '@/composables/useProjectWorkspace.js'
 import { useTestRunnerControl }from '@/composables/useTestRunnerControl.js'
 import { usePanelResize }      from '@/composables/usePanelResize.js'
 import { useCanvasClipboard }  from '@/composables/useCanvasClipboard.js'
+import { useTheme }            from '@/composables/useTheme.js'
 
 const runner    = useRunnerStore()
 const canvas    = useCanvasStore()   // dipakai template untuk guard tombol (ada feature?)
@@ -34,6 +35,7 @@ const { showReloadConfirm, openProject, syncOnBoot, loadFromDisk, keepLocal } =
   useProjectWorkspace({ onKeepLocal: triggerSave })
 const { validate } = useTestRunnerControl()
 const { inspectorHeightPct, isResizing, panelRef, startResize } = usePanelResize(55)
+const { theme, toggleTheme } = useTheme()
 useCanvasClipboard()
 
 // Setelah boot-sync (canvas == disk) → tandai tersimpan agar tidak tampak dirty.
@@ -76,10 +78,10 @@ const runnerStatusLabel = computed(() => {
 })
 const runnerStatusColor = computed(() => {
   switch (runner.status) {
-    case 'running': return '#f59e0b'
-    case 'passed':  return '#10b981'
-    case 'failed':  return '#ef4444'
-    default:        return '#334155'
+    case 'running': return 'var(--color-status-running)'
+    case 'passed':  return 'var(--color-status-passed)'
+    case 'failed':  return 'var(--color-status-failed)'
+    default:        return 'var(--color-border-default)'
   }
 })
 </script>
@@ -174,6 +176,15 @@ const runnerStatusColor = computed(() => {
           title="Toggle Test Runner panel"
         >
           ≡
+        </button>
+
+        <!-- Toggle tema light/dark -->
+        <button
+          class="topbar-btn theme-toggle"
+          @click="toggleTheme"
+          :title="theme === 'light' ? 'Ganti ke dark mode' : 'Ganti ke light mode'"
+        >
+          {{ theme === 'light' ? '🌙' : '☀️' }}
         </button>
       </div>
     </header>
@@ -443,7 +454,7 @@ const runnerStatusColor = computed(() => {
 }
 .status-dot.running { background: var(--color-warning); animation: pulse 1s ease-in-out infinite; }
 .status-dot.failed  { background: var(--color-danger); }
-.status-dot.stopped { background: #6b7280; }
+.status-dot.stopped { background: var(--color-status-stopped); }
 
 @keyframes pulse {
   0%, 100% { opacity: 1; }

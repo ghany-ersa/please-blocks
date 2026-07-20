@@ -231,7 +231,7 @@ function updateField(name, value) {
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-2-5) var(--space-3);
-  background: var(--color-black-50);
+  /* background: var(--color-black-50); */
   border-bottom: 1px solid var(--color-border-subtle);
   flex-shrink: 0;
 }

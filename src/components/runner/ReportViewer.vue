@@ -40,9 +40,9 @@ const passRate = computed(() => {
 })
 
 const passRateColor = computed(() => {
-  if (passRate.value === 100) return '#10b981'
-  if (passRate.value >= 70)   return '#f59e0b'
-  return '#ef4444'
+  if (passRate.value === 100) return 'var(--color-status-passed)'
+  if (passRate.value >= 70)   return 'var(--color-status-running)'
+  return 'var(--color-status-failed)'
 })
 
 // Breakdown per feature: label + array TC dengan status
@@ -69,10 +69,10 @@ const statusLabel = computed(() => {
 })
 
 const statusColor = computed(() => {
-  if (runner.status === 'passed') return '#10b981'
-  if (runner.status === 'failed') return '#ef4444'
-  if (runner.status === 'stopped') return '#f59e0b'
-  return '#94a3b8'
+  if (runner.status === 'passed') return 'var(--color-status-passed)'
+  if (runner.status === 'failed') return 'var(--color-status-failed)'
+  if (runner.status === 'stopped') return 'var(--color-status-stopped)'
+  return 'var(--color-status-neutral)'
 })
 
 function tcIcon(result) {
@@ -299,7 +299,7 @@ function tcIcon(result) {
 /* Summary section */
 .report-summary {
   padding: 20px 24px 16px;
-  background: #0d1424;
+  background: var(--color-surface-panel-alt);
   border-bottom: 1px solid var(--color-border-subtle);
   flex-shrink: 0;
   display: flex;
@@ -429,14 +429,14 @@ function tcIcon(result) {
   align-items: center;
   gap: 7px;
   padding: var(--space-2) var(--space-3);
-  background: #0f1828;
+  background: var(--color-bg-surface);
   border-bottom: 1px solid var(--color-border-subtle);
 }
 .feature-icon { font-size: var(--text-md); }
 .feature-label {
   font-size: var(--text-base);
   font-weight: var(--font-semibold);
-  color: #cbd5e1;
+  color: var(--color-text-primary);
   flex: 1;
 }
 .feature-badges {
@@ -562,5 +562,5 @@ function tcIcon(result) {
   cursor: pointer;
   transition: all var(--transition-base);
 }
-.btn-secondary:hover { background: #293548; color: var(--color-text-primary); }
+.btn-secondary:hover { background: var(--color-border-strong); color: var(--color-text-primary); }
 </style>

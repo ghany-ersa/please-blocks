@@ -21,16 +21,16 @@ const selectorType = computed(() => {
   const v = (props.modelValue || '').trim()
   if (!v) return null
   if (v.startsWith('//') || v.startsWith('(//'))
-    return { id: 'xpath', label: 'XPath',  color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' }
+    return { id: 'xpath', label: 'XPath',  color: 'var(--color-warning)', bg: 'var(--color-warning-bg)' }
   if (v.startsWith('#'))
-    return { id: 'id',    label: 'ID',     color: '#6366f1', bg: 'rgba(99,102,241,0.1)' }
+    return { id: 'id',    label: 'ID',     color: 'var(--color-primary)', bg: 'var(--color-primary-bg)' }
   if (v.startsWith('link='))
-    return { id: 'link',  label: 'Link',   color: '#0ea5e9', bg: 'rgba(14,165,233,0.1)' }
+    return { id: 'link',  label: 'Link',   color: 'var(--color-info)', bg: 'var(--color-info-bg)' }
   if (v.startsWith('.') || /[\s>+~[\]:()]/.test(v))
-    return { id: 'css',   label: 'CSS',    color: '#10b981', bg: 'rgba(16,185,129,0.1)' }
+    return { id: 'css',   label: 'CSS',    color: 'var(--color-success)', bg: 'var(--color-success-bg)' }
   if (/^[a-zA-Z][a-zA-Z0-9_-]*$/.test(v))
-    return { id: 'name',  label: 'Name',   color: '#94a3b8', bg: 'rgba(148,163,184,0.1)' }
-  return { id: 'css', label: 'CSS', color: '#10b981', bg: 'rgba(16,185,129,0.1)' }
+    return { id: 'name',  label: 'Name',   color: 'var(--color-text-secondary)', bg: 'var(--color-white-5)' }
+  return { id: 'css', label: 'CSS', color: 'var(--color-success)', bg: 'var(--color-success-bg)' }
 })
 
 // ── Validasi syntax ─────────────────────────────────────────────────
@@ -81,11 +81,11 @@ async function copySelector() {
 // ── Hint chips interaktif ────────────────────────────────────────────
 
 const HINTS = [
-  { format: '#',      example: '#username',               title: 'ID element',       color: '#6366f1' },
-  { format: '.',      example: '.btn-submit',             title: 'CSS class',        color: '#10b981' },
-  { format: '//',     example: '//input[@id="user"]',     title: 'XPath',            color: '#f59e0b' },
-  { format: 'link=',  example: 'link=Lupa Password',      title: 'Link text',        color: '#0ea5e9' },
-  { format: '[',      example: '[data-testid="login"]',   title: 'Attribute (CSS)',  color: '#10b981' },
+  { format: '#',      example: '#username',               title: 'ID element',       color: 'var(--color-primary)' },
+  { format: '.',      example: '.btn-submit',             title: 'CSS class',        color: 'var(--color-success)' },
+  { format: '//',     example: '//input[@id="user"]',     title: 'XPath',            color: 'var(--color-warning)' },
+  { format: 'link=',  example: 'link=Lupa Password',      title: 'Link text',        color: 'var(--color-info)' },
+  { format: '[',      example: '[data-testid="login"]',   title: 'Attribute (CSS)',  color: 'var(--color-success)' },
 ]
 
 function applyHint(hint) {

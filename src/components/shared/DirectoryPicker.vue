@@ -230,7 +230,7 @@ onMounted(() => browse())
 .breadcrumb {
   display: flex; align-items: center; flex-wrap: wrap; gap: 0;
   padding: var(--space-1-5) 14px;
-  background: #0d1424; border-bottom: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-panel-alt); border-bottom: 1px solid var(--color-border-subtle);
   flex-shrink: 0; min-height: 32px;
 }
 .crumb-btn {
@@ -247,7 +247,7 @@ onMounted(() => browse())
 .current-path {
   display: flex; align-items: center; gap: var(--space-1-5);
   padding: var(--pad-input-y) 14px;
-  background: #080c12; border-bottom: 1px solid #0f172a;
+  background: var(--color-surface-console); border-bottom: 1px solid var(--color-surface-panel-alt);
   flex-shrink: 0;
 }
 .path-label { font-size: var(--text-xs); color: var(--color-text-dimmed); font-weight: var(--font-bold); text-transform: uppercase; }
@@ -264,7 +264,7 @@ onMounted(() => browse())
 .new-folder-row {
   display: flex; align-items: center; gap: var(--space-2);
   padding: var(--space-1-5) 14px;
-  background: #0d1424; border-bottom: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-panel-alt); border-bottom: 1px solid var(--color-border-subtle);
   flex-shrink: 0;
 }
 .btn-new-folder {
@@ -304,7 +304,7 @@ onMounted(() => browse())
   transition: background var(--transition-fast);
   position: relative;
 }
-.dir-item:hover:not(.is-file) { background: var(--color-bg-surface); color: #cbd5e1; }
+.dir-item:hover:not(.is-file) { background: var(--color-bg-surface); color: var(--color-text-primary); }
 .dir-item.selected { background: var(--color-primary-bg); color: var(--color-primary-light); }
 .dir-item.selected .item-icon { filter: none; }
 .dir-item.project { color: var(--color-success-lighter); }
@@ -342,7 +342,7 @@ onMounted(() => browse())
 .selected-preview {
   display: flex; align-items: center; gap: var(--space-2);
   padding: var(--pad-item-y) 14px;
-  background: #0a0f18; border-top: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-console); border-top: 1px solid var(--color-border-subtle);
   flex-shrink: 0; min-height: 32px;
 }
 .sel-label { font-size: var(--text-xs); color: var(--color-text-dimmed); font-weight: var(--font-bold); text-transform: uppercase; flex-shrink: 0; }

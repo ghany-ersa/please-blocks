@@ -36,12 +36,12 @@ const statusLabel = computed(() => {
 
 const statusColor = computed(() => {
   switch (runner.status) {
-    case 'idle':    return '#475569'
-    case 'running': return '#f59e0b'
-    case 'passed':  return '#10b981'
-    case 'failed':  return '#ef4444'
-    case 'stopped': return '#6b7280'
-    default:        return '#475569'
+    case 'idle':    return 'var(--color-status-idle)'
+    case 'running': return 'var(--color-status-running)'
+    case 'passed':  return 'var(--color-status-passed)'
+    case 'failed':  return 'var(--color-status-failed)'
+    case 'stopped': return 'var(--color-status-stopped)'
+    default:        return 'var(--color-status-idle)'
   }
 })
 
@@ -58,13 +58,13 @@ function clear() {
 
 // Warna per level log
 const levelColor = {
-  info:     '#64748b',
-  pass:     '#10b981',
-  fail:     '#ef4444',
-  warn:     '#f59e0b',
-  cmd:      '#818cf8',
-  expected: '#10b981',
-  received: '#f59e0b'
+  info:     'var(--color-text-faint)',
+  pass:     'var(--color-status-passed)',
+  fail:     'var(--color-status-failed)',
+  warn:     'var(--color-status-running)',
+  cmd:      'var(--color-primary-light)',
+  expected: 'var(--color-status-passed)',
+  received: 'var(--color-status-running)'
 }
 </script>
 
@@ -129,7 +129,7 @@ const levelColor = {
           width: runner.stats.total
             ? ((runner.stats.passed + runner.stats.failed) / runner.stats.total * 100) + '%'
             : '0%',
-          background: runner.stats.failed > 0 ? '#ef4444' : '#10b981'
+          background: runner.stats.failed > 0 ? 'var(--color-status-failed)' : 'var(--color-status-passed)'
         }"
       ></div>
     </div>
@@ -145,7 +145,7 @@ const levelColor = {
         v-for="entry in runner.logs"
         :key="entry.id"
         class="log-entry"
-        :style="{ color: levelColor[entry.level] || '#64748b' }"
+        :style="{ color: levelColor[entry.level] || 'var(--color-text-faint)' }"
       >
         <span class="log-time">{{ entry.time }}</span>
         <span class="log-text" :class="`log-${entry.level}`">{{ entry.text }}</span>
@@ -185,7 +185,7 @@ const levelColor = {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: #080c12;
+  background: var(--color-surface-console);
   font-family: var(--font-mono);
   font-size: var(--text-base);
   color: var(--color-text-secondary);

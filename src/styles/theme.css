@@ -95,6 +95,19 @@
   --color-purple-bg:      rgba(168, 85, 247, 0.08);
   --color-purple-bg-mid:  rgba(168, 85, 247, 0.14);
 
+  /* Status — dipakai runner/report/export untuk state pass/fail/running/idle */
+  --color-status-idle:    #475569;
+  --color-status-running: #f59e0b;
+  --color-status-passed:  #10b981;
+  --color-status-failed:  #ef4444;
+  --color-status-stopped: #6b7280;
+  --color-status-neutral: #94a3b8;
+
+  /* Surface gelap khusus (code preview, console log) — beda dari --color-bg-* umum */
+  --color-surface-code:    #0d1117;
+  --color-surface-console: #080c12;
+  --color-surface-panel-alt: #0d1424;
+
 
   /* ─────────────────────────────────────────────────────────────────
    * WARNA — Utility Alpha
@@ -252,4 +265,112 @@
   --syntax-data-key: #7dd3fc;
   --syntax-default:  #94a3b8;
 
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+ * LIGHT THEME — override token warna. Spacing/tipografi/radius/z-index
+ * tetap sama, hanya warna yang berubah per tema.
+ * Diaktifkan lewat atribut data-theme="light" di <html> (lihat useTheme.js).
+ * ───────────────────────────────────────────────────────────────────── */
+
+:root[data-theme="light"] {
+
+  /* Surface / Background */
+  --color-bg-deepest: #f1f5f9;
+  --color-bg-base:    #f8fafc;
+  --color-bg-surface: #ffffff;
+  --color-bg-scrim:   rgba(15, 23, 42, 0.45);
+
+  /* Border */
+  --color-border-subtle:  #e2e8f0;
+  --color-border-default: #cbd5e1;
+  --color-border-strong:  #78849a;
+
+  /* Teks */
+  --color-text-primary:   #0f172a;
+  --color-text-secondary: #334155;
+  --color-text-muted:     #64748b;
+  --color-text-faint:     #7c8ba0;
+  --color-text-ghost:     #6b7f96;
+  --color-text-dimmed:    #7c8ba0;
+
+  /* Aksen semantik — hue sama, disesuaikan agar kontras di atas background terang */
+  --color-primary:        #4f46e5;
+  --color-primary-light:  #6366f1;
+  --color-primary-bg:     rgba(79, 70, 229, 0.08);
+  --color-primary-border: rgba(79, 70, 229, 0.25);
+
+  --color-success:        #047857;
+  --color-success-light:  #059669;
+  --color-success-lighter:#10b981;
+  --color-success-bg:     rgba(4, 120, 87, 0.10);
+  --color-success-border: rgba(4, 120, 87, 0.30);
+
+  --color-danger:         #dc2626;
+  --color-danger-light:   #ef4444;
+  --color-danger-lighter: #f87171;
+  --color-danger-bg:      rgba(220, 38, 38, 0.08);
+  --color-danger-border:  rgba(220, 38, 38, 0.25);
+
+  --color-warning:        #b45309;
+  --color-warning-text:   #92400e;
+  --color-warning-muted:  #78350f;
+  --color-warning-bg:     rgba(217, 119, 6, 0.10);
+  --color-warning-border: rgba(217, 119, 6, 0.30);
+
+  --color-info:           #0369a1;
+  --color-info-light:     #0284c7;
+  --color-info-lighter:   #0ea5e9;
+  --color-info-bg:        rgba(3, 105, 161, 0.08);
+  --color-info-border:    rgba(3, 105, 161, 0.25);
+
+  --color-comp:           #db2777;
+  --color-comp-light:     #ec4899;
+  --color-comp-bg:        rgba(219, 39, 119, 0.08);
+  --color-comp-border:    rgba(219, 39, 119, 0.25);
+
+  --color-purple:         #9333ea;
+  --color-purple-dark:    #7c3aed;
+  --color-purple-comp:    #6b21a8;
+  --color-purple-light:   #a855f7;
+  --color-purple-bg:      rgba(147, 51, 234, 0.06);
+  --color-purple-bg-mid:  rgba(147, 51, 234, 0.12);
+
+  /* Status */
+  --color-status-idle:    #7c8ba0;
+  --color-status-running: #b45309;
+  --color-status-passed:  #047857;
+  --color-status-failed:  #dc2626;
+  --color-status-stopped: #64748b;
+  --color-status-neutral: #64748b;
+
+  /* Surface gelap khusus → ikut terang di light mode */
+  --color-surface-code:    #f8fafc;
+  --color-surface-console: #0f172a;
+  --color-surface-panel-alt: #f1f5f9;
+
+  /* Utility alpha — versi gelap-di-atas-terang */
+  --color-white-3: rgba(15, 23, 42, 0.03);
+  --color-white-4: rgba(15, 23, 42, 0.04);
+  --color-white-5: rgba(15, 23, 42, 0.05);
+  --color-white-6: rgba(15, 23, 42, 0.06);
+  --color-black:   rgba(15, 23, 42, 0.35);
+  --color-black-50:rgba(15, 23, 42, 0.25);
+
+  /* Shadow — lebih lembut di light mode */
+  --shadow-sm:   0 1px 3px rgba(15, 23, 42, 0.12);
+  --shadow-md:   0 4px 12px rgba(15, 23, 42, 0.14);
+  --shadow-lg:   0 8px 24px rgba(15, 23, 42, 0.16);
+  --shadow-xl:   0 16px 40px rgba(15, 23, 42, 0.18);
+  --shadow-drop: 0 2px 0 var(--color-purple);
+
+  /* Syntax highlight — kontras untuk background terang */
+  --syntax-comment:  #7c8ba0;
+  --syntax-keyword:  #7c3aed;
+  --syntax-string:   #92400e;
+  --syntax-function: #047857;
+  --syntax-object:   #047857;
+  --syntax-data:     #0369a1;
+  --syntax-data-key: #0c5a8a;
+  --syntax-default:  #475569;
 }

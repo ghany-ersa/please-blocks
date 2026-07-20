@@ -35,8 +35,8 @@ const dataReg = useDataRegistry()
 const canvas  = useCanvasStore()
 
 // ── Helpers ───────────────────────────────────────────────────────
-const colorMap = { dataref: '#0ea5e9', value: '#94a3b8', varref: '#c084fc' }
-const color    = computed(() => colorMap[props.inputType] || '#94a3b8')
+const colorMap = { dataref: 'var(--color-info)', value: 'var(--color-text-secondary)', varref: 'var(--color-purple-light)' }
+const color    = computed(() => colorMap[props.inputType] || 'var(--color-text-secondary)')
 
 function isRefValue(v) {
   return v && typeof v === 'object' && (v.type === 'dataref' || v.type === 'varref')
@@ -274,7 +274,7 @@ function clearValue() {
             >
               <span class="opt-icon">⚙️</span>
               <div class="opt-body">
-                <span class="opt-path" style="color:#a78bfa">{{ p.varName }}</span>
+                <span class="opt-path" style="color:var(--color-purple-light)">{{ p.varName }}</span>
                 <span v-if="p.schema?.requiredFields" class="opt-fields">
                   butuh: {{ p.schema.requiredFields.join(', ') }}
                 </span>
@@ -284,7 +284,7 @@ function clearValue() {
                 class="opt-compat warn"
                 :title="`Param ini butuh: ${p.schema.requiredFields?.join(', ')}, tapi field ini butuh: ${schema.requiredFields?.join(', ')}`"
               >⚠</span>
-              <span class="opt-type" style="color:#7c3aed;background:rgba(124,58,237,0.1)">
+              <span class="opt-type" style="color:var(--color-purple-dark);background:var(--color-purple-bg)">
                 {{ p.inputType === 'dataref' && p.schema ? p.schema.description?.split(' ')[0] || 'obj' : p.inputType || 'param' }}
               </span>
             </div>
@@ -331,7 +331,7 @@ function clearValue() {
               @click="selectVar(v)"
             >
               <span class="opt-icon">📌</span>
-              <span class="opt-path" style="color:#c084fc">${{ v.varName }}</span>
+              <span class="opt-path" style="color:var(--color-purple-light)">${{ v.varName }}</span>
             </div>
           </DropdownOptionGroup>
 
@@ -343,7 +343,7 @@ function clearValue() {
           >
             <div class="vi-option" @click="selectInline(inlineValue)">
               <span class="opt-icon">✏️</span>
-              <span class="opt-path" style="color:#fbbf24">'{{ inlineValue }}'</span>
+              <span class="opt-path" style="color:var(--color-warning-text)">'{{ inlineValue }}'</span>
             </div>
           </DropdownOptionGroup>
 
@@ -403,8 +403,8 @@ function clearValue() {
 .schema-hint {
   display: flex; align-items: center; gap: var(--space-2-5);
   font-size: var(--text-xs); color: var(--color-text-faint); margin-bottom: var(--space-2-5);
-  padding: var(--space-1) 7px; background: rgba(99,102,241,0.06);
-  border-radius: var(--radius-sm); border: 1px solid rgba(99,102,241,0.15);
+  padding: var(--space-1) 7px; background: var(--color-primary-bg);
+  border-radius: var(--radius-sm); border: 1px solid var(--color-primary-border);
 }
 .sh-icon { flex-shrink: 0; }
 

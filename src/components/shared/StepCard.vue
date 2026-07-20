@@ -407,7 +407,7 @@ function onDrop(e) {
 /* ── Expanded fields ─────────────────────────────────────── */
 .sc-fields {
   padding: var(--space-1-5) var(--pad-item-x) var(--space-2);
-  background: var(--color-black-50);
+  /* background: var(--color-white-6); */
   border-radius: 0 0 var(--radius-sm) var(--radius-sm);
 }
 
