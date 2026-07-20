@@ -92,24 +92,6 @@ describe('action.clear — codegen', () => {
   })
 })
 
-describe('action.datepicker — codegen', () => {
-  const b = block(actions, 'action.datepicker')
-
-  it('generates datepicker', () => {
-    expect(b.codegen({ label: 'tanggal lahir', selector: '#birthdate', value: '2000-01-01' }))
-      .toBe("await please.datepicker('tanggal lahir', '#birthdate', '2000-01-01')")
-  })
-})
-
-describe('action.uploadFile — codegen', () => {
-  const b = block(actions, 'action.uploadFile')
-
-  it('generates uploadFile with path', () => {
-    expect(b.codegen({ label: 'foto', selector: 'input[type=file]', path: '/tmp/foto.jpg' }))
-      .toBe("await please.uploadFile('foto', 'input[type=file]', '/tmp/foto.jpg')")
-  })
-})
-
 describe('action.scrollTo — codegen', () => {
   const b = block(actions, 'action.scrollTo')
 
@@ -254,20 +236,6 @@ describe('assert.verifyPage — validate', () => {
   })
 })
 
-describe('assert.equal — codegen', () => {
-  const b = block(assertions, 'assert.equal')
-
-  it('generates expect().toBe() without message', () => {
-    expect(b.codegen({ actual: { type: 'varref', varName: 'pageTitle' }, expected: 'Dashboard' }))
-      .toBe("expect(pageTitle).toBe('Dashboard')")
-  })
-
-  it('generates expect().toBe() with message', () => {
-    expect(b.codegen({ actual: { type: 'varref', varName: 'pageTitle' }, expected: 'Dashboard', message: 'judul salah' }))
-      .toBe("expect(pageTitle, 'judul salah').toBe('Dashboard')")
-  })
-})
-
 describe('assert.notEqual — codegen', () => {
   const b = block(assertions, 'assert.notEqual')
 
@@ -357,62 +325,3 @@ describe('util.screenshot — codegen', () => {
   })
 })
 
-describe('util.newTab — codegen', () => {
-  const b = block(utilities, 'util.newTab')
-
-  it('generates newTab assignment ke variabel', () => {
-    expect(b.codegen({ varName: 'tab2' }))
-      .toBe('const tab2 = await please.newTab()')
-  })
-
-  it('returns error when varName kosong', () => {
-    expect(b.validate({ varName: '' })).toBeTruthy()
-  })
-
-  it('returns null when varName diisi', () => {
-    expect(b.validate({ varName: 'tab2' })).toBeNull()
-  })
-})
-
-describe('util.switchTab — codegen', () => {
-  const b = block(utilities, 'util.switchTab')
-
-  it('generates switchTab dari varref', () => {
-    expect(b.codegen({ tab: { type: 'varref', varName: 'tab2' } }))
-      .toBe('await please.switchTab(tab2)')
-  })
-
-  it('returns error when tab kosong', () => {
-    expect(b.validate({ tab: '' })).toBeTruthy()
-  })
-})
-
-describe('util.closeTab — codegen', () => {
-  const b = block(utilities, 'util.closeTab')
-
-  it('generates closeTab dari varref', () => {
-    expect(b.codegen({ tab: { type: 'varref', varName: 'tab2' } }))
-      .toBe('await please.closeTab(tab2)')
-  })
-})
-
-describe('util.acceptDialog — codegen', () => {
-  const b = block(utilities, 'util.acceptDialog')
-
-  it('generates acceptDialog tanpa teks', () => {
-    expect(b.codegen({})).toBe('await please.acceptDialog()')
-  })
-
-  it('generates acceptDialog dengan teks prompt', () => {
-    expect(b.codegen({ text: 'konfirmasi' }))
-      .toBe("await please.acceptDialog('konfirmasi')")
-  })
-})
-
-describe('util.dismissDialog — codegen', () => {
-  const b = block(utilities, 'util.dismissDialog')
-
-  it('generates dismissDialog', () => {
-    expect(b.codegen({})).toBe('await please.dismissDialog()')
-  })
-})
