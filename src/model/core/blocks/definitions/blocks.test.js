@@ -69,11 +69,16 @@ describe('action.fill — validate', () => {
   })
 })
 
-describe('action.fillAndEnter — codegen', () => {
-  const b = block(actions, 'action.fillAndEnter')
+describe('action.fill — codegen dengan checkbox enter', () => {
+  const b = block(actions, 'action.fill')
 
-  it('generates fillAndEnter', () => {
+  it('generates fill biasa saat enter tidak dicentang', () => {
     expect(b.codegen({ label: 'search', selector: '#q', value: 'kata kunci' }))
+      .toBe("await please.fill('search', '#q', 'kata kunci')")
+  })
+
+  it('generates fillAndEnter saat checkbox enter dicentang', () => {
+    expect(b.codegen({ label: 'search', selector: '#q', value: 'kata kunci', enter: true }))
       .toBe("await please.fillAndEnter('search', '#q', 'kata kunci')")
   })
 })

@@ -3,7 +3,7 @@
 
 import { t } from './inputTemplates.js'
 import { v, createValidator } from './validationHelpers.js'
-import { codegenLabelSelector, codegenLabelSelectorValue } from './codegenHelpers.js'
+import { codegenLabelSelector, codegenLabelSelectorValue, codegenFill } from './codegenHelpers.js'
 
 const ACTION = { type: 'action', color: '#10b981', colorBg: 'rgba(16,185,129,0.1)', output: null }
 
@@ -25,22 +25,15 @@ export default [
     label: 'Fill',
     icon: '⌨️',
     description: 'Isi field dengan nilai tertentu',
-    inputs: [t.label('input username'), t.selector('label=Username'), t.value('student')],
-    codegen: codegenLabelSelectorValue('fill'),
+    inputs: [
+      t.label('input username'),
+      t.selector('label=Username'),
+      t.value('student'),
+      t.checkbox('enter', 'Tekan Enter setelah isi')
+    ],
+    codegen: codegenFill,
     validate: createValidator(v.selector(), v.value())
   },
-  /*
-    {
-      ...ACTION,
-      id: 'action.fillAndEnter',
-      label: 'Fill & Enter',
-      icon: '⏎',
-      description: 'Isi field lalu tekan Enter',
-      inputs: [t.label('input search'), t.selector('label=Search'), t.value('kata kunci')],
-      codegen: codegenLabelSelectorValue('fillAndEnter'),
-      validate: createValidator(v.selector(), v.value())
-    },
-  */
 
   {
     ...ACTION,

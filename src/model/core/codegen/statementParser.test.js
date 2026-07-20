@@ -110,10 +110,11 @@ describe('parseStatementToStep — action blocks', () => {
     expect(step.inputs.value).toBe('user@x.com')
   })
 
-  it('memetakan please.fillAndEnter', () => {
+  it('memetakan please.fillAndEnter ke action.fill dengan enter=true', () => {
     const src = "await please.fillAndEnter('q', '#q', 'kata')"
     const step = parseStatementToStep(stmtOf(src), makeCtx({ source: src }))
-    expect(step.blockId).toBe('action.fillAndEnter')
+    expect(step.blockId).toBe('action.fill')
+    expect(step.inputs.enter).toBe(true)
   })
 
   it('memetakan please.clear', () => {

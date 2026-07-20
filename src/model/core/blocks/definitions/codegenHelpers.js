@@ -30,6 +30,16 @@ export function codegenLabelSelectorValue(method, valueField = 'value', ...optio
 }
 
 /**
+ * Codegen untuk block Fill: await please.fill(label, selector, value), atau
+ * please.fillAndEnter(...) jika checkbox "Tekan Enter setelah isi" dicentang.
+ */
+export function codegenFill(inputs) {
+  const method = inputs.enter ? 'fillAndEnter' : 'fill'
+  const args = [resolveString(inputs.label), resolveString(inputs.selector), resolveValue(inputs.value)]
+  return `await please.${method}(${args.join(', ')})`
+}
+
+/**
  * Codegen untuk pola: const VARNAME = await please.METHOD(label, selector)
  */
 export function codegenGetVar(method) {

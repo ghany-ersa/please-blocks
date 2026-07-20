@@ -9,4 +9,5 @@ export const t = {
   message:  ()                                   => ({ name: 'message',  type: 'text',     label: 'Pesan error (opsional)', placeholder: 'opsional', required: false }),
   actual:   (placeholder = '$variabel')          => ({ name: 'actual',   type: 'varref',   label: 'Nilai aktual',       placeholder, required: true }),
   expected: (placeholder = 'nilai', lbl = 'Nilai yang diharapkan') => ({ name: 'expected', type: 'value', label: lbl, placeholder, required: true }),
+  checkbox: (name, label)                        => ({ name,            type: 'checkbox', label,                       required: false }),
 }

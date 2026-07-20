@@ -142,7 +142,11 @@ function mapPleaseMethod({ method, args }, ctx) {
     }
 
     case 'fill':
-    case 'fillAndEnter':
+    case 'fillAndEnter': {
+      const inputs = { label: litStr(args[0]), selector: litStr(args[1]), value: valueFrom(args[2], ctx) }
+      if (method === 'fillAndEnter') inputs.enter = true
+      return { blockId: 'action.fill', inputs }
+    }
     case 'datepicker':
       return {
         blockId: `action.${method}`,

@@ -27,6 +27,7 @@ import TextInput        from '@/components/inspector/inputs/TextInput.vue'
 import SelectorInput    from '@/components/inspector/inputs/SelectorInput.vue'
 import NumberInput      from '@/components/inspector/inputs/NumberInput.vue'
 import ValueInput       from '@/components/inspector/inputs/ValueInput.vue'
+import CheckboxInput    from '@/components/inspector/inputs/CheckboxInput.vue'
 
 const props = defineProps({
   step:         { type: Object,  required: true },
@@ -250,6 +251,12 @@ function onDrop(e) {
           :placeholder="field.placeholder"
           :required="field.required"
           :model-value="step.inputs[field.name] ?? ''"
+          @update:model-value="emit('update-input', field.name, $event)"
+        />
+        <CheckboxInput
+          v-else-if="field.type === 'checkbox'"
+          :label="field.label"
+          :model-value="!!step.inputs[field.name]"
           @update:model-value="emit('update-input', field.name, $event)"
         />
         <TextInput

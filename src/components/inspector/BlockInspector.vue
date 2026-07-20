@@ -13,6 +13,7 @@ import TextInput        from './inputs/TextInput.vue'
 import SelectorInput    from './inputs/SelectorInput.vue'
 import NumberInput      from './inputs/NumberInput.vue'
 import ValueInput       from './inputs/ValueInput.vue'
+import CheckboxInput    from './inputs/CheckboxInput.vue'
 
 const canvas   = useCanvasStore()
 const registry = useBlockRegistry()
@@ -163,7 +164,13 @@ function updateField(name, value) {
             @update:model-value="updateField(inputDef.name, $event)"
           />
 
-          <!-- text (default) -->
+          <CheckboxInput
+            v-else-if="inputDef.type === 'checkbox'"
+            :label="inputDef.label"
+            :model-value="!!localInputs[inputDef.name]"
+            @update:model-value="updateField(inputDef.name, $event)"
+          />
+
           <TextInput
             v-else
             :label="inputDef.label"
