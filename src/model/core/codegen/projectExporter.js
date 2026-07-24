@@ -6,6 +6,7 @@
  */
 
 import { generateSpec } from './specGenerator.js'
+import { generateGherkin } from './gherkinGenerator.js'
 import { generateAllDataFiles }        from '../factory/DataFactory.js'
 import { generateComponentFile }       from '../factory/ComponentFactory.js'
 
@@ -35,6 +36,12 @@ export function exportProject(canvas, blockRegistry, dataRegistry, componentStor
       path:     `feature/${slug}.spec.js`,
       content,
       category: 'spec',
+      enabled:  feature.enabled !== false
+    })
+    files.push({
+      path:     `gherkin/${slug}.feature`,
+      content:  generateGherkin(feature, blockRegistry, dataRegistry.entries),
+      category: 'gherkin',
       enabled:  feature.enabled !== false
     })
   }

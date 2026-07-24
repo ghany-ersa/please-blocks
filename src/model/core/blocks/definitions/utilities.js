@@ -1,6 +1,8 @@
 // Definisi blok kategori Utilities
 // Mapping ke: please.wait(), untilShow(), screenshot(), switchTab(), acceptDialog(), dismissDialog()
 
+import { gherkinText } from './gherkinHelpers.js'
+
 const UTIL = { type: 'utility', color: '#6b7280', colorBg: 'rgba(107,114,128,0.1)', output: null }
 
 export default [
@@ -9,20 +11,25 @@ export default [
     id: 'util.wait',
     label: 'Wait',
     icon: '⏳',
-    description: 'Tunggu selama N milidetik',
+    description: 'Tunggu selama N detik',
     inputs: [
       {
         name: 'duration',
         type: 'number',
-        label: 'Durasi (ms)',
-        placeholder: '2000',
+        label: 'Durasi (s)',
+        placeholder: '2',
         required: false
       }
     ],
     codegen(inputs) {
+      // duration disimpan dalam detik (UI) — please.wait() butuh ms
       return inputs.duration
-        ? `await please.wait(${inputs.duration})`
+        ? `await please.wait(${inputs.duration * 1000})`
         : `await please.wait()`
+    },
+    gherkinTemplate(inputs) {
+      if (!inputs.duration) return 'the user waits'
+      return `the user waits for ${inputs.duration} second${inputs.duration === 1 ? '' : 's'}`
     },
     validate(_inputs) {
       return null
@@ -38,14 +45,18 @@ export default [
     inputs: [
       { name: 'label', type: 'text', label: 'Label', placeholder: 'loading spinner', required: true },
       { name: 'selector', type: 'selector', label: 'Selector', placeholder: 'role=progressbar', required: true },
-      { name: 'time', type: 'number', label: 'Timeout (ms)', placeholder: '20000', required: false }
+      { name: 'time', type: 'number', label: 'Timeout (s)', placeholder: '20', required: false }
     ],
     codegen(inputs) {
+      // time disimpan dalam detik (UI) — please.untilShow() butuh ms
       const label = inputs.label ? `'${inputs.label}'` : "'elemen'"
       const selector = inputs.selector ? `'${inputs.selector}'` : "''"
       return inputs.time
-        ? `await please.untilShow(${label}, ${selector}, ${inputs.time})`
+        ? `await please.untilShow(${label}, ${selector}, ${inputs.time * 1000})`
         : `await please.untilShow(${label}, ${selector})`
+    },
+    gherkinTemplate(inputs, dataEntries) {
+      return `the user waits for "${gherkinText(inputs.label, dataEntries)}" to appear`
     },
     validate(inputs) {
       if (!inputs.selector) return 'Selector wajib diisi'
@@ -92,6 +103,9 @@ export default [
       return inputs.label
         ? `await please.screenshot('${inputs.label}')`
         : `await please.screenshot()`
+    },
+    gherkinTemplate() {
+      return 'a screenshot is captured'
     },
     validate(_inputs) { return null }
   },

@@ -4,6 +4,7 @@
 import { t } from './inputTemplates.js'
 import { v, createValidator } from './validationHelpers.js'
 import { codegenLabelSelector, codegenLabelSelectorValue, codegenFill } from './codegenHelpers.js'
+import { gherkinText } from './gherkinHelpers.js'
 
 const ACTION = { type: 'action', color: '#10b981', colorBg: 'rgba(16,185,129,0.1)', output: null }
 
@@ -15,7 +16,15 @@ export default [
     icon: '🖱️',
     description: 'Klik element di halaman',
     inputs: [t.label('button submit'), t.selector('button=Submit'), t.wait()],
-    codegen: codegenLabelSelector('click', 'wait'),
+    codegen(inputs) {
+      // t.wait() disimpan dalam detik (UI) — please.click() butuh ms
+      const ms = inputs.wait ? inputs.wait * 1000 : inputs.wait
+      return codegenLabelSelector('click', 'wait')({ ...inputs, wait: ms })
+    },
+    gherkinTemplate(inputs, dataEntries) {
+      const base = `the user clicks "${gherkinText(inputs.label, dataEntries)}"`
+      return inputs.wait ? `${base} and waits ${inputs.wait} second${inputs.wait === 1 ? '' : 's'}` : base
+    },
     validate: createValidator(v.selector())
   },
 
@@ -32,6 +41,9 @@ export default [
       t.checkbox('enter', 'Tekan Enter setelah isi')
     ],
     codegen: codegenFill,
+    gherkinTemplate(inputs, dataEntries) {
+      return `the user fills "${gherkinText(inputs.label, dataEntries)}" with "${gherkinText(inputs.value, dataEntries)}"`
+    },
     validate: createValidator(v.selector(), v.value())
   },
 
@@ -43,6 +55,9 @@ export default [
     description: 'Kosongkan nilai dari sebuah input field',
     inputs: [t.label('input username'), t.selector('label=Username')],
     codegen: codegenLabelSelector('clear'),
+    gherkinTemplate(inputs, dataEntries) {
+      return `the user clears "${gherkinText(inputs.label, dataEntries)}"`
+    },
     validate: createValidator(v.selector())
   },
   /*
@@ -81,6 +96,9 @@ export default [
     description: 'Scroll halaman ke posisi element',
     inputs: [t.label('tombol submit'), t.selector('button=Submit')],
     codegen: codegenLabelSelector('scrollTo'),
+    gherkinTemplate(inputs, dataEntries) {
+      return `the user scrolls to "${gherkinText(inputs.label, dataEntries)}"`
+    },
     validate: createValidator(v.selector())
   }
 ]

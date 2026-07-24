@@ -2,6 +2,7 @@
 // Mapping ke: please.goto(url, title?), please.newTab(), please.closeTab()
 
 import { resolveValue } from './helpers.js'
+import { gherkinText } from './gherkinHelpers.js'
 
 const NAV = { type: 'navigation', color: '#6366f1', colorBg: 'rgba(99,102,241,0.1)', output: null }
 
@@ -33,50 +34,55 @@ export default [
       if (inputs.title) args.push(resolveValue(inputs.title))
       return `await please.goto(${args.join(', ')})`
     },
+    gherkinTemplate(inputs, dataEntries) {
+      return `the user opens "${gherkinText(inputs.url, dataEntries)}"`
+    },
     validate(inputs) {
       if (!inputs.url) return 'URL wajib diisi'
       return null
     }
   },
 
-  {
-    ...NAV,
-    id:          'nav.newTab',
-    label:       'New Tab',
-    icon:        '🪟',
-    description: 'Buka tab baru, simpan referensinya ke variabel',
-    output:      'tab',
-    inputs: [
-      { name: 'varName', type: 'text', label: 'Simpan ke variabel', placeholder: 'tab2', required: true }
-    ],
-    codegen(inputs) {
-      const v = inputs.varName || 'tab'
-      return `const ${v} = await please.newTab()`
+  /*
+    {
+      ...NAV,
+      id:          'nav.newTab',
+      label:       'New Tab',
+      icon:        '🪟',
+      description: 'Buka tab baru, simpan referensinya ke variabel',
+      output:      'tab',
+      inputs: [
+        { name: 'varName', type: 'text', label: 'Simpan ke variabel', placeholder: 'tab2', required: true }
+      ],
+      codegen(inputs) {
+        const v = inputs.varName || 'tab'
+        return `const ${v} = await please.newTab()`
+      },
+      validate(inputs) {
+        if (!inputs.varName) return 'Nama variabel wajib diisi'
+        return null
+      }
     },
-    validate(inputs) {
-      if (!inputs.varName) return 'Nama variabel wajib diisi'
-      return null
-    }
-  },
 
-  {
-    ...NAV,
-    id:          'nav.closeTab',
-    label:       'Close Tab',
-    icon:        '✖️',
-    description: 'Tutup tab tertentu',
-    inputs: [
-      { name: 'tab', type: 'varref', label: 'Variabel tab', placeholder: '$tab2', required: true }
-    ],
-    codegen(inputs) {
-      const ref = inputs.tab && typeof inputs.tab === 'object' && inputs.tab.type === 'varref'
-        ? inputs.tab.varName
-        : inputs.tab || 'tab'
-      return `await please.closeTab(${ref})`
+    {
+      ...NAV,
+      id:          'nav.closeTab',
+      label:       'Close Tab',
+      icon:        '✖️',
+      description: 'Tutup tab tertentu',
+      inputs: [
+        { name: 'tab', type: 'varref', label: 'Variabel tab', placeholder: '$tab2', required: true }
+      ],
+      codegen(inputs) {
+        const ref = inputs.tab && typeof inputs.tab === 'object' && inputs.tab.type === 'varref'
+          ? inputs.tab.varName
+          : inputs.tab || 'tab'
+        return `await please.closeTab(${ref})`
+      },
+      validate(inputs) {
+        if (!inputs.tab) return 'Variabel tab wajib diisi'
+        return null
+      }
     },
-    validate(inputs) {
-      if (!inputs.tab) return 'Variabel tab wajib diisi'
-      return null
-    }
-  }
+  */
 ]

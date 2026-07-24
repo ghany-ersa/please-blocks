@@ -4,6 +4,7 @@
 import { t }                  from './inputTemplates.js'
 import { v, createValidator } from './validationHelpers.js'
 import { resolveString, resolveValue } from './helpers.js'
+import { gherkinText } from './gherkinHelpers.js'
 
 const ASSERTION = { type: 'assertion', color: '#f59e0b', colorBg: 'rgba(245,158,11,0.1)', output: null }
 
@@ -35,6 +36,12 @@ export default [
       if (inputs.title) args.push(resolveValue(inputs.title))
       return `await please.verifyPage(${args.join(', ')})`
     },
+    gherkinTemplate(inputs, dataEntries) {
+      const parts = []
+      if (inputs.url) parts.push(`the page URL must be in "${gherkinText(inputs.url, dataEntries)}"`)
+      if (inputs.title) parts.push(`the page title should be "${gherkinText(inputs.title, dataEntries)}"`)
+      return parts.join(' and ') || 'the page should match the expected URL/title'
+    },
     validate(inputs) {
       if (!inputs.url && !inputs.title) return 'URL atau title wajib diisi salah satu'
       return null
@@ -62,6 +69,12 @@ export default [
         return `const ${inputs.varName} = await please.see(${label}, ${selector}${args})`
       }
       return `await please.see(${label}, ${selector}${args})`
+    },
+    gherkinTemplate(inputs, dataEntries) {
+      const label = gherkinText(inputs.label, dataEntries)
+      return inputs.expected
+        ? `"${label}" text should be "${gherkinText(inputs.expected, dataEntries)}"`
+        : `"${label}" should be displayed`
     },
     validate: createValidator(v.selector())
   },
@@ -99,6 +112,9 @@ export default [
       const expected = resolveValue(inputs.expected)
       const msg      = inputs.message ? `, ${resolveString(inputs.message)}` : ''
       return `expect(${actual}${msg}).not.toBe(${expected})`
+    },
+    gherkinTemplate(inputs, dataEntries) {
+      return `"${gherkinText(inputs.actual, dataEntries)}" should not equal "${gherkinText(inputs.expected, dataEntries)}"`
     },
     validate: createValidator(v.actual(), v.expected('Nilai yang tidak diharapkan wajib diisi'))
   },

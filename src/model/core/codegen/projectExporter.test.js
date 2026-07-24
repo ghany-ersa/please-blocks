@@ -24,6 +24,36 @@ function getFile(files, path) {
   return files.find(f => f.path === path)
 }
 
+// ── gherkin/*.feature ────────────────────────────────────────────
+
+describe('exportProject — gherkin/*.feature', () => {
+  const clickBlock = { id: 'action.click', type: 'action', codegen: () => '', gherkinTemplate: ({ label }) => `the user clicks "${label}"` }
+  const registry = makeBlockRegistry([clickBlock])
+
+  const canvas = makeCanvas({
+    features: [
+      {
+        label: 'Login',
+        enabled: true,
+        testCases: [
+          { label: 'klik submit', steps: [{ blockId: 'action.click', inputs: { label: 'Submit' } }] }
+        ]
+      }
+    ]
+  })
+
+  const files = exportProject(canvas, registry, makeDataRegistry(), makeComponentStore())
+
+  it('menghasilkan gherkin/login.feature berdampingan dengan feature/login.spec.js', () => {
+    expect(getFile(files, 'feature/login.spec.js')).toBeTruthy()
+    const gherkinFile = getFile(files, 'gherkin/login.feature')
+    expect(gherkinFile).toBeTruthy()
+    expect(gherkinFile.content).toContain('Feature: Login')
+    expect(gherkinFile.content).toContain('Scenario: klik submit')
+    expect(gherkinFile.content).toContain('When the user clicks "Submit"')
+  })
+})
+
 // ── app.js ────────────────────────────────────────────────────────
 
 describe('exportProject — app.js (tanpa component)', () => {

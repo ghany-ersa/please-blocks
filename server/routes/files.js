@@ -10,7 +10,7 @@ import { join, dirname, resolve, sep }           from 'path'
 import { homedir }                               from 'os'
 
 // Folder yang sepenuhnya dikelola IDE — aman untuk prune (hapus file basi).
-const MANAGED_DIRS = ['feature', 'data', 'components']
+const MANAGED_DIRS = ['feature', 'data', 'components', 'gherkin']
 
 export const filesRouter = Router()
 
