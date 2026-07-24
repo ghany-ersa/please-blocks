@@ -48,9 +48,11 @@ export function parseStatementToStep(stmt, ctx) {
         if (expected !== undefined) inputs.expected = valueFrom(expected, ctx)
         return withNote(note, { blockId: 'assert.see', inputs })
       }
+      /*
       if (pleaseMethod.method === 'newTab') {
         return withNote(note, { blockId: 'nav.newTab', inputs: { varName } })
       }
+      */
     }
     return rawStep(stmt, ctx, note)
   }
@@ -137,7 +139,7 @@ function mapPleaseMethod({ method, args }, ctx) {
     case 'scrollTo':
     case 'clear': {
       const inputs = { label: litStr(args[0]), selector: litStr(args[1]) }
-      if (method === 'click' && args[2] !== undefined) inputs.wait = numFrom(args[2])
+      if (method === 'click' && args[2] !== undefined) inputs.wait = numFrom(args[2]) / 1000
       return { blockId: `action.${method}`, inputs }
     }
 
@@ -165,11 +167,11 @@ function mapPleaseMethod({ method, args }, ctx) {
     }
 
     case 'wait':
-      return { blockId: 'util.wait', inputs: args[0] !== undefined ? { duration: numFrom(args[0]) } : {} }
+      return { blockId: 'util.wait', inputs: args[0] !== undefined ? { duration: numFrom(args[0]) / 1000 } : {} }
 
     case 'untilShow': {
       const inputs = { label: litStr(args[0]), selector: litStr(args[1]) }
-      if (args[2] !== undefined) inputs.time = numFrom(args[2])
+      if (args[2] !== undefined) inputs.time = numFrom(args[2]) / 1000
       return { blockId: 'util.untilShow', inputs }
     }
 
@@ -185,8 +187,10 @@ function mapPleaseMethod({ method, args }, ctx) {
     case 'switchTab':
       return { blockId: 'util.switchTab', inputs: { tab: valueFrom(args[0], ctx) } }
 
+    /*
     case 'closeTab':
       return { blockId: 'nav.closeTab', inputs: { tab: valueFrom(args[0], ctx) } }
+    */
 
     default:
       return null  // tak dikenal → caller pakai rawStep

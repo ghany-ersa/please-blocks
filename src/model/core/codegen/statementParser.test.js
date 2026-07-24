@@ -96,11 +96,11 @@ describe('parseStatementToStep — action blocks', () => {
     expect(step.inputs.selector).toBe('#btn')
   })
 
-  it('memetakan please.click dengan wait', () => {
+  it('memetakan please.click dengan wait (dikonversi dari ms ke detik)', () => {
     const src = "await please.click('btn', '#btn', 500)"
     const step = parseStatementToStep(stmtOf(src), makeCtx({ source: src }))
     expect(step.blockId).toBe('action.click')
-    expect(step.inputs.wait).toBe(500)
+    expect(step.inputs.wait).toBe(0.5)
   })
 
   it('memetakan please.fill', () => {
@@ -218,11 +218,11 @@ describe('parseStatementToStep — see sebagai VariableDeclaration (Read mode)',
 })
 
 describe('parseStatementToStep — wait', () => {
-  it('memetakan please.wait dengan durasi', () => {
+  it('memetakan please.wait dengan durasi (dikonversi dari ms ke detik)', () => {
     const src = 'await please.wait(3000)'
     const step = parseStatementToStep(stmtOf(src), makeCtx({ source: src }))
     expect(step.blockId).toBe('util.wait')
-    expect(step.inputs.duration).toBe(3000)
+    expect(step.inputs.duration).toBe(3)
   })
 
   it('memetakan please.wait tanpa argumen', () => {

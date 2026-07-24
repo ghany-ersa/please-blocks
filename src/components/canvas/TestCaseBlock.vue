@@ -338,7 +338,6 @@ function onTcDrop(e) {
 
 <style scoped>
 .test-case {
-  background: var(--color-purple-bg);
   border: 1px solid rgba(168,85,247,0.18);
   border-radius: var(--radius-xl);
   margin-bottom: var(--space-2);
